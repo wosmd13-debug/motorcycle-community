@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+:root {
+  --background: #fff8f0;
+  --foreground: #2d3436;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-noto-sans);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-noto-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Tailwind preflight breaks map tile images (max-width: 100%) */
+.leaflet-container img,
+.naver-map-root img {
+  max-width: none !important;
+  max-height: none !important;
+}
+
+.leaflet-container {
+  width: 100%;
+  z-index: 0;
+}
+
+/* height는 각 컴포넌트의 h-[420px] 등 Tailwind 클래스로 지정 */
+.naver-map-root {
+  width: 100%;
+  z-index: 0;
+}
+
+.naver-map-root > div {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.leaflet-pane,
+.leaflet-top,
+.leaflet-bottom {
+  z-index: 1;
+}

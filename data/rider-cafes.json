@@ -1,0 +1,127 @@
+[
+  {
+    "id": "d034e7cf-da69-4c21-9cd5-39ebe0fdb6a7",
+    "name": "카페 하라 예산점",
+    "author": "안지훈",
+    "address": "충남 예산군 덕산면 둔리 485-2",
+    "region": "충남",
+    "imageUrl": "/uploads/rider-cafes/1783316793934-cddb1566-1c8d-47d9-aeda-6c5d3ee7f13e.jpg",
+    "description": "라이더쉼터, 카페, 휴식공간",
+    "amenities": [
+      "바이크 주차",
+      "와이파이",
+      "반려동물 동반 가능",
+      "남녀 화장실 구분"
+    ],
+    "likes": 1,
+    "views": 1,
+    "createdAt": "2026-07-06T05:46:34.086Z",
+    "phone": "041-123-4567",
+    "closedDays": "눈,비 많이 내리는 날 휴무 (인스타 별도 공지)",
+    "weeklyHours": {
+      "mon": {
+        "closed": false,
+        "open": "09:00",
+        "close": "21:00"
+      },
+      "tue": {
+        "closed": false,
+        "open": "09:00",
+        "close": "21:00"
+      },
+      "wed": {
+        "closed": false,
+        "open": "09:00",
+        "close": "21:00"
+      },
+      "thu": {
+        "closed": false,
+        "open": "09:00",
+        "close": "21:00"
+      },
+      "fri": {
+        "closed": false,
+        "open": "09:00",
+        "close": "21:00"
+      },
+      "sat": {
+        "closed": false,
+        "open": "09:00",
+        "close": "22:00"
+      },
+      "sun": {
+        "closed": false,
+        "open": "09:00",
+        "close": "22:00"
+      }
+    }
+  },
+  {
+    "id": "seed-cafe-1",
+    "name": "바람카페 남해",
+    "author": "해안라이더",
+    "address": "경남 남해군 설리면 설리로 123",
+    "region": "경남",
+    "imageUrl": "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=1200&q=80",
+    "description": "바이크 주차 공간이 넓고 해안 뷰가 좋은 라이더 카페.",
+    "amenities": [
+      "바이크 주차",
+      "테라스",
+      "음료·디저트"
+    ],
+    "likes": 18,
+    "views": 94,
+    "createdAt": "2026-07-05T10:00:00.000Z"
+  },
+  {
+    "id": "seed-cafe-2",
+    "name": "속초 라이더 카페",
+    "author": "강원러너",
+    "address": "강원 속초시 중앙로 45",
+    "region": "강원",
+    "imageUrl": "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=80",
+    "description": "출발 전 커피 한 잔과 라이더 모임 공간.",
+    "amenities": [
+      "바이크 주차",
+      "Wi-Fi",
+      "모임 공간"
+    ],
+    "likes": 12,
+    "views": 67,
+    "createdAt": "2026-07-04T08:30:00.000Z"
+  },
+  {
+    "id": "seed-cafe-3",
+    "name": "애월 바이크 카페",
+    "author": "제주라이더",
+    "address": "제주 제주시 애월읍 애월해안로 12",
+    "region": "제주",
+    "imageUrl": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=1200&q=80",
+    "description": "1132 해안도로 중간 휴식에 인기 있는 카페.",
+    "amenities": [
+      "바이크 주차",
+      "오션뷰",
+      "충전 콘센트"
+    ],
+    "likes": 24,
+    "views": 112,
+    "createdAt": "2026-07-03T14:20:00.000Z"
+  },
+  {
+    "id": "seed-cafe-4",
+    "name": "팔당 라이더 스톱",
+    "author": "팔당크루",
+    "address": "경기 남양주시 팔당면 팔당로 88",
+    "region": "수도권",
+    "imageUrl": "https://images.unsplash.com/photo-1453614512568-c7021287638a?auto=format&fit=crop&w=1200&q=80",
+    "description": "팔당댐 일주 코스의 대표 휴식 거점.",
+    "amenities": [
+      "바이크 주차",
+      "간식",
+      "화장실"
+    ],
+    "likes": 31,
+    "views": 145,
+    "createdAt": "2026-07-02T09:00:00.000Z"
+  }
+]
