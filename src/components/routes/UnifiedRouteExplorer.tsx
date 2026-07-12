@@ -282,6 +282,11 @@ export default function UnifiedRouteExplorer({
                   route={item.route}
                   isSelected={selectedItem?.key === item.key}
                   onSelect={() => setSelectedKey(item.key)}
+                  onDeleted={(routeId) => {
+                    setBariRoutes((prev) =>
+                      prev.filter((route) => route.id !== routeId)
+                    );
+                  }}
                 />
               ) : (
                 <MemberRouteCard
@@ -289,6 +294,11 @@ export default function UnifiedRouteExplorer({
                   route={item.route}
                   isSelected={selectedItem?.key === item.key}
                   onSelect={() => setSelectedKey(item.key)}
+                  onDeleted={(routeId) => {
+                    setMemberRoutes((prev) =>
+                      prev.filter((route) => route.id !== routeId)
+                    );
+                  }}
                 />
               )
             )}
@@ -302,10 +312,22 @@ export default function UnifiedRouteExplorer({
                   <RouteDetail
                     route={selectedItem.route}
                     communityCafes={initialCommunityCafes}
+                    onDeleted={(routeId) => {
+                      setBariRoutes((prev) =>
+                        prev.filter((route) => route.id !== routeId)
+                      );
+                    }}
                   />
                 </>
               ) : (
-                <MemberRouteDetail route={selectedItem.route} />
+                <MemberRouteDetail
+                  route={selectedItem.route}
+                  onDeleted={(routeId) => {
+                    setMemberRoutes((prev) =>
+                      prev.filter((route) => route.id !== routeId)
+                    );
+                  }}
+                />
               )}
             </div>
           )}

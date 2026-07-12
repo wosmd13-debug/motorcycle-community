@@ -56,7 +56,7 @@ function BariRouteEditForm({ route }: BariRouteEditClientProps) {
     []
   );
 
-  if (!canManageBariRoute(user)) {
+  if (!canManageBariRoute(user, route)) {
     return (
       <div className="rounded-3xl border border-signature/20 bg-white p-6 text-center">
         <p className="font-semibold text-stone-700">

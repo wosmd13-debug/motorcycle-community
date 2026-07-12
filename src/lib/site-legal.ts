@@ -4,7 +4,7 @@ export const siteLegalInfo = {
   serviceNameEn: "Bike Community",
   operatorName: process.env.NEXT_PUBLIC_SITE_OPERATOR_NAME ?? "바이크커뮤니티 운영팀",
   contactEmail:
-    process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "contact@example.com",
+    process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "wosmd13@naver.com",
   contactPhone: process.env.NEXT_PUBLIC_CONTACT_PHONE ?? "",
   siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? "https://bikecommunity.example.com",
   effectiveDate: "2026-07-07",

@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  requireCurrentUserFromRequest,
-} from "@/lib/auth-server";
+import { requireCurrentUserFromRequest } from "@/lib/auth-server";
 import {
   canManageBariRoute,
   validateBariRouteInput,
@@ -17,20 +15,6 @@ import { isDetailRegion } from "@/lib/regions";
 type RouteContext = {
   params: Promise<{ id: string }>;
 };
-
-async function requireBariRouteManager(request: NextRequest) {
-  const user = await requireCurrentUserFromRequest(request);
-  if (user instanceof NextResponse) return user;
-
-  if (!canManageBariRoute(user)) {
-    return NextResponse.json(
-      { error: "추천 바리코스 관리 권한이 없습니다." },
-      { status: 403 }
-    );
-  }
-
-  return user;
-}
 
 export async function GET(_request: NextRequest, context: RouteContext) {
   const { id } = await context.params;
@@ -64,12 +48,19 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   }
 
   try {
-    const user = await requireBariRouteManager(request);
+    const user = await requireCurrentUserFromRequest(request);
     if (user instanceof NextResponse) return user;
 
     const route = await getBariRoute(routeId);
     if (!route) {
       return NextResponse.json({ error: "코스를 찾을 수 없습니다." }, { status: 404 });
+    }
+
+    if (!canManageBariRoute(user, route)) {
+      return NextResponse.json(
+        { error: "추천 바리코스 관리 권한이 없습니다." },
+        { status: 403 }
+      );
     }
 
     const body = await request.json();
@@ -174,12 +165,19 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
   }
 
   try {
-    const user = await requireBariRouteManager(request);
+    const user = await requireCurrentUserFromRequest(request);
     if (user instanceof NextResponse) return user;
 
     const route = await getBariRoute(routeId);
     if (!route) {
       return NextResponse.json({ error: "코스를 찾을 수 없습니다." }, { status: 404 });
+    }
+
+    if (!canManageBariRoute(user, route)) {
+      return NextResponse.json(
+        { error: "추천 바리코스 관리 권한이 없습니다." },
+        { status: 403 }
+      );
     }
 
     const result = await deleteBariRoute(routeId);

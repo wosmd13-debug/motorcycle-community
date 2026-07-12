@@ -35,6 +35,10 @@ export type BariRoute = {
   lng: number;
   rating: number;
   reviewCount: number;
+  /** 등록자 닉네임 (있으면 등록자도 수정·삭제 가능) */
+  author?: string;
+  /** 등록자 유저 ID */
+  authorId?: string;
 };
 
 export const routeRegions = filterRegions;

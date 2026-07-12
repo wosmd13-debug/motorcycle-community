@@ -13,11 +13,13 @@ import type { RiderCafeEntry } from "@/lib/rider-cafe";
 type RouteDetailProps = {
   route: BariRoute;
   communityCafes?: RiderCafeEntry[];
+  onDeleted?: (routeId: number) => void;
 };
 
 export default function RouteDetail({
   route,
   communityCafes = [],
+  onDeleted,
 }: RouteDetailProps) {
   const places = getPlacesForRoute(route.id);
   const restStops = getRestStopsForRoute(route.id);
@@ -32,16 +34,22 @@ export default function RouteDetail({
           <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
             {route.region}
           </span>
+          <span className="rounded-full bg-signature-muted px-3 py-1 text-xs font-bold text-signature-darker">
+            추천
+          </span>
         </div>
         <h2 className="mt-4 text-2xl font-bold text-slate-800">{route.name}</h2>
         <p className="mt-2 text-sm leading-7 text-slate-500">{route.description}</p>
+        {route.author ? (
+          <p className="mt-2 text-xs text-slate-400">등록자 {route.author}</p>
+        ) : null}
         <div className="mt-4 space-y-3">
           <RouteLinkActions
             routeId={route.id}
             waypoints={route.waypoints}
             routeName={route.name}
           />
-          <BariRouteManageActions route={route} />
+          <BariRouteManageActions route={route} onDeleted={() => onDeleted?.(route.id)} />
         </div>
       </div>
 

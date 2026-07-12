@@ -56,6 +56,7 @@ export function canManageMemberRoute(
   user:
     | {
         id: string;
+        nickname?: string;
         isAdmin?: boolean;
         isOperator?: boolean;
       }
@@ -64,11 +65,10 @@ export function canManageMemberRoute(
   route: MemberRoute
 ): boolean {
   if (!user) return false;
-  return (
-    user.id === route.authorId ||
-    Boolean(user.isAdmin) ||
-    Boolean(user.isOperator)
-  );
+  if (user.isAdmin || user.isOperator) return true;
+  if (route.authorId) return user.id === route.authorId;
+  if (user.nickname) return route.author === user.nickname;
+  return false;
 }
 
 export function computeRouteAnchor(waypoints: RouteWaypoint[]) {

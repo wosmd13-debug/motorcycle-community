@@ -24,14 +24,21 @@ export type UpdateBariRouteInput = {
 export function canManageBariRoute(
   user:
     | {
+        id: string;
+        nickname: string;
         isAdmin?: boolean;
         isOperator?: boolean;
       }
     | null
-    | undefined
+    | undefined,
+  route?: Pick<BariRoute, "author" | "authorId"> | null
 ): boolean {
   if (!user) return false;
-  return Boolean(user.isAdmin) || Boolean(user.isOperator);
+  if (user.isAdmin || user.isOperator) return true;
+  if (!route) return false;
+  if (route.authorId) return route.authorId === user.id;
+  if (route.author) return route.author === user.nickname;
+  return false;
 }
 
 export function computeBariRouteAnchor(waypoints: RouteWaypoint[]) {
@@ -50,6 +57,9 @@ export function normalizeBariRoute(route: BariRoute): BariRoute {
   }));
   const anchor = computeBariRouteAnchor(waypoints);
 
+  const author = route.author?.trim() || undefined;
+  const authorId = route.authorId?.trim() || undefined;
+
   return {
     ...route,
     name: route.name.trim(),
@@ -65,6 +75,8 @@ export function normalizeBariRoute(route: BariRoute): BariRoute {
     waypoints,
     lat: anchor.lat,
     lng: anchor.lng,
+    ...(author ? { author } : {}),
+    ...(authorId ? { authorId } : {}),
   };
 }
 

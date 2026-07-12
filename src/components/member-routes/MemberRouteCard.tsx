@@ -1,6 +1,8 @@
 ﻿"use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import AuthorWithGrade from "@/components/ranking/AuthorWithGrade";
 import {
@@ -16,15 +18,39 @@ type MemberRouteCardProps = {
   route: MemberRoute;
   isSelected: boolean;
   onSelect: () => void;
+  onDeleted?: (routeId: string) => void;
 };
 
 export default function MemberRouteCard({
   route,
   isSelected,
   onSelect,
+  onDeleted,
 }: MemberRouteCardProps) {
   const { user } = useAuth();
+  const router = useRouter();
   const canManage = canManageMemberRoute(user, route);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!canManage) return;
+    if (!window.confirm(`"${route.name}" 코스를 삭제할까요?`)) return;
+
+    setDeleting(true);
+    const response = await fetch(`/api/member-routes/${route.id}`, {
+      method: "DELETE",
+    });
+    const data = await response.json();
+    setDeleting(false);
+
+    if (!response.ok) {
+      window.alert((data.error as string) ?? "삭제에 실패했습니다.");
+      return;
+    }
+
+    onDeleted?.(route.id);
+    router.refresh();
+  };
 
   return (
     <div
@@ -95,6 +121,14 @@ export default function MemberRouteCard({
             >
               수정
             </Link>
+            <button
+              type="button"
+              onClick={() => void handleDelete()}
+              disabled={deleting}
+              className="rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-[11px] font-semibold text-red-700 hover:bg-red-100 disabled:opacity-60"
+            >
+              {deleting ? "삭제 중..." : "삭제"}
+            </button>
           </div>
         )}
       </div>

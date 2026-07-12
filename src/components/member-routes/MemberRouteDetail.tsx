@@ -20,9 +20,13 @@ import { buildMemberMapHref, buildMemberRouteEditHref } from "@/lib/route-links"
 
 type MemberRouteDetailProps = {
   route: MemberRoute;
+  onDeleted?: (routeId: string) => void;
 };
 
-export default function MemberRouteDetail({ route }: MemberRouteDetailProps) {
+export default function MemberRouteDetail({
+  route,
+  onDeleted,
+}: MemberRouteDetailProps) {
   const { user } = useAuth();
   const router = useRouter();
   const [deleting, setDeleting] = useState(false);
@@ -48,6 +52,7 @@ export default function MemberRouteDetail({ route }: MemberRouteDetailProps) {
       return;
     }
 
+    onDeleted?.(route.id);
     router.push("/routes?source=member");
     router.refresh();
   };

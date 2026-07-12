@@ -10,17 +10,19 @@ import type { BariRoute } from "@/lib/routes-data";
 
 type BariRouteManageActionsProps = {
   route: BariRoute;
+  onDeleted?: () => void;
 };
 
 export default function BariRouteManageActions({
   route,
+  onDeleted,
 }: BariRouteManageActionsProps) {
   const { user } = useAuth();
   const router = useRouter();
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  if (!canManageBariRoute(user)) return null;
+  if (!canManageBariRoute(user, route)) return null;
 
   const handleDelete = async () => {
     if (!window.confirm(`"${route.name}" 추천 코스를 삭제할까요?`)) return;
@@ -39,7 +41,7 @@ export default function BariRouteManageActions({
       return;
     }
 
-    router.push("/routes?source=official");
+    onDeleted?.();
     router.refresh();
   };
 
@@ -47,7 +49,7 @@ export default function BariRouteManageActions({
     <div className="space-y-2">
       <div className="flex flex-wrap items-center gap-2">
         <span className="rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-700">
-          운영 관리
+          {user?.isAdmin || user?.isOperator ? "운영 관리" : "등록자 관리"}
         </span>
         <Link
           href={buildBariRouteEditHref(route.id)}

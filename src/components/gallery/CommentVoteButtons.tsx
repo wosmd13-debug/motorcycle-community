@@ -42,7 +42,7 @@ function writeVote(
 
 const voteBtnClass = (active: boolean, tone: "up" | "down") =>
   [
-    "inline-flex min-h-11 min-w-[5.5rem] flex-1 items-center justify-center rounded-full px-3 py-2.5 text-xs font-semibold touch-manipulation transition disabled:opacity-60 sm:flex-none",
+    "inline-flex min-h-11 min-w-11 flex-1 items-center justify-center gap-1.5 rounded-full px-3 py-2.5 text-sm touch-manipulation transition disabled:opacity-60 sm:flex-none sm:min-w-[4.5rem]",
     active
       ? tone === "up"
         ? "bg-signature text-white"
@@ -89,17 +89,23 @@ export default function CommentVoteButtons({
           type="button"
           onClick={() => void handleVote("up")}
           disabled={disabled || voting}
+          aria-label={`추천 ${upvotes}`}
+          title="추천"
           className={voteBtnClass(currentVote === "up", "up")}
         >
-          추천 {upvotes}
+          <span aria-hidden="true">👍</span>
+          <span className="tabular-nums text-xs font-semibold">{upvotes}</span>
         </button>
         <button
           type="button"
           onClick={() => void handleVote("down")}
           disabled={disabled || voting}
+          aria-label={`비추천 ${downvotes}`}
+          title="비추천"
           className={voteBtnClass(currentVote === "down", "down")}
         >
-          비추천 {downvotes}
+          <span aria-hidden="true">👎</span>
+          <span className="tabular-nums text-xs font-semibold">{downvotes}</span>
         </button>
       </div>
       {!user ? (

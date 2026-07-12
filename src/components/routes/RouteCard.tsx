@@ -1,6 +1,8 @@
 ﻿"use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { canManageBariRoute } from "@/lib/bari-route";
 import { getPlaceCountForRoute } from "@/lib/places-data";
@@ -12,6 +14,7 @@ type RouteCardProps = {
   route: BariRoute;
   isSelected: boolean;
   onSelect: () => void;
+  onDeleted?: (routeId: number) => void;
 };
 
 const difficultyColor: Record<BariRoute["difficulty"], string> = {
@@ -20,10 +23,37 @@ const difficultyColor: Record<BariRoute["difficulty"], string> = {
   상급: "bg-rose-100 text-rose-700",
 };
 
-export default function RouteCard({ route, isSelected, onSelect }: RouteCardProps) {
+export default function RouteCard({
+  route,
+  isSelected,
+  onSelect,
+  onDeleted,
+}: RouteCardProps) {
   const { user } = useAuth();
-  const canManage = canManageBariRoute(user);
+  const router = useRouter();
+  const canManage = canManageBariRoute(user, route);
   const placeCount = getPlaceCountForRoute(route.id);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!canManage) return;
+    if (!window.confirm(`"${route.name}" 추천 코스를 삭제할까요?`)) return;
+
+    setDeleting(true);
+    const response = await fetch(`/api/bari-routes/${route.id}`, {
+      method: "DELETE",
+    });
+    const data = await response.json();
+    setDeleting(false);
+
+    if (!response.ok) {
+      window.alert((data.error as string) ?? "삭제에 실패했습니다.");
+      return;
+    }
+
+    onDeleted?.(route.id);
+    router.refresh();
+  };
 
   return (
     <div
@@ -105,6 +135,14 @@ export default function RouteCard({ route, isSelected, onSelect }: RouteCardProp
             >
               수정
             </Link>
+            <button
+              type="button"
+              onClick={() => void handleDelete()}
+              disabled={deleting}
+              className="rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-[11px] font-semibold text-red-700 hover:bg-red-100 disabled:opacity-60"
+            >
+              {deleting ? "삭제 중..." : "삭제"}
+            </button>
           </div>
         )}
       </div>
