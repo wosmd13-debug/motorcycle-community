@@ -17,8 +17,7 @@ export default function MapAccessNotice() {
   return (
     <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
       현재 <strong>{hostname}</strong> 주소로 접속 중입니다. 네이버 지도는{" "}
-      <strong>http://localhost:3000</strong> 으로 접속해야 인증됩니다. 지도는
-      OpenStreetMap으로 표시됩니다.
+      <strong>http://localhost:3000</strong> 으로 접속해야 정상 표시됩니다.
     </div>
   );
 }

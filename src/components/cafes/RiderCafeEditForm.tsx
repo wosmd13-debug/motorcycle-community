@@ -1,5 +1,7 @@
 "use client";
 
+import PortalModal from "@/components/portal/PortalModal";
+
 import { useState } from "react";
 import {
   RiderCafeBasicFields,
@@ -64,10 +66,10 @@ export default function RiderCafeEditForm({
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/70 p-4">
+    <PortalModal onClose={onClose} overlayClassName="z-[80]">
       <form
         onSubmit={handleSubmit}
-        className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl sm:p-8"
+        className="portal-modal-panel max-w-xl overflow-y-auto p-4 shadow-2xl sm:p-8"
       >
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold text-slate-800">업체 정보 수정</h2>
@@ -85,7 +87,7 @@ export default function RiderCafeEditForm({
         </p>
 
         <div className="mt-6 space-y-4">
-          <RiderCafeBasicFields values={values} onChange={handleChange} />
+          <RiderCafeBasicFields values={values} onChange={handleChange} hideAuthor />
           <RiderCafeBusinessFields values={values} onChange={handleChange} />
         </div>
 
@@ -98,11 +100,11 @@ export default function RiderCafeEditForm({
         <button
           type="submit"
           disabled={submitting}
-          className="mt-6 w-full rounded-2xl bg-orange-500 py-3 text-sm font-bold text-white transition hover:bg-orange-600 disabled:opacity-60"
+          className="portal-btn mt-6 w-full py-3 text-sm disabled:opacity-60"
         >
           {submitting ? "저장 중..." : "변경사항 저장"}
         </button>
       </form>
-    </div>
+    </PortalModal>
   );
 }

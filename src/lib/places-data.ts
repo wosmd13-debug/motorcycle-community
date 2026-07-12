@@ -2,9 +2,11 @@ export type PlaceCategory =
   | "cafe"
   | "restaurant"
   | "fuel"
+  | "carwash"
   | "repair"
   | "viewpoint"
-  | "parking";
+  | "parking"
+  | "accommodation";
 
 export type PromotionTier = "basic" | "premium";
 
@@ -35,6 +37,8 @@ export type RiderPlace = {
   amenities: string[];
   openHours?: string;
   phone?: string;
+  /** 네이버 예약·호텔 예약 페이지 URL (hotels.naver.com, pcmap.place.naver.com 등) */
+  naverBookingUrl?: string;
   routeLinks: RoutePlaceLink[];
   isPartner: boolean;
   promotion?: PlacePromotion;
@@ -53,21 +57,25 @@ export type PartnerPlan = {
 };
 
 export const placeCategoryLabels: Record<PlaceCategory, string> = {
-  cafe: "라이더 카페",
+  cafe: "바이크 카페",
   restaurant: "식당",
   fuel: "주유소",
+  carwash: "세차장",
   repair: "정비소",
   viewpoint: "전망·명소",
   parking: "주차·휴게",
+  accommodation: "숙박업소",
 };
 
-export const placeCategoryEmoji: Record<PlaceCategory, string> = {
-  cafe: "☕",
-  restaurant: "🍽️",
-  fuel: "⛽",
-  repair: "🔧",
-  viewpoint: "📸",
-  parking: "🅿️",
+export const placeCategoryMarker: Record<PlaceCategory, string> = {
+  cafe: "카",
+  restaurant: "식",
+  fuel: "유",
+  carwash: "세",
+  repair: "정",
+  viewpoint: "경",
+  parking: "P",
+  accommodation: "숙",
 };
 
 export const partnerPlans: PartnerPlan[] = [
@@ -107,8 +115,8 @@ export const riderPlaces: RiderPlace[] = [
     lat: 34.812,
     lng: 127.905,
     address: "경남 남해군 설리면 설리로",
-    region: "경상",
-    description: "바이크 주차 공간이 넓고 해안 뷰가 좋은 라이더 카페.",
+    region: "경남",
+    description: "바이크 주차 공간이 넓고 해안 뷰가 좋은 바이크 카페.",
     amenities: ["바이크 주차", "테라스", "음료·디저트"],
     openHours: "09:00 - 19:00",
     routeLinks: [{ routeId: 1, sortOrder: 1, note: "설리 구간 휴식 추천" }],
@@ -128,7 +136,7 @@ export const riderPlaces: RiderPlace[] = [
     lat: 34.845,
     lng: 128.42,
     address: "경남 통영시 항만로",
-    region: "경상",
+    region: "경남",
     description: "코스 종착 후 회·해물로 마무리하기 좋은 식당.",
     amenities: ["주차", "단체석", "해물 요리"],
     openHours: "11:00 - 21:00",
@@ -144,7 +152,7 @@ export const riderPlaces: RiderPlace[] = [
   },
   {
     id: "cafe-sokcho-rider",
-    name: "속초 라이더 카페",
+    name: "속초 바이크 카페",
     category: "cafe",
     lat: 38.198,
     lng: 128.585,
@@ -185,7 +193,7 @@ export const riderPlaces: RiderPlace[] = [
     lat: 37.528,
     lng: 127.368,
     address: "경기 남양주시 팔당면",
-    region: "서울·경기",
+    region: "수도권",
     description: "팔당댐 일주 코스의 대표 휴식 거점.",
     amenities: ["바이크 주차", "간식", "화장실"],
     openHours: "07:00 - 21:00",
@@ -206,7 +214,7 @@ export const riderPlaces: RiderPlace[] = [
     lat: 37.488,
     lng: 127.492,
     address: "경기 양평군 양평읍",
-    region: "서울·경기",
+    region: "수도권",
     description: "코스 후반부 카페거리에서 여유롭게 쉬기 좋은 곳.",
     amenities: ["주차", "브런치", "야외석"],
     openHours: "09:30 - 20:30",
@@ -250,7 +258,7 @@ export const riderPlaces: RiderPlace[] = [
     lat: 35.065,
     lng: 127.748,
     address: "경남 하동군 하동읍",
-    region: "전라",
+    region: "경남",
     description: "지리산 코스 종착 후 녹차 디저트.",
     amenities: ["주차", "녹차·디저트", "야외 정원"],
     openHours: "09:00 - 18:00",
@@ -271,7 +279,7 @@ export const riderPlaces: RiderPlace[] = [
     lat: 35.225,
     lng: 128.575,
     address: "경남 창원시 마산합포구",
-    region: "경상",
+    region: "경남",
     description: "남해 코스 출발 전 연료·공기압 점검하기 좋은 24시간 주유소.",
     amenities: ["24시간", "세차", "공기압", "간단 매점"],
     openHours: "24시간",
@@ -286,7 +294,7 @@ export const riderPlaces: RiderPlace[] = [
     lat: 34.776,
     lng: 127.955,
     address: "경남 남해군 삼동면 독일마을",
-    region: "경상",
+    region: "경남",
     description: "남해 독일마을 전망과 함께 쉬어가는 인기 스팟.",
     amenities: ["전망 테라스", "바이크 주차", "브런치"],
     openHours: "10:00 - 19:00",
@@ -301,7 +309,7 @@ export const riderPlaces: RiderPlace[] = [
     lat: 34.795,
     lng: 127.88,
     address: "경남 남해군 설리면",
-    region: "경상",
+    region: "경남",
     description: "바다와 섬이 한눈에 보이는 대표 포토 스팟.",
     amenities: ["주차", "전망대", "포토존"],
     routeLinks: [{ routeId: 1, sortOrder: 4, note: "인증샷 명소" }],
@@ -465,7 +473,7 @@ export const riderPlaces: RiderPlace[] = [
     lat: 37.634,
     lng: 127.21,
     address: "경기 남양주시",
-    region: "서울·경기",
+    region: "수도권",
     description: "팔당 코스 시작 전 연료·타이어 점검.",
     amenities: ["24시간", "공기압", "세차"],
     openHours: "24시간",
@@ -480,7 +488,7 @@ export const riderPlaces: RiderPlace[] = [
     lat: 37.732,
     lng: 127.42,
     address: "경기 가평군 청평면",
-    region: "서울·경기",
+    region: "수도권",
     description: "북쪽 루프 구간 호수 뷰 카페.",
     amenities: ["호수 뷰", "주차", "브런치"],
     openHours: "09:00 - 20:00",
@@ -495,7 +503,7 @@ export const riderPlaces: RiderPlace[] = [
     lat: 37.52,
     lng: 127.372,
     address: "경기 남양주시 팔당면",
-    region: "서울·경기",
+    region: "수도권",
     description: "팔당호 전경을 담기 좋은 대표 스팟.",
     amenities: ["주차", "전망대"],
     routeLinks: [{ routeId: 4, sortOrder: 4, note: "댐 전경" }],
@@ -617,13 +625,169 @@ export const riderPlaces: RiderPlace[] = [
     status: "active",
   },
   {
+    id: "fuel-gangneung-start",
+    name: "강릉 출발 주유소",
+    category: "fuel",
+    lat: 37.756,
+    lng: 128.898,
+    address: "강원 강릉시 교동",
+    region: "강원",
+    description: "대관령·동해 코스 출발 전 연료·타이어 점검.",
+    amenities: ["24시간", "공기압", "세차"],
+    openHours: "24시간",
+    routeLinks: [{ routeId: 5, sortOrder: 0, note: "출발 전" }],
+    isPartner: false,
+    status: "active",
+  },
+  {
+    id: "fuel-sokcho-start",
+    name: "속초 출발 주유소",
+    category: "fuel",
+    lat: 38.201,
+    lng: 128.592,
+    address: "강원 속초시 중앙로",
+    region: "강원",
+    description: "설악·양양 코스 출발 전 연료 보충.",
+    amenities: ["24시간", "공기압", "매점"],
+    openHours: "24시간",
+    routeLinks: [{ routeId: 2, sortOrder: 0, note: "출발 전" }],
+    isPartner: false,
+    status: "active",
+  },
+  {
+    id: "fuel-gyeongju-mid",
+    name: "경주 중간 주유소",
+    category: "fuel",
+    lat: 35.848,
+    lng: 129.225,
+    address: "경북 경주시 보문로",
+    region: "경북",
+    description: "경주·포항 해안 코스 중간 연료 보충.",
+    amenities: ["24시간", "세차", "매점"],
+    openHours: "24시간",
+    routeLinks: [{ routeId: 7, sortOrder: 1, note: "중간 연료" }],
+    isPartner: false,
+    status: "active",
+  },
+  {
+    id: "fuel-gurye-start",
+    name: "구례 출발 주유소",
+    category: "fuel",
+    lat: 35.201,
+    lng: 127.461,
+    address: "전남 구례군 구례읍",
+    region: "전남",
+    description: "지리산 코스 출발 전 연료·공기압 점검.",
+    amenities: ["24시간", "공기압"],
+    openHours: "24시간",
+    routeLinks: [{ routeId: 8, sortOrder: 0, note: "출발 전" }],
+    isPartner: false,
+    status: "active",
+  },
+  {
+    id: "carwash-paldang-self",
+    name: "팔당 셀프 세차장",
+    category: "carwash",
+    lat: 37.526,
+    lng: 127.365,
+    address: "경기 남양주시 팔당면",
+    region: "수도권",
+    description: "팔당 일주 후 바이크 세척하기 좋은 셀프 세차. 고압·폼 세차 가능.",
+    amenities: ["셀프 세차", "고압", "건조", "24시간"],
+    openHours: "24시간",
+    routeLinks: [{ routeId: 4, sortOrder: 5, note: "귀환 후 세차" }],
+    isPartner: false,
+    status: "active",
+  },
+  {
+    id: "carwash-gangneung-coast",
+    name: "강릉 해안 세차장",
+    category: "carwash",
+    lat: 37.751,
+    lng: 128.875,
+    address: "강원 강릉시 안목해변",
+    region: "강원",
+    description: "해안 라이딩 후 바이크 세척. 넓은 주차와 건조 공간.",
+    amenities: ["셀프 세차", "건조", "바이크 주차"],
+    openHours: "07:00 - 22:00",
+    routeLinks: [{ routeId: 5, sortOrder: 4, note: "종착 후 세차" }],
+    isPartner: false,
+    status: "active",
+  },
+  {
+    id: "carwash-changwon-rider",
+    name: "마산 바이크 세차",
+    category: "carwash",
+    lat: 35.228,
+    lng: 128.578,
+    address: "경남 창원시 마산합포구",
+    region: "경남",
+    description: "남해 코스 전후 바이크 전용 세차 구역. 체인·휠 세척 가능.",
+    amenities: ["바이크 세차", "체인 세척", "공기압"],
+    openHours: "08:00 - 21:00",
+    routeLinks: [{ routeId: 1, sortOrder: 6, note: "귀환 후 세차" }],
+    isPartner: true,
+    promotion: {
+      tier: "basic",
+      headline: "라이더 세차 1,000원 할인",
+      offer: "헬멧 착용 방문 시 적용",
+      badge: "제휴 세차장",
+    },
+    status: "active",
+  },
+  {
+    id: "carwash-jeju-mid",
+    name: "제주 중앙 세차장",
+    category: "carwash",
+    lat: 33.382,
+    lng: 126.425,
+    address: "제주 서귀포시 남원읍",
+    region: "제주",
+    description: "제주 일주 중간 바이크 세척. 해안 라이딩 후 염분 제거에 좋습니다.",
+    amenities: ["셀프 세차", "고압", "건조", "24시간"],
+    openHours: "24시간",
+    routeLinks: [{ routeId: 3, sortOrder: 6, note: "중간 세차" }],
+    isPartner: false,
+    status: "active",
+  },
+  {
+    id: "carwash-sokcho-beach",
+    name: "속초 해변 세차",
+    category: "carwash",
+    lat: 38.195,
+    lng: 128.588,
+    address: "강원 속초시 조양동",
+    region: "강원",
+    description: "속초 해안 코스 종착 후 세차. 바이크 전용 구역 운영.",
+    amenities: ["바이크 세차", "건조", "공기압"],
+    openHours: "08:00 - 20:00",
+    routeLinks: [{ routeId: 2, sortOrder: 5, note: "종착 후 세차" }],
+    isPartner: false,
+    status: "active",
+  },
+  {
+    id: "carwash-gyeongju-bike",
+    name: "경주 라이더 세차",
+    category: "carwash",
+    lat: 35.855,
+    lng: 129.218,
+    address: "경북 경주시 보문로",
+    region: "경북",
+    description: "경주·포항 해안 코스 후 바이크 세척. 셀프·자동 세차 모두 가능.",
+    amenities: ["셀프 세차", "자동 세차", "건조"],
+    openHours: "07:00 - 23:00",
+    routeLinks: [{ routeId: 7, sortOrder: 5, note: "귀환 후 세차" }],
+    isPartner: false,
+    status: "active",
+  },
+  {
     id: "cafe-gyeongju-rider",
-    name: "경주 라이더 카페",
+    name: "경주 바이크 카페",
     category: "cafe",
     lat: 35.852,
     lng: 129.22,
     address: "경북 경주시 보문로",
-    region: "경상",
+    region: "경북",
     description: "경주 출발 전 커피와 간단 식사.",
     amenities: ["바이크 주차", "Wi-Fi", "브런치"],
     openHours: "08:00 - 20:00",
@@ -638,7 +802,7 @@ export const riderPlaces: RiderPlace[] = [
     lat: 35.79,
     lng: 129.332,
     address: "경북 경주시 불국로",
-    region: "경상",
+    region: "경북",
     description: "경주 역사와 함께 잠시 멈추기 좋은 구간.",
     amenities: ["주차", "문화유적", "카페 인근"],
     routeLinks: [{ routeId: 7, sortOrder: 1, note: "경주 관광 연계" }],
@@ -652,7 +816,7 @@ export const riderPlaces: RiderPlace[] = [
     lat: 35.535,
     lng: 129.305,
     address: "울산 남구 삼산동",
-    region: "경상",
+    region: "경남",
     description: "울산 경유 구간 바다 전망 카페.",
     amenities: ["전망", "주차", "음료"],
     openHours: "09:00 - 21:00",
@@ -667,7 +831,7 @@ export const riderPlaces: RiderPlace[] = [
     lat: 36.058,
     lng: 129.565,
     address: "경북 포항시 호미곶면",
-    region: "경상",
+    region: "경북",
     description: "한반도 최동단 상생의 손. 일출·바다 명소.",
     amenities: ["주차", "전망", "기념품"],
     routeLinks: [{ routeId: 7, sortOrder: 3, note: "종착 명소" }],
@@ -675,7 +839,7 @@ export const riderPlaces: RiderPlace[] = [
     promotion: {
       tier: "premium",
       headline: "기념품 10% 할인",
-      offer: "라이더모임 방문 인증 시",
+      offer: "바이크커뮤니티 방문 인증 시",
       badge: "프리미엄 제휴",
     },
     status: "active",
@@ -687,7 +851,7 @@ export const riderPlaces: RiderPlace[] = [
     lat: 36.015,
     lng: 129.555,
     address: "경북 포항시 남구",
-    region: "경상",
+    region: "경북",
     description: "과메기·회로 유명한 포항 종착 식당.",
     amenities: ["주차", "회·해산물", "단체석"],
     openHours: "11:00 - 22:00",
@@ -708,7 +872,7 @@ export const riderPlaces: RiderPlace[] = [
     lat: 35.198,
     lng: 127.458,
     address: "전남 구례군 구례읍",
-    region: "전라",
+    region: "전남",
     description: "지리산 코스 출발 전 집결·커피.",
     amenities: ["바이크 주차", "Wi-Fi", "간식"],
     openHours: "07:00 - 19:00",
@@ -723,7 +887,7 @@ export const riderPlaces: RiderPlace[] = [
     lat: 35.08,
     lng: 127.48,
     address: "전남 구례군 토지면",
-    region: "전라",
+    region: "전남",
     description: "지리산 능선과 계곡이 보이는 구간.",
     amenities: ["주차", "포토존"],
     routeLinks: [{ routeId: 8, sortOrder: 2, note: "산악 전망" }],
@@ -737,7 +901,7 @@ export const riderPlaces: RiderPlace[] = [
     lat: 35.068,
     lng: 127.485,
     address: "전남 구례군",
-    region: "전라",
+    region: "전남",
     description: "섬진강 재첩국·민물매운탕으로 든든하게.",
     amenities: ["주차", "한식", "단체석"],
     openHours: "10:00 - 20:00",
@@ -752,11 +916,136 @@ export const riderPlaces: RiderPlace[] = [
     lat: 35.062,
     lng: 127.742,
     address: "경남 하동군",
-    region: "전라",
+    region: "경남",
     description: "종착 전 간단 점검·공기압 보충.",
     amenities: ["공기압", "세척", "휴게"],
     openHours: "09:00 - 18:00",
     routeLinks: [{ routeId: 8, sortOrder: 4, note: "종착 전 점검" }],
+    isPartner: false,
+    status: "active",
+  },
+  {
+    id: "lodging-namhae-pension",
+    name: "쏠비치 남해",
+    category: "accommodation",
+    lat: 34.728,
+    lng: 127.878,
+    address: "경남 남해군 설리면 설리해안로 999",
+    region: "경남",
+    description:
+      "남해 해안 일주 전후 1박에 적합한 리조트. 넓은 주차와 인피니티 풀, 세탁·건조 공간을 갖추고 있어 장거리 라이딩 후 휴식에 좋습니다.",
+    amenities: ["바이크 주차", "실외 세척", "세탁·건조", "조식", "인피니티 풀"],
+    openHours: "15:00 체크인 · 11:00 체크아웃",
+    naverBookingUrl:
+      "https://map.naver.com/p/search/%EB%82%A8%ED%95%B4%20%EA%B5%B0%EC%B2%AD%20%EC%88%99%EB%B0%95/place/1032374380?placePath=/home?abtExp=NEW-PLACE-SEARCH:4&bk_query=%EB%82%A8%ED%95%B4%20%EA%B5%B0%EC%B2%AD%20%EC%88%99%EB%B0%95&entry=pll&from=nx&fromNxList=true&from=map&fromPanelNum=2&timestamp=202607082356&locale=ko&svcName=map_pcv5&searchText=%EB%82%A8%ED%95%B4%20%EA%B5%B0%EC%B2%AD%20%EC%88%99%EB%B0%95&searchType=place",
+    routeLinks: [{ routeId: 1, sortOrder: 10, note: "1박 숙박 · 해안 일주 전후" }],
+    isPartner: true,
+    promotion: {
+      tier: "basic",
+      headline: "리조트 숙박 패키지",
+      offer: "네이버 예약 시 객실 패키지 확인",
+      badge: "제휴 숙소",
+    },
+    status: "active",
+  },
+  {
+    id: "lodging-sokcho-rider-inn",
+    name: "라마다 속초 호텔",
+    category: "accommodation",
+    lat: 38.119,
+    lng: 128.601,
+    address: "강원 속초시 대포동 896-16",
+    region: "강원",
+    description:
+      "설악·속초 해안 바리 전후 1박에 적합한 호텔. 넓은 발코니와 주차, 조식을 제공하며 2일차 출발 전 충분히 쉬기 좋습니다.",
+    amenities: ["바이크 주차", "발코니", "조식", "세탁"],
+    openHours: "15:00 체크인 · 11:00 체크아웃",
+    naverBookingUrl:
+      "https://hotels.naver.com/accommodation/search/detail/domestic/37942683/rates?entry=bikecommunity",
+    routeLinks: [{ routeId: 2, sortOrder: 10, note: "1박 숙박 · 2일차 출발 전" }],
+    isPartner: false,
+    status: "active",
+  },
+  {
+    id: "lodging-jeju-city-hotel",
+    name: "롯데시티호텔 제주",
+    category: "accommodation",
+    lat: 33.485,
+    lng: 126.488,
+    address: "제주 제주시 도령로 83",
+    region: "제주",
+    description:
+      "제주 일주 1일차 종료 후 묵기 좋은 시내 호텔. 실내 주차와 공항 접근성이 좋아 장비 관리와 다음 날 출발이 편합니다.",
+    amenities: ["실내 주차", "충전 콘센트", "세탁", "Wi-Fi", "공항 셔틀"],
+    openHours: "15:00 체크인 · 11:00 체크아웃",
+    naverBookingUrl:
+      "https://hotels.naver.com/accommodation/search?keyword=%EB%A1%9C%ED%8B%80%EC%8B%9C%ED%8B%80%ED%98%B8%ED%85%94%20%EC%A0%9C%EC%A3%BC&entry=bikecommunity",
+    routeLinks: [{ routeId: 3, sortOrder: 10, note: "1박 · 서쪽 해안 구간 후" }],
+    isPartner: true,
+    promotion: {
+      tier: "premium",
+      headline: "일주 라이더 숙박",
+      offer: "네이버 예약 시 객실·패키지 비교",
+      badge: "프리미엄 제휴",
+    },
+    status: "active",
+  },
+  {
+    id: "lodging-jeju-seogwipo-pension",
+    name: "롯데호텔 제주",
+    category: "accommodation",
+    lat: 33.248,
+    lng: 126.41,
+    address: "제주 서귀포시 중문관광로72번길 35",
+    region: "제주",
+    description:
+      "제주 일주 2일차·남부 해안 구간 후 머물기 좋은 리조트 호텔. 넓은 주차와 다양한 부대시설로 장거리 라이딩 후 회복에 적합합니다.",
+    amenities: ["바이크 주차", "실내 수영장", "오션뷰", "세탁", "레스토랑"],
+    openHours: "15:00 체크인 · 11:00 체크아웃",
+    naverBookingUrl: "https://booking.naver.com/booking/3/bizes/167596?entry=bikecommunity",
+    routeLinks: [{ routeId: 3, sortOrder: 11, note: "2박 · 남부·동쪽 해안 전" }],
+    isPartner: false,
+    status: "active",
+  },
+  {
+    id: "lodging-gyeongju-rider-guesthouse",
+    name: "라한셀렉트 경주",
+    category: "accommodation",
+    lat: 35.842,
+    lng: 129.285,
+    address: "경북 경주시 보문로 338",
+    region: "경북",
+    description:
+      "경주·포항 해안 바리 1박 2일 일정에 맞춘 5성급 호텔. 보문호 전망과 넓은 주차, 세탁 시설로 라이더 숙박에 적합합니다.",
+    amenities: ["바이크 주차", "실내 수영장", "세탁", "조식", "Wi-Fi"],
+    openHours: "15:00 체크인 · 11:00 체크아웃",
+    naverBookingUrl:
+      "https://hotels.naver.com/accommodation/search?keyword=%EB%9D%BC%ED%95%9C%EC%85%80%EB%A0%89%ED%8A%B8%20%EA%B2%BD%EC%A3%BC&entry=bikecommunity",
+    routeLinks: [{ routeId: 7, sortOrder: 10, note: "1박 · 2일차 포항 향해 출발" }],
+    isPartner: true,
+    promotion: {
+      tier: "basic",
+      headline: "1박 2일 라이더 패키지",
+      offer: "네이버 예약으로 날짜·객실 선택",
+      badge: "제휴 숙소",
+    },
+    status: "active",
+  },
+  {
+    id: "lodging-donghae-coast-motel",
+    name: "동해 오션투유토피아",
+    category: "accommodation",
+    lat: 37.522,
+    lng: 129.118,
+    address: "강원 동해시 해수욕장길 20",
+    region: "강원",
+    description:
+      "동해·삼척 해안도로를 2일에 나눠 달릴 때 1박하기 좋은 호텔. 지하 주차와 세탁 시설로 바이크 보관·장비 관리가 편합니다.",
+    amenities: ["지하 주차", "세탁", "조식", "Wi-Fi"],
+    openHours: "15:00 체크인 · 11:00 체크아웃",
+    naverBookingUrl:
+      "https://hotels.naver.com/accommodation/search?keyword=%EB%8F%99%ED%95%B4%20%EC%98%A4%EC%85%98%ED%88%AC%EC%9C%A0%ED%86%A0%ED%94%BC%EC%95%84&entry=bikecommunity",
+    routeLinks: [{ routeId: 6, sortOrder: 10, note: "1박 · 2일차 삼척 구간 전" }],
     isPartner: false,
     status: "active",
   },
@@ -796,6 +1085,28 @@ export function getPlacesByCategory(category: PlaceCategory): RiderPlace[] {
   );
 }
 
+export const servicePlaceCategories = ["fuel"] as const;
+export type ServicePlaceCategory = (typeof servicePlaceCategories)[number];
+
+export function isServicePlace(
+  place: RiderPlace
+): place is RiderPlace & { category: ServicePlaceCategory } {
+  return place.status === "active" && place.category === "fuel";
+}
+
+export function getServicePlaces(): RiderPlace[] {
+  return riderPlaces.filter(isServicePlace);
+}
+
+export function partitionRoutePlaces(places: RiderPlace[]): {
+  accommodations: RiderPlace[];
+  others: RiderPlace[];
+} {
+  const accommodations = places.filter((place) => place.category === "accommodation");
+  const others = places.filter((place) => place.category !== "accommodation");
+  return { accommodations, others };
+}
+
 export function getActivePlaceCount(): number {
   return riderPlaces.filter((place) => place.status === "active").length;
 }
@@ -816,6 +1127,7 @@ export type PlaceRegistrationRequest = {
   description: string;
   promotionHeadline?: string;
   planId: PromotionTier;
+  naverBookingUrl?: string;
 };
 
 export const emptyRegistrationRequest: PlaceRegistrationRequest = {
@@ -829,4 +1141,5 @@ export const emptyRegistrationRequest: PlaceRegistrationRequest = {
   description: "",
   promotionHeadline: "",
   planId: "basic",
+  naverBookingUrl: "",
 };

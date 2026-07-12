@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import PortalModal from "@/components/portal/PortalModal";
 import {
   galleryCategories,
   type GalleryCategory,
@@ -84,10 +85,10 @@ export default function GalleryUploadForm({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4">
+    <PortalModal onClose={onClose}>
       <form
         onSubmit={handleSubmit}
-        className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl sm:p-8"
+        className="portal-modal-panel max-w-xl overflow-y-auto p-4 shadow-2xl sm:p-8"
       >
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold text-slate-800">📸 사진 올리기</h2>
@@ -129,7 +130,7 @@ export default function GalleryUploadForm({
             <select
               value={category}
               onChange={(event) => setCategory(event.target.value as GalleryCategory)}
-              className="mt-2 w-full rounded-2xl border border-orange-100 bg-orange-50/50 px-4 py-3 text-sm outline-none focus:border-orange-300"
+              className="mt-2 w-full rounded-2xl border border-signature/20 bg-signature-light/40 px-4 py-3 text-sm outline-none focus:border-signature"
             >
               {galleryCategories
                 .filter((item) => item !== "전체")
@@ -147,7 +148,7 @@ export default function GalleryUploadForm({
               value={caption}
               onChange={(event) => setCaption(event.target.value)}
               rows={3}
-              className="mt-2 w-full rounded-2xl border border-orange-100 bg-orange-50/50 px-4 py-3 text-sm outline-none focus:border-orange-300"
+              className="mt-2 w-full rounded-2xl border border-signature/20 bg-signature-light/40 px-4 py-3 text-sm outline-none focus:border-signature"
               placeholder="라이딩 후기, 코스 정보 등을 적어주세요."
             />
           </label>
@@ -162,12 +163,12 @@ export default function GalleryUploadForm({
         <button
           type="submit"
           disabled={submitting}
-          className="mt-6 w-full rounded-2xl bg-orange-500 py-3 text-sm font-bold text-white transition hover:bg-orange-600 disabled:opacity-60"
+          className="portal-btn mt-6 w-full py-3 text-sm disabled:opacity-60"
         >
           {submitting ? "업로드 중..." : "갤러리에 등록"}
         </button>
       </form>
-    </div>
+    </PortalModal>
   );
 }
 
@@ -189,7 +190,7 @@ function Input({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         required={required}
-        className="mt-2 w-full rounded-2xl border border-orange-100 bg-orange-50/50 px-4 py-3 text-sm outline-none focus:border-orange-300"
+        className="mt-2 w-full rounded-2xl border border-signature/20 bg-signature-light/40 px-4 py-3 text-sm outline-none focus:border-signature"
       />
     </label>
   );

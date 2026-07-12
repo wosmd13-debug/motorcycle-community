@@ -1,55 +1,101 @@
-"use client";
-
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import type { WeatherResponse } from "@/lib/weather";
+import {
+  formatWeatherUpdated,
+  goNoGoLabel,
+} from "@/lib/weather";
+import { fetchWeather } from "@/lib/weather-service";
 
-export default function WeatherPreview() {
-  const [weather, setWeather] = useState<WeatherResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+type WeatherPreviewProps = {
+  compact?: boolean;
+};
 
-  useEffect(() => {
-    fetch("/api/weather?city=Seoul%2CKR")
-      .then(async (response) => {
-        if (!response.ok) return null;
-        return response.json() as Promise<WeatherResponse>;
-      })
-      .then((data) => setWeather(data))
-      .finally(() => setLoading(false));
-  }, []);
+export default async function WeatherPreview({ compact = false }: WeatherPreviewProps) {
+  const result = await fetchWeather({ city: "Seoul,KR", fresh: true });
+
+  if (compact) {
+    return (
+      <section className="portal-panel overflow-hidden">
+        <div className="portal-panel-head">
+          <h2 className="portal-panel-title">오늘의 날씨</h2>
+          <Link href="/weather" className="portal-panel-more">
+            상세
+          </Link>
+        </div>
+        <div className="bg-signature-light/30 p-3">
+          {result.ok ? (
+            <>
+              <p className="text-xs text-stone-500">{result.data.current.location}</p>
+              <p className="mt-1 text-2xl font-bold text-signature">
+                {result.data.current.temperature}°C
+              </p>
+              <p className="mt-1 text-sm text-slate-600">{result.data.current.condition}</p>
+              <p className="mt-2 text-xs leading-5 text-slate-500">
+                {result.ok
+                  ? `${goNoGoLabel(result.data.current.goNoGo.verdict)} · ${result.data.current.ridingTip}`
+                  : ""}
+              </p>
+              <p className="mt-2 text-[11px] text-slate-400">
+                {formatWeatherUpdated(result.data.updatedAt)} 기준
+              </p>
+            </>
+          ) : (
+            <p className="text-xs leading-5 text-slate-500">
+              날씨 API 설정 후 표시됩니다.
+            </p>
+          )}
+        </div>
+      </section>
+    );
+  }
 
   return (
-    <div className="rounded-3xl border border-orange-100 bg-white p-6 shadow-sm">
-      <h2 className="text-xl font-bold text-slate-800">☀️ 오늘의 라이딩 날씨</h2>
-
-      {loading ? (
-        <p className="mt-4 text-sm text-slate-500">날씨 불러오는 중...</p>
-      ) : weather ? (
-        <>
-          <p className="mt-1 text-sm text-orange-500">{weather.current.location}</p>
-          <div className="mt-3 flex items-center gap-3">
-            <span className="text-3xl">{weather.current.emoji}</span>
-            <p className="text-3xl font-bold text-orange-500">
-              {weather.current.temperature}°C
+    <section className="portal-panel overflow-hidden">
+      <div className="portal-panel-head">
+        <h2 className="portal-panel-title">오늘의 라이딩 날씨</h2>
+        <Link href="/weather" className="portal-panel-more">
+          자세히 보기
+        </Link>
+      </div>
+      <div className="p-4">
+        {result.ok ? (
+          <>
+            <p className="text-sm text-slate-500">{result.data.current.location}</p>
+            <p className="mt-2 text-3xl font-bold text-signature">
+              {result.data.current.temperature}°C
             </p>
-          </div>
-          <p className="mt-1 capitalize text-slate-600">{weather.current.condition}</p>
-          <p className="mt-4 text-sm leading-6 text-slate-500">
-            {weather.current.ridingTip}
-          </p>
-        </>
-      ) : (
-        <p className="mt-4 text-sm leading-6 text-slate-500">
-          실시간 날씨 API 키를 설정하면 서울 기준 날씨가 표시됩니다.
-        </p>
-      )}
+            <p className="mt-1 text-slate-600">{result.data.current.condition}</p>
+            <p className="mt-3 text-sm leading-6 text-slate-500">
+              {result.data.current.ridingTip}
+            </p>
+            <p className="mt-2 text-xs text-slate-400">
+              OpenWeatherMap · {formatWeatherUpdated(result.data.updatedAt)} 기준
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="text-sm text-red-600">{result.error}</p>
+            <p className="mt-2 text-xs text-slate-500">
+              .env.local에 OPENWEATHERMAP_API_KEY를 저장한 뒤 개발 서버를 재시작해
+              주세요.
+            </p>
+          </>
+        )}
+      </div>
+    </section>
+  );
+}
 
-      <Link
-        href="/weather"
-        className="mt-4 inline-block text-sm font-semibold text-orange-500"
-      >
-        자세히 보기 →
-      </Link>
-    </div>
+export function WeatherPreviewSkeleton() {
+  return (
+    <section className="portal-panel animate-pulse">
+      <div className="portal-panel-head">
+        <div className="h-4 w-24 rounded bg-slate-200" />
+      </div>
+      <div className="space-y-2 p-3">
+        <div className="h-3 w-16 rounded bg-slate-100" />
+        <div className="h-8 w-20 rounded bg-slate-200" />
+        <div className="h-3 w-full rounded bg-slate-100" />
+      </div>
+    </section>
   );
 }

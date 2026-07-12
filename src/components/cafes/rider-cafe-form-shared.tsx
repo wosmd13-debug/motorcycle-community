@@ -48,7 +48,11 @@ type FieldProps = {
   ) => void;
 };
 
-export function RiderCafeBasicFields({ values, onChange }: FieldProps) {
+export function RiderCafeBasicFields({
+  values,
+  onChange,
+  hideAuthor = false,
+}: FieldProps & { hideAuthor?: boolean }) {
   return (
     <>
       <Input
@@ -57,12 +61,14 @@ export function RiderCafeBasicFields({ values, onChange }: FieldProps) {
         onChange={(value) => onChange("name", value)}
         required
       />
-      <Input
-        label="등록자"
-        value={values.author}
-        onChange={(value) => onChange("author", value)}
-        required
-      />
+      {!hideAuthor && (
+        <Input
+          label="등록자"
+          value={values.author}
+          onChange={(value) => onChange("author", value)}
+          required
+        />
+      )}
       <Input
         label="주소"
         value={values.address}
@@ -78,7 +84,7 @@ export function RiderCafeBasicFields({ values, onChange }: FieldProps) {
           onChange={(event) =>
             onChange("region", event.target.value as RiderCafeRegion)
           }
-          className="mt-2 w-full rounded-2xl border border-orange-100 bg-orange-50/50 px-4 py-3 text-sm outline-none focus:border-orange-300"
+          className="mt-2 w-full rounded-2xl border border-signature/20 bg-signature-light/40 px-4 py-3 text-sm outline-none focus:border-signature"
         >
           {riderCafeCategories
             .filter((item) => item !== "전체")
@@ -96,7 +102,7 @@ export function RiderCafeBasicFields({ values, onChange }: FieldProps) {
           value={values.description}
           onChange={(event) => onChange("description", event.target.value)}
           rows={3}
-          className="mt-2 w-full rounded-2xl border border-orange-100 bg-orange-50/50 px-4 py-3 text-sm outline-none focus:border-orange-300"
+          className="mt-2 w-full rounded-2xl border border-signature/20 bg-signature-light/40 px-4 py-3 text-sm outline-none focus:border-signature"
           placeholder="카페 분위기, 추천 메뉴, 라이더에게 좋은 점 등"
         />
       </label>
@@ -113,7 +119,7 @@ export function RiderCafeBasicFields({ values, onChange }: FieldProps) {
 
 export function RiderCafeBusinessFields({ values, onChange }: FieldProps) {
   return (
-    <div className="space-y-4 rounded-2xl border border-orange-100 bg-orange-50/40 p-4">
+    <div className="space-y-4 rounded-2xl border border-signature/20 bg-signature-light/40 p-4">
       <div>
         <p className="text-sm font-bold text-slate-800">업체 정보</p>
         <p className="mt-1 text-xs text-slate-500">
@@ -147,7 +153,7 @@ export function RiderCafeBusinessFields({ values, onChange }: FieldProps) {
           value={values.directions}
           onChange={(event) => onChange("directions", event.target.value)}
           rows={4}
-          className="mt-2 w-full rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm outline-none focus:border-orange-300"
+          className="mt-2 w-full rounded-2xl border border-signature/20 bg-white px-4 py-3 text-sm outline-none focus:border-signature"
           placeholder="IC, 랜드마크, 바이크 주차 위치 등 상세 안내"
         />
       </label>
@@ -187,7 +193,7 @@ function Input({
         onChange={(event) => onChange(event.target.value)}
         required={required}
         placeholder={placeholder}
-        className="mt-2 w-full rounded-2xl border border-orange-100 bg-orange-50/50 px-4 py-3 text-sm outline-none focus:border-orange-300"
+        className="mt-2 w-full rounded-2xl border border-signature/20 bg-signature-light/40 px-4 py-3 text-sm outline-none focus:border-signature"
       />
     </label>
   );

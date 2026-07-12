@@ -1,0 +1,18 @@
+# 단일 VPS 배포용. data/와 uploads는 볼륨으로 영속화하세요.
+# 사용: docker compose up -d --build
+
+services:
+  web:
+    build: .
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.production
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      HOSTNAME: "0.0.0.0"
+    volumes:
+      - ./data:/app/data
+      - ./public/uploads:/app/public/uploads
+    restart: unless-stopped

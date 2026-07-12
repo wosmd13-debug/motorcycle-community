@@ -1,17 +1,17 @@
-"use client";
+﻿"use client";
 
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import RouteCard from "@/components/routes/RouteCard";
 import RouteDetail from "@/components/routes/RouteDetail";
+import type { RiderCafeEntry } from "@/lib/rider-cafe";
 import MapAccessNotice from "@/components/map/MapAccessNotice";
-import MapEngineStatus from "@/components/map/MapEngineStatus";
 import {
-  bariRoutes,
   filterRoutes,
   routeDifficulties,
   routeRegions,
   routeTypes,
+  type BariRoute,
   type RouteDifficulty,
   type RouteType,
 } from "@/lib/routes-data";
@@ -19,22 +19,37 @@ import {
 const RouteMap = dynamic(() => import("@/components/routes/RouteMap"), {
   ssr: false,
   loading: () => (
-    <div className="flex min-h-[320px] items-center justify-center rounded-3xl border border-orange-100 bg-orange-50 text-sm text-slate-500 lg:min-h-[420px]">
+    <div className="flex min-h-[320px] items-center justify-center rounded-3xl border border-signature/20 bg-signature-light text-sm text-slate-500 lg:min-h-[420px]">
       지도 불러오는 중...
     </div>
   ),
 });
 
-export default function RouteExplorer() {
-  const [selectedId, setSelectedId] = useState(bariRoutes[0]?.id ?? 1);
+export default function RouteExplorer({
+  initialBariRoutes = [],
+  initialQuery = "",
+  initialOpenId = "",
+  initialCommunityCafes = [],
+}: {
+  initialBariRoutes?: BariRoute[];
+  initialQuery?: string;
+  initialOpenId?: string;
+  initialCommunityCafes?: RiderCafeEntry[];
+} = {}) {
+  const parsedOpenId = initialOpenId ? Number(initialOpenId) : NaN;
+  const [selectedId, setSelectedId] = useState(
+    Number.isFinite(parsedOpenId)
+      ? parsedOpenId
+      : (initialBariRoutes[0]?.id ?? 1)
+  );
   const [region, setRegion] = useState("전체");
   const [difficulty, setDifficulty] = useState<RouteDifficulty | "전체">("전체");
   const [type, setType] = useState<RouteType | "전체">("전체");
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialQuery);
 
   const filteredRoutes = useMemo(
-    () => filterRoutes({ region, difficulty, type, query }),
-    [region, difficulty, type, query]
+    () => filterRoutes(initialBariRoutes, { region, difficulty, type, query }),
+    [initialBariRoutes, region, difficulty, type, query]
   );
 
   const selectedRoute =
@@ -51,7 +66,7 @@ export default function RouteExplorer() {
 
   return (
     <div className="mt-8 space-y-6">
-      <div className="rounded-3xl border border-orange-100 bg-white p-5 shadow-sm">
+      <div className="rounded-3xl border border-signature/20 bg-white p-5 shadow-sm">
         <label className="block text-sm font-semibold text-slate-700">
           코스 검색
         </label>
@@ -60,7 +75,7 @@ export default function RouteExplorer() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="코스명, 지역, 키워드로 검색..."
-          className="mt-2 w-full rounded-2xl border border-orange-100 bg-orange-50/50 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-orange-300 focus:bg-white"
+          className="mt-2 w-full rounded-2xl border border-signature/20 bg-signature-light/50 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-signature focus:bg-white"
         />
 
         <div className="mt-4 space-y-3">
@@ -112,18 +127,15 @@ export default function RouteExplorer() {
       </div>
 
       <p className="text-sm text-slate-500">
-        총 <strong className="text-orange-600">{filteredRoutes.length}</strong>
+        총 <strong className="text-signature-dark">{filteredRoutes.length}</strong>
         개의 바리 코스
       </p>
 
       <MapAccessNotice />
 
-      <MapEngineStatus />
-
       {filteredRoutes.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-orange-200 bg-orange-50/50 px-6 py-16 text-center">
-          <p className="text-4xl">🔍</p>
-          <p className="mt-4 font-semibold text-slate-700">
+        <div className="rounded-3xl border border-dashed border-signature/30 bg-signature-light/50 px-6 py-16 text-center">
+          <p className="font-semibold text-slate-700">
             조건에 맞는 코스가 없습니다
           </p>
           <p className="mt-2 text-sm text-slate-500">
@@ -146,7 +158,10 @@ export default function RouteExplorer() {
           {selectedRoute && (
             <div className="min-w-0 space-y-6">
               <RouteMap route={selectedRoute} />
-              <RouteDetail route={selectedRoute} />
+              <RouteDetail
+                route={selectedRoute}
+                communityCafes={initialCommunityCafes}
+              />
             </div>
           )}
         </div>
@@ -185,8 +200,8 @@ function FilterChip({
       onClick={onClick}
       className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
         active
-          ? "bg-orange-500 text-white"
-          : "bg-white text-slate-600 ring-1 ring-orange-100 hover:bg-orange-50"
+          ? "bg-signature-dark text-white"
+          : "bg-white text-slate-600 ring-1 ring-signature/20 hover:bg-signature-light"
       }`}
     >
       {children}

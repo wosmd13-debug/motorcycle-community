@@ -45,7 +45,40 @@ export function BoardCategoryGuide({
   compact = false,
   hideAllOption = false,
 }: BoardCategoryGuideProps) {
-  const selectedMeta = getBoardCategoryMeta(selected);
+  const selectedMeta = compact ? null : getBoardCategoryMeta(selected);
+
+  if (compact) {
+    const categories: Array<BoardCategory | "전체"> = hideAllOption
+      ? [...writableBoardCategories]
+      : ["전체", ...writableBoardCategories];
+
+    return (
+      <div className="flex flex-wrap gap-2">
+        {categories.map((category) => {
+          const meta =
+            category === "전체"
+              ? { label: "전체", emoji: "📋" }
+              : boardCategoryMeta[category];
+          const active = selected === category;
+
+          return (
+            <button
+              key={category}
+              type="button"
+              onClick={() => onSelect?.(category)}
+              className={`portal-filter-chip shrink-0 rounded-full transition ${
+                active
+                  ? "bg-slate-800 text-white shadow-sm"
+                  : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50"
+              }`}
+            >
+              {meta.emoji} {meta.label}
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

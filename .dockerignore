@@ -1,0 +1,14 @@
+node_modules
+.next
+.git
+backups
+data/**
+!data/.gitkeep
+public/uploads/**
+!public/uploads/**/.gitkeep
+.env*
+*.md
+!DEPLOY.md
+npm-debug.log*
+Dockerfile
+docker-compose.yml

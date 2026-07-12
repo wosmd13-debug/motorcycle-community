@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useAuth } from "@/components/auth/AuthProvider";
+import PortalModal from "@/components/portal/PortalModal";
 import { BoardCategoryGuide } from "@/components/board/BoardCategoryGuide";
 import {
   boardCategoryMeta,
@@ -19,9 +21,9 @@ export default function BoardWriteForm({
   onCreated,
   initialCategory = "자유",
 }: BoardWriteFormProps) {
+  const { user } = useAuth();
   const [category, setCategory] = useState<BoardCategory>(initialCategory);
   const [title, setTitle] = useState("");
-  const [author, setAuthor] = useState("");
   const [content, setContent] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
@@ -67,7 +69,6 @@ export default function BoardWriteForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title,
-          author,
           content,
           category,
           imageUrls,
@@ -89,10 +90,10 @@ export default function BoardWriteForm({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4">
+    <PortalModal onClose={onClose}>
       <form
         onSubmit={handleSubmit}
-        className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl sm:p-8"
+        className="portal-modal-panel max-w-2xl overflow-y-auto p-4 shadow-2xl sm:p-8"
       >
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold text-slate-800">✍️ 글쓰기</h2>
@@ -128,7 +129,9 @@ export default function BoardWriteForm({
             required
             placeholder={meta.titlePlaceholder}
           />
-          <Input label="작성자" value={author} onChange={setAuthor} required />
+          <p className="text-sm text-slate-500">
+            작성자: <strong className="text-slate-800">{user?.nickname}</strong>
+          </p>
 
           <label className="block">
             <span className="text-sm font-semibold text-slate-700">내용</span>
@@ -182,7 +185,7 @@ export default function BoardWriteForm({
           {submitting ? "등록 중..." : `${meta.emoji} ${meta.label} 게시판에 등록`}
         </button>
       </form>
-    </div>
+    </PortalModal>
   );
 }
 

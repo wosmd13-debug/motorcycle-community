@@ -1,16 +1,41 @@
-import PageHeader from "@/components/PageHeader";
 import BoardExplorer from "@/components/board/BoardExplorer";
+import { boardCategories } from "@/lib/board";
+import { readBoardPosts } from "@/lib/board-store";
+import { redirect } from "next/navigation";
 
-export default function BoardPage() {
+export const dynamic = "force-dynamic";
+
+type BoardPageProps = {
+  searchParams: Promise<{ q?: string; id?: string; category?: string }>;
+};
+
+function resolveBoardCategory(
+  value?: string
+): (typeof boardCategories)[number] {
+  if (!value) return "전체";
+  return boardCategories.includes(value as (typeof boardCategories)[number])
+    ? (value as (typeof boardCategories)[number])
+    : "전체";
+}
+
+export default async function BoardPage({ searchParams }: BoardPageProps) {
+  const { q, id, category } = await searchParams;
+
+  if (id) {
+    redirect(`/board/${id}`);
+  }
+
+  const initialPosts = await readBoardPosts();
+
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
-      <PageHeader
-        emoji="💬"
-        title="게시판"
-        description="카테고리별로 글을 구분해 올릴 수 있어요. 자유·코스·정비·장비·모임 중 어디에 쓸지 헷갈리면 아래 안내를 확인하세요."
-      />
-
-      <BoardExplorer />
+    <div className="portal-page">
+      <div className="portal-container">
+        <BoardExplorer
+          initialPosts={initialPosts}
+          initialQuery={q ?? ""}
+          initialCategory={resolveBoardCategory(category)}
+        />
+      </div>
     </div>
   );
 }

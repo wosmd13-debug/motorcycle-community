@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { BariRoute } from "@/lib/routes-data";
@@ -23,7 +23,8 @@ import {
 } from "@/lib/naver-maps";
 import { useNaverMapsReady } from "@/components/map/NaverMapsProvider";
 import { NAVER_MAP_CLIENT_ID } from "@/lib/map-config";
-import { getPlacesForRoute, placeCategoryEmoji } from "@/lib/places-data";
+import { buildPlaceMapPopupHtml } from "@/lib/naver-booking";
+import { getPlacesForRoute, placeCategoryLabels, placeCategoryMarker } from "@/lib/places-data";
 import { useLatest } from "@/lib/use-latest";
 
 type NaverRouteMapProps = {
@@ -31,7 +32,7 @@ type NaverRouteMapProps = {
   onAuthFailure?: () => void;
 };
 
-const ROUTE_COLOR = "#f97316";
+const ROUTE_COLOR = "#22c55e";
 
 function buildPopup(name: string, note?: string) {
   return `
@@ -42,14 +43,19 @@ function buildPopup(name: string, note?: string) {
   `;
 }
 
-function buildPlacePopup(name: string, category: string, offer?: string) {
-  return `
-    <div style="padding:10px 12px;font-family:sans-serif;min-width:140px;">
-      <strong style="font-size:13px;color:#1e293b;">${name}</strong>
-      <p style="margin:4px 0 0;font-size:12px;color:#64748b;">${category}</p>
-      ${offer ? `<p style="margin:4px 0 0;font-size:12px;color:#f97316;font-weight:600;">🎁 ${offer}</p>` : ""}
-    </div>
-  `;
+function buildPlacePopup(
+  name: string,
+  category: string,
+  offer?: string,
+  naverBookingUrl?: string
+) {
+  return buildPlaceMapPopupHtml({
+    name,
+    category: "accommodation",
+    categoryLabel: category,
+    offer,
+    naverBookingUrl,
+  });
 }
 
 function formatDuration(ms: number) {
@@ -212,7 +218,7 @@ export default function NaverRouteMap({
             position,
             title: place.name,
             icon: {
-              content: `<div style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:9999px;background:${isPremium ? "#f59e0b" : "#fff"};border:2px solid ${isPremium ? "#d97706" : ROUTE_COLOR};box-shadow:0 2px 8px rgba(0,0,0,.15);font-size:16px;">${placeCategoryEmoji[place.category]}</div>`,
+              content: `<div style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:9999px;background:${isPremium ? "#f59e0b" : "#fff"};border:2px solid ${isPremium ? "#d97706" : ROUTE_COLOR};box-shadow:0 2px 8px rgba(0,0,0,.15);font-size:12px;font-weight:700;color:${isPremium ? "#fff" : ROUTE_COLOR};">${placeCategoryMarker[place.category]}</div>`,
               size: new activeMaps.Size(32, 32),
               anchor: new activeMaps.Point(16, 16),
             },
@@ -222,8 +228,9 @@ export default function NaverRouteMap({
             openInfo(
               buildPlacePopup(
                 place.name,
-                place.category === "cafe" ? "라이더 카페" : place.category,
-                place.promotion?.headline
+                placeCategoryLabels[place.category as keyof typeof placeCategoryLabels] ?? place.category,
+                place.promotion?.headline,
+                place.naverBookingUrl
               ),
               marker,
               map
@@ -366,7 +373,7 @@ export default function NaverRouteMap({
 
   return (
     <div className="space-y-2">
-      <div className="relative h-[320px] overflow-hidden rounded-3xl border border-orange-100 bg-slate-100 shadow-sm lg:h-[420px]">
+      <div className="relative h-[320px] overflow-hidden rounded-3xl border border-signature/20 bg-slate-100 shadow-sm lg:h-[420px]">
         <span className="absolute right-3 top-3 z-20 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-semibold text-green-700 shadow-sm ring-1 ring-green-100">
           네이버 지도
         </span>
@@ -376,12 +383,12 @@ export default function NaverRouteMap({
           </div>
         )}
         {!mapReady && !initError && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-orange-50 text-sm text-slate-500">
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-signature-light text-sm text-slate-500">
             {sdkLoading ? "네이버 지도 SDK 불러오는 중..." : "네이버 지도 불러오는 중..."}
           </div>
         )}
         {initError && (
-          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-orange-50 p-6 text-center text-sm text-slate-600">
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-signature-light p-6 text-center text-sm text-slate-600">
             <p>{initError}</p>
             <button
               type="button"
@@ -389,7 +396,7 @@ export default function NaverRouteMap({
                 reloadSdk();
                 setBootAttempt((value) => value + 1);
               }}
-              className="rounded-full bg-orange-500 px-4 py-2 text-xs font-semibold text-white hover:bg-orange-600"
+              className="rounded-full bg-signature-dark px-4 py-2 text-xs font-semibold text-white hover:bg-signature-darker"
             >
               다시 불러오기
             </button>
@@ -409,12 +416,12 @@ export default function NaverRouteMap({
 
       {routeSummary && (
         <p className="text-center text-xs text-slate-500">
-          🏍️ 이륜차 통행 가능 경로 · 약{" "}
-          <strong className="text-orange-600">
+          이륜차 통행 가능 경로 · 약{" "}
+          <strong className="text-signature-dark">
             {formatDistance(routeSummary.distance)}
           </strong>
           {" · "}
-          <strong className="text-orange-600">
+          <strong className="text-signature-dark">
             {formatDuration(routeSummary.duration)}
           </strong>{" "}
           (자동차전용도로 회피)

@@ -1,8 +1,9 @@
-"use client";
+﻿"use client";
 
 import { useState, type FormEvent, type ReactNode } from "react";
 import PlaceCard from "@/components/places/PlaceCard";
-import { bariRoutes } from "@/lib/routes-data";
+import type { BariRoute } from "@/lib/routes-data";
+import { isAllowedNaverBookingUrl } from "@/lib/naver-booking";
 import {
   emptyRegistrationRequest,
   getPartnerPlaces,
@@ -12,7 +13,11 @@ import {
   type PlaceRegistrationRequest,
 } from "@/lib/places-data";
 
-export default function PartnerRegistrationForm() {
+export default function PartnerRegistrationForm({
+  bariRoutes = [],
+}: {
+  bariRoutes?: BariRoute[];
+}) {
   const [form, setForm] = useState<PlaceRegistrationRequest>(
     emptyRegistrationRequest
   );
@@ -36,14 +41,21 @@ export default function PartnerRegistrationForm() {
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    if (
+      form.category === "accommodation" &&
+      form.naverBookingUrl &&
+      !isAllowedNaverBookingUrl(form.naverBookingUrl)
+    ) {
+      alert("네이버 예약 URL 형식을 확인해 주세요. (hotels.naver.com, map.naver.com, pcmap.place.naver.com 등)");
+      return;
+    }
     setSubmitted(true);
   }
 
   if (submitted) {
     return (
       <div className="rounded-3xl border border-emerald-200 bg-emerald-50 px-6 py-10 text-center">
-        <p className="text-4xl">✅</p>
-        <h3 className="mt-4 text-xl font-bold text-slate-800">
+        <h3 className="text-xl font-bold text-slate-800">
           입점 신청이 접수되었습니다
         </h3>
         <p className="mt-3 text-sm leading-7 text-slate-600">
@@ -68,7 +80,7 @@ export default function PartnerRegistrationForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <section className="rounded-3xl border border-orange-100 bg-white p-6 shadow-sm">
+      <section className="rounded-3xl border border-signature/20 bg-white p-6 shadow-sm">
         <h3 className="text-lg font-bold text-slate-800">1. 홍보 플랜 선택</h3>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           {partnerPlans.map((plan) => (
@@ -76,8 +88,8 @@ export default function PartnerRegistrationForm() {
               key={plan.id}
               className={`cursor-pointer rounded-2xl border p-5 transition ${
                 form.planId === plan.id
-                  ? "border-orange-400 bg-orange-50 ring-2 ring-orange-200"
-                  : "border-slate-100 hover:border-orange-200"
+                  ? "border-signature bg-signature-light ring-2 ring-signature/30"
+                  : "border-slate-100 hover:border-signature/30"
               }`}
             >
               <input
@@ -89,7 +101,7 @@ export default function PartnerRegistrationForm() {
                 className="sr-only"
               />
               <p className="font-bold text-slate-800">{plan.name}</p>
-              <p className="mt-1 text-sm font-semibold text-orange-600">
+              <p className="mt-1 text-sm font-semibold text-signature-dark">
                 {plan.price}
               </p>
               <p className="mt-2 text-sm text-slate-500">{plan.description}</p>
@@ -98,7 +110,7 @@ export default function PartnerRegistrationForm() {
         </div>
       </section>
 
-      <section className="rounded-3xl border border-orange-100 bg-white p-6 shadow-sm">
+      <section className="rounded-3xl border border-signature/20 bg-white p-6 shadow-sm">
         <h3 className="text-lg font-bold text-slate-800">2. 매장 정보</h3>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <Field label="매장명">
@@ -177,9 +189,25 @@ export default function PartnerRegistrationForm() {
             placeholder="예: 헬멧 착용 시 음료 10% 할인"
           />
         </Field>
+        {form.category === "accommodation" ? (
+          <Field label="네이버 예약 URL" className="mt-4">
+            <input
+              required
+              type="url"
+              value={form.naverBookingUrl ?? ""}
+              onChange={(e) => updateField("naverBookingUrl", e.target.value)}
+              className={inputClass}
+              placeholder="https://hotels.naver.com/... 또는 https://map.naver.com/..."
+            />
+            <p className="mt-2 text-xs text-slate-500">
+              네이버 호텔·플레이스 예약 페이지 URL을 입력하세요. 코스 상세에서
+              &quot;네이버 예약&quot; 버튼으로 연결됩니다.
+            </p>
+          </Field>
+        ) : null}
       </section>
 
-      <section className="rounded-3xl border border-orange-100 bg-white p-6 shadow-sm">
+      <section className="rounded-3xl border border-signature/20 bg-white p-6 shadow-sm">
         <h3 className="text-lg font-bold text-slate-800">
           3. 연결할 바리 코스 (복수 선택)
         </h3>
@@ -192,7 +220,7 @@ export default function PartnerRegistrationForm() {
               key={route.id}
               className={`flex cursor-pointer items-start gap-3 rounded-2xl border px-4 py-3 ${
                 form.routeIds.includes(route.id)
-                  ? "border-orange-300 bg-orange-50"
+                  ? "border-signature/40 bg-signature-light"
                   : "border-slate-100"
               }`}
             >
@@ -217,7 +245,7 @@ export default function PartnerRegistrationForm() {
 
       <button
         type="submit"
-        className="w-full rounded-full bg-orange-500 py-3.5 text-sm font-bold text-white shadow-sm transition hover:bg-orange-600"
+        className="w-full rounded-full bg-signature-dark py-3.5 text-sm font-bold text-white shadow-sm transition hover:bg-signature-darker"
       >
         입점·홍보 신청하기 (데모)
       </button>
@@ -246,7 +274,7 @@ function Field({
 }
 
 const inputClass =
-  "w-full rounded-2xl border border-orange-100 bg-orange-50/40 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-orange-300 focus:bg-white";
+  "w-full rounded-2xl border border-signature/20 bg-signature-light/40 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-signature focus:bg-white";
 
 export function PartnerPlanCards() {
   return (
@@ -256,24 +284,24 @@ export function PartnerPlanCards() {
           key={plan.id}
           className={`rounded-3xl border p-6 ${
             plan.highlighted
-              ? "border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 shadow-md"
-              : "border-orange-100 bg-white shadow-sm"
+              ? "border-amber-300 bg-gradient-to-br from-signature-light to-signature-muted shadow-md"
+              : "border-signature/20 bg-white shadow-sm"
           }`}
         >
           {plan.highlighted && (
-            <span className="rounded-full bg-amber-500 px-3 py-1 text-xs font-bold text-white">
+            <span className="rounded-full bg-signature-dark px-3 py-1 text-xs font-bold text-white">
               추천
             </span>
           )}
           <h3 className="mt-2 text-xl font-bold text-slate-800">{plan.name}</h3>
-          <p className="mt-1 text-lg font-semibold text-orange-600">
+          <p className="mt-1 text-lg font-semibold text-signature-dark">
             {plan.price}
           </p>
           <p className="mt-2 text-sm text-slate-500">{plan.description}</p>
           <ul className="mt-4 space-y-2">
             {plan.features.map((feature) => (
               <li key={feature} className="flex gap-2 text-sm text-slate-600">
-                <span className="text-emerald-500">✓</span>
+                <span className="text-emerald-500">-</span>
                 {feature}
               </li>
             ))}

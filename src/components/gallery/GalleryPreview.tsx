@@ -19,20 +19,20 @@ export default function GalleryPreview() {
   }, []);
 
   return (
-    <div className="rounded-3xl border border-orange-100 bg-white p-6 shadow-sm">
-      <h2 className="text-xl font-bold text-slate-800">📸 최근 갤러리</h2>
+    <div className="portal-panel p-6">
+      <h2 className="text-xl font-bold text-stone-800">📸 최근 갤러리</h2>
 
       <div className="mt-4 space-y-3">
         {posts.length === 0 ? (
-          <p className="text-sm text-slate-500">최근 올라온 사진이 없습니다.</p>
+          <p className="text-sm text-stone-500">최근 올라온 사진이 없습니다.</p>
         ) : (
           posts.map((post) => (
             <Link
               key={post.id}
-              href="/gallery"
-              className="flex items-center gap-3 rounded-2xl p-2 transition hover:bg-orange-50"
+              href={`/gallery/${post.id}`}
+              className="flex items-center gap-3 rounded-2xl p-2 transition hover:bg-signature-light"
             >
-              <div className="relative h-12 w-12 overflow-hidden rounded-2xl bg-amber-100">
+              <div className="relative h-12 w-12 overflow-hidden rounded-2xl bg-signature-light ring-1 ring-signature/20">
                 <Image
                   src={post.imageUrl}
                   alt={post.title}
@@ -42,8 +42,8 @@ export default function GalleryPreview() {
                 />
               </div>
               <div>
-                <p className="font-medium text-slate-800">{post.title}</p>
-                <p className="text-xs text-slate-500">{post.location}</p>
+                <p className="font-medium text-stone-800">{post.title}</p>
+                <p className="text-xs text-stone-500">{post.location}</p>
               </div>
             </Link>
           ))
@@ -52,7 +52,7 @@ export default function GalleryPreview() {
 
       <Link
         href="/gallery"
-        className="mt-4 inline-block text-sm font-semibold text-orange-500"
+        className="mt-4 inline-block text-sm font-semibold text-signature-dark hover:text-signature-darker"
       >
         갤러리 더보기 →
       </Link>

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -9,14 +9,15 @@ import {
   pathToLatLngs,
   type DirectionsResult,
 } from "@/lib/naver-directions";
-import { getPlacesForRoute, placeCategoryEmoji } from "@/lib/places-data";
+import { buildPlaceMapPopupHtml } from "@/lib/naver-booking";
+import { getPlacesForRoute, placeCategoryLabels, placeCategoryMarker } from "@/lib/places-data";
 import { bootstrapLeafletMap } from "@/lib/leaflet-map";
 
 type LeafletRouteMapProps = {
   route: BariRoute;
 };
 
-const ROUTE_COLOR = "#f97316";
+const ROUTE_COLOR = "#22c55e";
 
 function formatDuration(ms: number) {
   const minutes = Math.round(ms / 60000);
@@ -124,13 +125,19 @@ export default function LeafletRouteMap({ route }: LeafletRouteMapProps) {
         L.marker([place.lat, place.lng], {
           icon: L.divIcon({
             className: "",
-            html: `<div style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:9999px;background:${isPremium ? "#f59e0b" : "#fff"};border:2px solid ${isPremium ? "#d97706" : ROUTE_COLOR};box-shadow:0 2px 8px rgba(0,0,0,.15);font-size:16px;">${placeCategoryEmoji[place.category]}</div>`,
+            html: `<div style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:9999px;background:${isPremium ? "#f59e0b" : "#fff"};border:2px solid ${isPremium ? "#d97706" : ROUTE_COLOR};box-shadow:0 2px 8px rgba(0,0,0,.15);font-size:12px;font-weight:700;color:${isPremium ? "#fff" : ROUTE_COLOR};">${placeCategoryMarker[place.category]}</div>`,
             iconSize: [32, 32],
             iconAnchor: [16, 16],
           }),
         })
           .bindPopup(
-            `<strong>${place.name}</strong><br/><span style="color:#64748b;font-size:12px">${place.category === "cafe" ? "라이더 카페" : place.category}</span>`
+            buildPlaceMapPopupHtml({
+              name: place.name,
+              category: place.category,
+              categoryLabel: placeCategoryLabels[place.category],
+              offer: place.promotion?.headline,
+              naverBookingUrl: place.naverBookingUrl,
+            })
           )
           .addTo(layersRef.current!);
       });
@@ -195,12 +202,12 @@ export default function LeafletRouteMap({ route }: LeafletRouteMapProps) {
 
   return (
     <div className="space-y-2">
-      <div className="relative min-h-[320px] overflow-hidden rounded-3xl border border-orange-100 bg-slate-100 shadow-sm lg:min-h-[420px]">
+      <div className="relative min-h-[320px] overflow-hidden rounded-3xl border border-signature/20 bg-slate-100 shadow-sm lg:min-h-[420px]">
         <span className="absolute right-3 top-3 z-20 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-semibold text-slate-500 shadow-sm ring-1 ring-slate-200">
           OpenStreetMap
         </span>
         {(!mapReady || routeLoading) && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-orange-50 text-sm text-slate-500">
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-signature-light text-sm text-slate-500">
             {routeLoading ? "오토바이 경로 계산 중..." : "지도 불러오는 중..."}
           </div>
         )}
@@ -209,12 +216,12 @@ export default function LeafletRouteMap({ route }: LeafletRouteMapProps) {
 
       {routeSummary && (
         <p className="text-center text-xs text-slate-500">
-          🏍️ 이륜차 통행 가능 경로 · 약{" "}
-          <strong className="text-orange-600">
+          이륜차 통행 가능 경로 · 약{" "}
+          <strong className="text-signature-dark">
             {formatDistance(routeSummary.distance)}
           </strong>
           {" · "}
-          <strong className="text-orange-600">
+          <strong className="text-signature-dark">
             {formatDuration(routeSummary.duration)}
           </strong>{" "}
           (자동차전용도로 회피)

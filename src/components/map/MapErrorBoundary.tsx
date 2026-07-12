@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Component, type ReactNode } from "react";
 
@@ -34,12 +34,12 @@ export default class MapErrorBoundary extends Component<
   render() {
     if (this.state.hasError) {
       return (
-        <div className="flex min-h-[320px] flex-col items-center justify-center gap-3 rounded-3xl border border-orange-100 bg-orange-50 p-6 text-center text-sm text-slate-600 lg:min-h-[420px]">
+        <div className="flex min-h-[320px] flex-col items-center justify-center gap-3 rounded-3xl border border-signature/20 bg-signature-light p-6 text-center text-sm text-slate-600 lg:min-h-[420px]">
           <p>지도 표시 중 오류가 발생했습니다.</p>
           <button
             type="button"
             onClick={() => this.setState({ hasError: false })}
-            className="rounded-full bg-orange-500 px-4 py-2 text-xs font-semibold text-white hover:bg-orange-600"
+            className="rounded-full bg-signature-dark px-4 py-2 text-xs font-semibold text-white hover:bg-signature-darker"
           >
             다시 시도
           </button>

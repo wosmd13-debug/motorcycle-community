@@ -1,14 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import PortalModal from "@/components/portal/PortalModal";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useMemo, useState } from "react";
+import { useAuth } from "@/components/auth/AuthProvider";
+import OperatorContentActions from "@/components/admin/OperatorContentActions";
 import { BoardCategoryBadge } from "@/components/board/BoardCategoryGuide";
+import EngagementLikeButton from "@/components/engagement/EngagementLikeButton";
 import CommentVoteButtons from "@/components/gallery/CommentVoteButtons";
+import AuthorWithGrade from "@/components/ranking/AuthorWithGrade";
+import ReportButton from "@/components/report/ReportButton";
+import { useMemberGradeLookup } from "@/hooks/useMemberGradeLookup";
 import {
   boardCategoryMeta,
+  canManageBoardPost,
   formatBoardDate,
   formatCommentDate,
   type BoardPost,
 } from "@/lib/board";
+import type { CommentVoteChoice } from "@/lib/gallery";
+import { collectAuthorGradeSources } from "@/lib/member-grade-display";
 
 type BoardDetailModalProps = {
   post: BoardPost;
@@ -18,11 +31,14 @@ type BoardDetailModalProps = {
   onCommentVote: (
     postId: string,
     commentId: string,
-    delta: { up: number; down: number }
-  ) => Promise<void>;
+    choice: CommentVoteChoice
+  ) => Promise<CommentVoteChoice | null | void>;
   liking?: boolean;
   commenting?: boolean;
   votingComment?: boolean;
+  onEdit?: () => void;
+  onDelete?: () => void;
+  deleting?: boolean;
 };
 
 export default function BoardDetailModal({
@@ -34,17 +50,39 @@ export default function BoardDetailModal({
   liking = false,
   commenting = false,
   votingComment = false,
+  onEdit,
+  onDelete,
+  deleting = false,
 }: BoardDetailModalProps) {
-  const [author, setAuthor] = useState("");
+  const { user } = useAuth();
+  const pathname = usePathname();
   const [content, setContent] = useState("");
   const [commentError, setCommentError] = useState<string | null>(null);
+
+  const gradeSources = useMemo(
+    () => collectAuthorGradeSources([post]),
+    [post]
+  );
+  const gradesByNickname = useMemberGradeLookup(gradeSources);
+
+  const meta = boardCategoryMeta[post.category];
 
   const handleCommentSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setCommentError(null);
 
+    if (!user) {
+      setCommentError("댓글을 작성하려면 로그인이 필요합니다.");
+      return;
+    }
+
+    if (!content.trim()) {
+      setCommentError("댓글 내용을 입력해 주세요.");
+      return;
+    }
+
     try {
-      await onComment(post.id, author.trim(), content.trim());
+      await onComment(post.id, user.nickname, content.trim());
       setContent("");
     } catch (err) {
       setCommentError(
@@ -53,27 +91,47 @@ export default function BoardDetailModal({
     }
   };
 
-  const meta = boardCategoryMeta[post.category];
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4">
-      <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl bg-white shadow-2xl">
-        <div className="sticky top-0 flex items-center justify-between border-b border-orange-50 bg-white px-6 py-4">
-          <div>
+    <PortalModal onClose={onClose}>
+      <div className="portal-modal-panel max-w-3xl shadow-2xl">
+        <div className="portal-modal-header">
+          <div className="min-w-0 flex-1">
             <BoardCategoryBadge category={post.category} size="md" />
-            <p className="mt-2 text-xs text-slate-500">{meta.summary}</p>
-            <h2 className="mt-2 text-xl font-bold text-slate-800">{post.title}</h2>
-            <p className="mt-1 text-sm text-slate-500">
-              {post.author} · {formatBoardDate(post.createdAt)}
+            <p className="mt-2 text-xs text-stone-500">{meta.summary}</p>
+            <h2 className="mt-2 text-xl font-bold text-stone-800">{post.title}</h2>
+            <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-stone-500">
+              <AuthorWithGrade
+                author={post.author}
+                authorGradeId={post.authorGradeId}
+                gradesByNickname={gradesByNickname}
+                nicknameClassName="font-medium text-stone-700"
+              />
+              <span aria-hidden>·</span>
+              <span>{formatBoardDate(post.createdAt)}</span>
             </p>
           </div>
-          <button
-            type="button"
+          <div className="portal-modal-header-actions">
+            {onEdit && onDelete && canManageBoardPost(user, post) && (
+              <OperatorContentActions
+                onEdit={onEdit}
+                onDelete={onDelete}
+                deleting={deleting}
+                compact
+              />
+            )}
+            <button
+              type="button"
             onClick={onClose}
-            className="rounded-full px-3 py-1 text-sm text-slate-500 hover:bg-slate-100"
-          >
-            닫기
-          </button>
+              className="rounded-full px-3 py-1 text-sm text-stone-500 hover:bg-stone-100"
+            >
+              닫기
+            </button>
+            <ReportButton
+              targetType="board"
+              targetId={post.id}
+              targetTitle={post.title}
+            />
+          </div>
         </div>
 
         <div className="space-y-6 px-6 py-6">
@@ -90,82 +148,90 @@ export default function BoardDetailModal({
             </div>
           )}
 
-          <p className="whitespace-pre-wrap text-sm leading-7 text-slate-700">
+          <p className="whitespace-pre-wrap text-sm leading-7 text-stone-700">
             {post.content}
           </p>
 
-          <div className="flex flex-wrap items-center gap-3 text-sm text-slate-500">
-            <button
-              type="button"
-              onClick={() => onLike(post.id)}
-              disabled={liking}
-              className="rounded-full bg-orange-50 px-4 py-2 font-semibold text-orange-600 transition hover:bg-orange-100 disabled:opacity-60"
-            >
-              ❤️ 좋아요 {post.likes}
-            </button>
-            <span>👁 조회 {post.views}</span>
-            <span>💬 댓글 {post.comments.length}</span>
+          <div className="flex flex-wrap items-center gap-3 text-sm text-stone-500">
+            <EngagementLikeButton
+              likes={post.likes}
+              liking={liking}
+              onLike={() => onLike(post.id)}
+              className="portal-btn px-4 py-2 text-sm disabled:opacity-60"
+            />
+            <span>조회 {post.views}</span>
+            <span>댓글 {post.comments.length}</span>
           </div>
 
-          <section className="rounded-3xl border border-orange-100 bg-orange-50/30 p-5">
-            <h3 className="font-bold text-slate-800">
+          <section className="rounded-3xl border border-signature/20 bg-signature-light/30 p-5">
+            <h3 className="font-bold text-stone-800">
               댓글 {post.comments.length}
             </h3>
 
-            <form onSubmit={handleCommentSubmit} className="mt-4 space-y-3">
-              <input
-                value={author}
-                onChange={(event) => setAuthor(event.target.value)}
-                required
-                placeholder="닉네임"
-                className="w-full rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm outline-none focus:border-orange-300"
-              />
-              <textarea
-                value={content}
-                onChange={(event) => setContent(event.target.value)}
-                required
-                rows={3}
-                placeholder="댓글을 입력하세요."
-                className="w-full rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm outline-none focus:border-orange-300"
-              />
-              {commentError && (
-                <p className="text-sm text-red-600">{commentError}</p>
-              )}
-              <button
-                type="submit"
-                disabled={commenting}
-                className="rounded-full bg-orange-500 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
-              >
-                {commenting ? "등록 중..." : "댓글 등록"}
-              </button>
-            </form>
+            {user ? (
+              <form onSubmit={handleCommentSubmit} className="mt-4 space-y-3">
+                <p className="text-xs text-stone-500">
+                  {user.nickname}으로 댓글 작성
+                </p>
+                <textarea
+                  value={content}
+                  onChange={(event) => setContent(event.target.value)}
+                  required
+                  rows={3}
+                  placeholder="댓글을 입력하세요."
+                  className="w-full rounded-2xl border border-signature/20 bg-white px-4 py-3 text-sm outline-none focus:border-signature"
+                />
+                {commentError && (
+                  <p className="text-sm text-red-600">{commentError}</p>
+                )}
+                <button
+                  type="submit"
+                  disabled={commenting}
+                  className="portal-btn px-4 py-2 text-sm disabled:opacity-60"
+                >
+                  {commenting ? "등록 중..." : "댓글 등록"}
+                </button>
+              </form>
+            ) : (
+              <p className="mt-4 text-sm text-stone-500">
+                <Link
+                  href={`/login?next=${encodeURIComponent(pathname || "/board")}`}
+                  className="font-semibold text-signature-dark hover:underline"
+                >
+                  로그인
+                </Link>
+                후 댓글을 작성할 수 있습니다.
+              </p>
+            )}
 
             <div className="mt-6 space-y-4">
               {post.comments.length === 0 ? (
-                <p className="text-sm text-slate-500">첫 댓글을 남겨보세요.</p>
+                <p className="text-sm text-stone-500">첫 댓글을 남겨보세요.</p>
               ) : (
                 post.comments.map((comment) => (
                   <article
                     key={comment.id}
-                    className="rounded-2xl border border-orange-100 bg-white p-4"
+                    className="rounded-2xl border border-signature/20 bg-white p-4"
                   >
                     <div className="flex items-center justify-between gap-3">
-                      <strong className="text-sm text-slate-800">
-                        {comment.author}
-                      </strong>
-                      <span className="text-xs text-slate-400">
+                      <AuthorWithGrade
+                        author={comment.author}
+                        authorGradeId={comment.authorGradeId}
+                        gradesByNickname={gradesByNickname}
+                      />
+                      <span className="text-xs text-stone-400">
                         {formatCommentDate(comment.createdAt)}
                       </span>
                     </div>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">
+                    <p className="mt-2 text-sm leading-6 text-stone-600">
                       {comment.content}
                     </p>
                     <CommentVoteButtons
                       commentId={comment.id}
                       upvotes={comment.upvotes}
                       downvotes={comment.downvotes}
-                      onVote={(commentId, delta) =>
-                        onCommentVote(post.id, commentId, delta)
+                      onVote={(commentId, choice) =>
+                        onCommentVote(post.id, commentId, choice)
                       }
                       disabled={votingComment}
                       storagePrefix="board-comment-vote"
@@ -177,6 +243,6 @@ export default function BoardDetailModal({
           </section>
         </div>
       </div>
-    </div>
+    </PortalModal>
   );
 }

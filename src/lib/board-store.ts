@@ -5,8 +5,10 @@ import {
   seedBoardPosts,
   type BoardComment,
   type BoardPost,
+  type CommentVoteChoice,
   type CreateBoardPostInput,
 } from "@/lib/board";
+import { applyCommentVoteChoice, toggleLikeByUser } from "@/lib/engagement";
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const DATA_FILE = path.join(DATA_DIR, "board.json");
@@ -78,14 +80,18 @@ export async function getBoardPost(id: string): Promise<BoardPost | null> {
   return posts.find((post) => post.id === id) ?? null;
 }
 
-export async function likeBoardPost(id: string): Promise<BoardPost | null> {
+export async function likeBoardPost(
+  id: string,
+  userId: string
+): Promise<{ post: BoardPost; liked: boolean } | null> {
   const posts = await readBoardPosts();
   const index = posts.findIndex((post) => post.id === id);
   if (index === -1) return null;
 
-  posts[index] = { ...posts[index], likes: posts[index].likes + 1 };
+  const { item, liked } = toggleLikeByUser(posts[index], userId);
+  posts[index] = item;
   await writeBoardPosts(posts);
-  return posts[index];
+  return { post: posts[index], liked };
 }
 
 export async function viewBoardPost(id: string): Promise<BoardPost | null> {
@@ -100,7 +106,7 @@ export async function viewBoardPost(id: string): Promise<BoardPost | null> {
 
 export async function addBoardComment(
   id: string,
-  input: { author: string; content: string }
+  input: { author: string; authorId?: string; authorGradeId?: import("@/lib/ranking").MemberGradeId; content: string }
 ): Promise<BoardPost | null> {
   const posts = await readBoardPosts();
   const index = posts.findIndex((post) => post.id === id);
@@ -109,6 +115,8 @@ export async function addBoardComment(
   const comment: BoardComment = {
     id: crypto.randomUUID(),
     author: input.author,
+    authorId: input.authorId,
+    authorGradeId: input.authorGradeId,
     content: input.content,
     upvotes: 0,
     downvotes: 0,
@@ -127,8 +135,9 @@ export async function addBoardComment(
 export async function voteBoardComment(
   postId: string,
   commentId: string,
-  delta: { up: number; down: number }
-): Promise<BoardPost | null> {
+  userId: string,
+  choice: CommentVoteChoice
+): Promise<{ post: BoardPost; myVote: CommentVoteChoice | null } | null> {
   const posts = await readBoardPosts();
   const postIndex = posts.findIndex((post) => post.id === postId);
   if (postIndex === -1) return null;
@@ -138,13 +147,59 @@ export async function voteBoardComment(
   );
   if (commentIndex === -1) return null;
 
-  const comment = posts[postIndex].comments[commentIndex];
-  posts[postIndex].comments[commentIndex] = {
-    ...comment,
-    upvotes: Math.max(0, comment.upvotes + delta.up),
-    downvotes: Math.max(0, comment.downvotes + delta.down),
+  const { comment, myVote } = applyCommentVoteChoice(
+    posts[postIndex].comments[commentIndex],
+    userId,
+    choice
+  );
+  posts[postIndex].comments[commentIndex] = comment;
+
+  await writeBoardPosts(posts);
+  return { post: posts[postIndex], myVote };
+}
+
+export async function deleteBoardPost(id: string): Promise<boolean> {
+  const posts = await readBoardPosts();
+  const target = posts.find((post) => post.id === id);
+  if (!target) return false;
+
+  const { deleteUploadedPublicUrls } = await import("@/lib/upload-files");
+  await deleteUploadedPublicUrls(target.imageUrls ?? []);
+
+  const next = posts.filter((post) => post.id !== id);
+  await writeBoardPosts(next);
+  return true;
+}
+
+export type UpdateBoardPostInput = {
+  title?: string;
+  content?: string;
+  category?: BoardPost["category"];
+  imageUrls?: string[];
+};
+
+export async function updateBoardPost(
+  id: string,
+  input: UpdateBoardPostInput
+): Promise<BoardPost | null> {
+  const posts = await readBoardPosts();
+  const index = posts.findIndex((post) => post.id === id);
+  if (index === -1) return null;
+
+  const previous = posts[index];
+  if (input.imageUrls) {
+    const removed = (previous.imageUrls ?? []).filter(
+      (url) => !input.imageUrls!.includes(url)
+    );
+    const { deleteUploadedPublicUrls } = await import("@/lib/upload-files");
+    await deleteUploadedPublicUrls(removed);
+  }
+
+  posts[index] = {
+    ...posts[index],
+    ...input,
   };
 
   await writeBoardPosts(posts);
-  return posts[postIndex];
+  return posts[index];
 }

@@ -31,14 +31,14 @@ export default function WeeklyHoursEditor({
         <button
           type="button"
           onClick={() => onChange(applyWeeklyHoursToAllDays(value, "mon"))}
-          className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-orange-700 ring-1 ring-orange-200 hover:bg-orange-50"
+          className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-signature-dark ring-1 ring-signature/20 hover:bg-signature-light"
         >
           월요일 시간 → 전체 적용
         </button>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-orange-100 bg-white">
-        <div className="hidden grid-cols-[3rem_1fr_1fr_4rem] gap-2 bg-orange-50 px-3 py-2 text-xs font-semibold text-slate-600 sm:grid">
+      <div className="overflow-hidden rounded-2xl border border-signature/20 bg-white">
+        <div className="hidden grid-cols-[3rem_1fr_1fr_4rem] gap-2 bg-signature-light/40 px-3 py-2 text-xs font-semibold text-slate-600 sm:grid">
           <span>요일</span>
           <span>오픈</span>
           <span>마감</span>
@@ -48,7 +48,7 @@ export default function WeeklyHoursEditor({
         {WEEK_DAYS.map((day) => (
           <div
             key={day}
-            className="grid grid-cols-1 gap-2 border-t border-orange-50 px-3 py-3 first:border-t-0 sm:grid-cols-[3rem_1fr_1fr_4rem] sm:items-center"
+            className="grid grid-cols-1 gap-2 border-t border-signature/10 px-3 py-3 first:border-t-0 sm:grid-cols-[3rem_1fr_1fr_4rem] sm:items-center"
           >
             <span className="text-sm font-bold text-slate-700">
               {WEEK_DAY_LABELS[day]}
@@ -63,7 +63,7 @@ export default function WeeklyHoursEditor({
                 value={value[day].open}
                 disabled={value[day].closed}
                 onChange={(event) => updateDay(day, { open: event.target.value })}
-                className="w-full rounded-xl border border-orange-100 px-3 py-2 text-sm outline-none focus:border-orange-300 disabled:bg-slate-100 disabled:text-slate-400"
+                className="w-full rounded-xl border border-signature/20 bg-signature-light/40 px-3 py-2 text-sm outline-none focus:border-signature disabled:bg-slate-100 disabled:text-slate-400"
               />
             </label>
 
@@ -76,7 +76,7 @@ export default function WeeklyHoursEditor({
                 value={value[day].close}
                 disabled={value[day].closed}
                 onChange={(event) => updateDay(day, { close: event.target.value })}
-                className="w-full rounded-xl border border-orange-100 px-3 py-2 text-sm outline-none focus:border-orange-300 disabled:bg-slate-100 disabled:text-slate-400"
+                className="w-full rounded-xl border border-signature/20 bg-signature-light/40 px-3 py-2 text-sm outline-none focus:border-signature disabled:bg-slate-100 disabled:text-slate-400"
               />
             </label>
 
@@ -87,7 +87,7 @@ export default function WeeklyHoursEditor({
                 onChange={(event) =>
                   updateDay(day, { closed: event.target.checked })
                 }
-                className="h-4 w-4 rounded border-orange-200 text-orange-500 focus:ring-orange-300"
+                className="h-4 w-4 rounded border-signature/30 text-signature focus:ring-signature/20"
               />
               <span className="text-xs text-slate-600 sm:sr-only">휴무</span>
               <span className="text-xs text-slate-600 sm:hidden">휴무</span>

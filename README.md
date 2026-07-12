@@ -48,14 +48,19 @@ npm run dev
 
 8. `/map` 페이지에서 지도 확인
 
+## 배포
+
+운영(도메인·VPS) 배포는 **[DEPLOY.md](./DEPLOY.md)** 를 참고하세요.
+
+- 권장: 단일 VPS + Docker (`docker compose up -d --build`)
+- `data/` · `public/uploads` 영구 보관 + `npm run backup`
+- Vercel 등 서버리스에는 현재 저장 방식과 맞지 않습니다
+
 ## 다음 단계 아이디어
 
-- 회원가입 / 로그인
-- 게시글 작성 / 댓글
-- 네이버 지도 API 연동 (지도 페이지)
-- 갤러리 이미지 업로드
-- OpenWeatherMap 날씨 API 연동
-- Supabase 또는 MongoDB 백엔드 연결
+- Postgres + 오브젝트 스토리지로 이전 (트래픽 증가 시)
+- CDN·이미지 최적화
+- 모니터링(Sentry 등)
 
 ## 프로젝트 구조
 
@@ -63,5 +68,8 @@ npm run dev
 src/
   app/          # 페이지 라우트
   components/   # 공통 UI 컴포넌트
-  lib/          # 목업 데이터
+  lib/          # 도메인 로직·JSON 스토어
+scripts/
+  backup.sh     # data/uploads 백업
+DEPLOY.md       # VPS 배포 가이드
 ```

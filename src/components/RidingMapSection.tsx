@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import RidingMap from "@/components/RidingMap";
@@ -35,20 +35,20 @@ export default function RidingMapSection({ spots }: RidingMapSectionProps) {
               onClick={() => setSelectedId(spot.id)}
               className={`w-full rounded-3xl border p-5 text-left shadow-sm transition ${
                 isSelected
-                  ? "border-orange-300 bg-orange-50 ring-2 ring-orange-200"
-                  : "border-orange-100 bg-white hover:border-orange-200"
+                  ? "border-signature/40 bg-signature-light ring-2 ring-signature/30"
+                  : "border-signature/20 bg-white hover:border-signature/30"
               }`}
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-xs font-semibold text-orange-500">
+                  <p className="text-xs font-semibold text-signature-dark">
                     {spot.region}
                   </p>
                   <h3 className="mt-1 text-lg font-bold text-slate-800">
                     {spot.name}
                   </h3>
                 </div>
-                <span className="shrink-0 rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-600">
+                <span className="shrink-0 rounded-full bg-signature-light px-3 py-1 text-xs font-semibold text-signature-dark">
                   {spot.distance}
                 </span>
               </div>

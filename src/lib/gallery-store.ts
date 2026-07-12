@@ -3,10 +3,13 @@ import path from "path";
 import {
   normalizeGalleryPost,
   seedGalleryPosts,
+  type CommentVoteChoice,
   type CreateGalleryPostInput,
   type GalleryComment,
   type GalleryPost,
 } from "@/lib/gallery";
+import { applyCommentVoteChoice, toggleLikeByUser } from "@/lib/engagement";
+import { deleteUploadedPublicUrls } from "@/lib/upload-files";
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const DATA_FILE = path.join(DATA_DIR, "gallery.json");
@@ -70,14 +73,18 @@ export async function createGalleryPost(
   return post;
 }
 
-export async function likeGalleryPost(id: string): Promise<GalleryPost | null> {
+export async function likeGalleryPost(
+  id: string,
+  userId: string
+): Promise<{ post: GalleryPost; liked: boolean } | null> {
   const posts = await readGalleryPosts();
   const index = posts.findIndex((post) => post.id === id);
   if (index === -1) return null;
 
-  posts[index] = { ...posts[index], likes: posts[index].likes + 1 };
+  const { item, liked } = toggleLikeByUser(posts[index], userId);
+  posts[index] = item;
   await writeGalleryPosts(posts);
-  return posts[index];
+  return { post: posts[index], liked };
 }
 
 export async function viewGalleryPost(id: string): Promise<GalleryPost | null> {
@@ -92,7 +99,12 @@ export async function viewGalleryPost(id: string): Promise<GalleryPost | null> {
 
 export async function addGalleryComment(
   id: string,
-  input: { author: string; content: string }
+  input: {
+    author: string;
+    authorId?: string;
+    authorGradeId?: import("@/lib/ranking").MemberGradeId;
+    content: string;
+  }
 ): Promise<GalleryPost | null> {
   const posts = await readGalleryPosts();
   const index = posts.findIndex((post) => post.id === id);
@@ -101,6 +113,8 @@ export async function addGalleryComment(
   const comment: GalleryComment = {
     id: crypto.randomUUID(),
     author: input.author,
+    authorId: input.authorId,
+    authorGradeId: input.authorGradeId,
     content: input.content,
     upvotes: 0,
     downvotes: 0,
@@ -119,8 +133,9 @@ export async function addGalleryComment(
 export async function voteGalleryComment(
   postId: string,
   commentId: string,
-  delta: { up: number; down: number }
-): Promise<GalleryPost | null> {
+  userId: string,
+  choice: CommentVoteChoice
+): Promise<{ post: GalleryPost; myVote: CommentVoteChoice | null } | null> {
   const posts = await readGalleryPosts();
   const postIndex = posts.findIndex((post) => post.id === postId);
   if (postIndex === -1) return null;
@@ -130,18 +145,63 @@ export async function voteGalleryComment(
   );
   if (commentIndex === -1) return null;
 
-  const comment = posts[postIndex].comments[commentIndex];
-  posts[postIndex].comments[commentIndex] = {
-    ...comment,
-    upvotes: Math.max(0, comment.upvotes + delta.up),
-    downvotes: Math.max(0, comment.downvotes + delta.down),
-  };
+  const { comment, myVote } = applyCommentVoteChoice(
+    posts[postIndex].comments[commentIndex],
+    userId,
+    choice
+  );
+  posts[postIndex].comments[commentIndex] = comment;
 
   await writeGalleryPosts(posts);
-  return posts[postIndex];
+  return { post: posts[postIndex], myVote };
 }
 
 export async function getGalleryPost(id: string): Promise<GalleryPost | null> {
   const posts = await readGalleryPosts();
   return posts.find((post) => post.id === id) ?? null;
+}
+
+export async function deleteGalleryPost(id: string): Promise<boolean> {
+  const posts = await readGalleryPosts();
+  const target = posts.find((post) => post.id === id);
+  if (!target) return false;
+
+  await deleteUploadedPublicUrls([target.imageUrl]);
+
+  const next = posts.filter((post) => post.id !== id);
+  await writeGalleryPosts(next);
+  return true;
+}
+
+export type UpdateGalleryPostInput = {
+  title?: string;
+  location?: string;
+  category?: GalleryPost["category"];
+  imageUrl?: string;
+  caption?: string;
+};
+
+export async function updateGalleryPost(
+  id: string,
+  input: UpdateGalleryPostInput
+): Promise<GalleryPost | null> {
+  const posts = await readGalleryPosts();
+  const index = posts.findIndex((post) => post.id === id);
+  if (index === -1) return null;
+
+  const previous = posts[index];
+  if (
+    input.imageUrl !== undefined &&
+    input.imageUrl !== previous.imageUrl
+  ) {
+    await deleteUploadedPublicUrls([previous.imageUrl]);
+  }
+
+  posts[index] = {
+    ...posts[index],
+    ...input,
+  };
+
+  await writeGalleryPosts(posts);
+  return posts[index];
 }

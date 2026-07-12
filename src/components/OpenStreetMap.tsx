@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -27,7 +27,7 @@ function buildPopupContent(spot: RidingSpot) {
     <div style="font-family:sans-serif;">
       <strong style="font-size:14px;color:#1e293b;">${spot.name}</strong>
       <p style="margin:6px 0 0;font-size:12px;color:#64748b;">${spot.region}</p>
-      <p style="margin:4px 0 0;font-size:12px;color:#f97316;font-weight:600;">${spot.distance}</p>
+      <p style="margin:4px 0 0;font-size:12px;color:#22c55e;font-weight:600;">${spot.distance}</p>
     </div>
   `;
 }
@@ -110,12 +110,12 @@ export default function OpenStreetMap({
   }, [selectedId, mapReady, spots, openPopup]);
 
   return (
-    <div className="relative min-h-[420px] overflow-hidden rounded-3xl border border-orange-100 bg-slate-100 shadow-sm">
+    <div className="relative min-h-[420px] overflow-hidden rounded-3xl border border-signature/20 bg-slate-100 shadow-sm">
       <span className="absolute right-3 top-3 z-20 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-semibold text-slate-500 shadow-sm ring-1 ring-slate-200">
         OpenStreetMap
       </span>
       {!mapReady && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center bg-orange-50 text-sm text-slate-500">
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-signature-light text-sm text-slate-500">
           지도 불러오는 중...
         </div>
       )}

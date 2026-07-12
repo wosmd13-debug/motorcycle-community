@@ -1,16 +1,36 @@
 import PageHeader from "@/components/PageHeader";
 import GalleryExplorer from "@/components/gallery/GalleryExplorer";
+import { readGalleryPosts } from "@/lib/gallery-store";
+import { redirect } from "next/navigation";
 
-export default function GalleryPage() {
+export const dynamic = "force-dynamic";
+
+type GalleryPageProps = {
+  searchParams: Promise<{ q?: string; id?: string }>;
+};
+
+export default async function GalleryPage({ searchParams }: GalleryPageProps) {
+  const { q, id } = await searchParams;
+
+  if (id) {
+    redirect(`/gallery/${id}`);
+  }
+
+  const initialPosts = await readGalleryPosts();
+
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
-      <PageHeader
-        emoji="📸"
-        title="갤러리"
-        description="라이딩 인증샷, 바이크 사진, 크루 모임 사진을 공유해보세요."
-      />
+    <div className="portal-page">
+      <div className="portal-container space-y-3 sm:space-y-4">
+        <PageHeader
+          title="갤러리"
+          description="라이딩 인증샷, 바이크 사진, 크루 모임 사진을 공유해보세요."
+        />
 
-      <GalleryExplorer />
+        <GalleryExplorer
+          initialPosts={initialPosts}
+          initialQuery={q ?? ""}
+        />
+      </div>
     </div>
   );
 }

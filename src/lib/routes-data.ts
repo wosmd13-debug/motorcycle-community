@@ -1,3 +1,9 @@
+import {
+  filterRegions,
+  matchesDetailRegion,
+  type DetailRegion,
+} from "@/lib/regions";
+
 export type RouteDifficulty = "초급" | "중급" | "상급";
 export type RouteType = "해안" | "산악" | "일주" | "당일치기" | "투어";
 
@@ -11,7 +17,7 @@ export type RouteWaypoint = {
 export type BariRoute = {
   id: number;
   name: string;
-  region: string;
+  region: DetailRegion;
   type: RouteType;
   difficulty: RouteDifficulty;
   distance: string;
@@ -31,24 +37,17 @@ export type BariRoute = {
   reviewCount: number;
 };
 
-export const routeRegions = [
-  "전체",
-  "서울·경기",
-  "강원",
-  "충청",
-  "전라",
-  "경상",
-  "제주",
-] as const;
+export const routeRegions = filterRegions;
+export type RouteRegion = DetailRegion;
 
 export const routeDifficulties: RouteDifficulty[] = ["초급", "중급", "상급"];
 export const routeTypes: RouteType[] = ["해안", "산악", "일주", "당일치기", "투어"];
 
-export const bariRoutes: BariRoute[] = [
+export const defaultBariRoutes: BariRoute[] = [
   {
     id: 1,
     name: "남해 해안 일주",
-    region: "경상",
+    region: "경남",
     type: "일주",
     difficulty: "중급",
     distance: "약 180km",
@@ -60,10 +59,10 @@ export const bariRoutes: BariRoute[] = [
     startPoint: "창원/마산",
     endPoint: "통영",
     waypoints: [
-      { name: "마산", lat: 35.228, lng: 128.581, note: "출발 · 연료 보충" },
+      { name: "마산", lat: 35.225, lng: 128.575, note: "출발 · 연료 보충" },
       { name: "남해 대교", lat: 34.918, lng: 128.025, note: "해안 진입" },
       { name: "설리해수욕장", lat: 34.837, lng: 127.892, note: "휴식 포인트" },
-      { name: "독일마을", lat: 34.778, lng: 127.957, note: "경치 좋은 구간" },
+      { name: "독일마을", lat: 34.776, lng: 127.955, note: "경치 좋은 구간" },
       { name: "통영", lat: 34.854, lng: 128.433, note: "도착 · 식사" },
     ],
     highlights: [
@@ -100,10 +99,10 @@ export const bariRoutes: BariRoute[] = [
     startPoint: "속초",
     endPoint: "양양",
     waypoints: [
-      { name: "속초", lat: 38.207, lng: 128.592, note: "출발" },
+      { name: "속초", lat: 38.204, lng: 128.59, note: "출발" },
       { name: "설악산 입구", lat: 38.172, lng: 128.536, note: "산악 뷰" },
-      { name: "대포항", lat: 38.125, lng: 128.629, note: "해안 드라이브" },
-      { name: "양양", lat: 38.075, lng: 128.619, note: "도착" },
+      { name: "대포항", lat: 38.122, lng: 128.625, note: "해안 드라이브" },
+      { name: "양양", lat: 38.072, lng: 128.622, note: "도착" },
     ],
     highlights: [
       "속초 해변과 설악산 전경",
@@ -135,11 +134,11 @@ export const bariRoutes: BariRoute[] = [
     startPoint: "제주시",
     endPoint: "서귀포",
     waypoints: [
-      { name: "제주시", lat: 33.499, lng: 126.531, note: "출발" },
-      { name: "애월", lat: 33.464, lng: 126.308, note: "서쪽 해안 진입" },
-      { name: "한림", lat: 33.412, lng: 126.268, note: "1132 구간" },
-      { name: "서귀포", lat: 33.254, lng: 126.56, note: "남쪽 해안" },
-      { name: "성산", lat: 33.458, lng: 126.942, note: "동쪽 해안" },
+      { name: "제주시", lat: 33.499621, lng: 126.531188, note: "출발" },
+      { name: "애월", lat: 33.464408, lng: 126.308397, note: "서쪽 해안 진입" },
+      { name: "한림", lat: 33.412192, lng: 126.268768, note: "1132 구간" },
+      { name: "성산", lat: 33.458384, lng: 126.942214, note: "동쪽 해안" },
+      { name: "서귀포", lat: 33.254121, lng: 126.560076, note: "남쪽 해안 · 도착" },
     ],
     highlights: [
       "애월·한림 서쪽 해안 드라이브",
@@ -163,7 +162,7 @@ export const bariRoutes: BariRoute[] = [
   {
     id: 4,
     name: "팔당댐 일주",
-    region: "서울·경기",
+    region: "수도권",
     type: "당일치기",
     difficulty: "초급",
     distance: "약 60km",
@@ -175,10 +174,11 @@ export const bariRoutes: BariRoute[] = [
     startPoint: "남양주",
     endPoint: "남양주",
     waypoints: [
-      { name: "남양주", lat: 37.636, lng: 127.216, note: "출발" },
-      { name: "팔당댐", lat: 37.523, lng: 127.375, note: "댐 전망" },
-      { name: "청평", lat: 37.735, lng: 127.426, note: "북쪽 구간" },
-      { name: "양평", lat: 37.491, lng: 127.487, note: "남쪽 구간" },
+      { name: "남양주", lat: 37.636021, lng: 127.216527, note: "출발" },
+      { name: "팔당댐", lat: 37.523112, lng: 127.375284, note: "댐 전망" },
+      { name: "청평", lat: 37.735421, lng: 127.426318, note: "북쪽 구간" },
+      { name: "양평", lat: 37.491894, lng: 127.487369, note: "남쪽 구간" },
+      { name: "남양주", lat: 37.636021, lng: 127.216527, note: "복귀 · 도착" },
     ],
     highlights: [
       "서울에서 1시간 내 접근",
@@ -267,7 +267,7 @@ export const bariRoutes: BariRoute[] = [
   {
     id: 7,
     name: "경주·포항 해안 바리",
-    region: "경상",
+    region: "경북",
     type: "해안",
     difficulty: "중급",
     distance: "약 110km",
@@ -298,7 +298,7 @@ export const bariRoutes: BariRoute[] = [
   {
     id: 8,
     name: "지리산 둘레 바리",
-    region: "전라",
+    region: "전남",
     type: "산악",
     difficulty: "상급",
     distance: "약 150km",
@@ -334,21 +334,27 @@ export const bariRoutes: BariRoute[] = [
   },
 ];
 
-export function getRouteById(id: number): BariRoute | undefined {
-  return bariRoutes.find((route) => route.id === id);
+export function getRouteById(
+  routes: BariRoute[],
+  id: number
+): BariRoute | undefined {
+  return routes.find((route) => route.id === id);
 }
 
-export function filterRoutes(options: {
-  region?: string;
-  difficulty?: RouteDifficulty | "전체";
-  type?: RouteType | "전체";
-  query?: string;
-}): BariRoute[] {
+export function filterRoutes(
+  routes: BariRoute[],
+  options: {
+    region?: string;
+    difficulty?: RouteDifficulty | "전체";
+    type?: RouteType | "전체";
+    query?: string;
+  }
+): BariRoute[] {
   const { region = "전체", difficulty = "전체", type = "전체", query = "" } =
     options;
 
-  return bariRoutes.filter((route) => {
-    if (region !== "전체" && route.region !== region) return false;
+  return routes.filter((route) => {
+    if (!matchesDetailRegion(route.region, region)) return false;
     if (difficulty !== "전체" && route.difficulty !== difficulty) return false;
     if (type !== "전체" && route.type !== type) return false;
 

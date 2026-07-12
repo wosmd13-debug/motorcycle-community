@@ -2,28 +2,35 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import GalleryCard from "@/components/gallery/GalleryCard";
-import GalleryDetailModal from "@/components/gallery/GalleryDetailModal";
 import GalleryUploadForm from "@/components/gallery/GalleryUploadForm";
+import { useMemberGradeLookup } from "@/hooks/useMemberGradeLookup";
+import { useCosmeticLookup } from "@/hooks/useCosmeticLookup";
+import { fetchEngagementAction } from "@/lib/engagement-client";
 import {
   filterGalleryPosts,
   galleryCategories,
   type GalleryPost,
 } from "@/lib/gallery";
+import { collectAuthorGradeSources } from "@/lib/member-grade-display";
 
-export default function GalleryExplorer() {
-  const [posts, setPosts] = useState<GalleryPost[]>([]);
-  const [loading, setLoading] = useState(true);
+type GalleryExplorerProps = {
+  initialPosts?: GalleryPost[];
+  initialQuery?: string;
+};
+
+export default function GalleryExplorer({
+  initialPosts = [],
+  initialQuery = "",
+}: GalleryExplorerProps) {
+  const [posts, setPosts] = useState<GalleryPost[]>(initialPosts);
+  const [loading, setLoading] = useState(initialPosts.length === 0);
   const [error, setError] = useState<string | null>(null);
   const [category, setCategory] =
     useState<(typeof galleryCategories)[number]>("전체");
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialQuery);
   const [sort, setSort] = useState<"latest" | "popular">("latest");
-  const [selectedPost, setSelectedPost] = useState<GalleryPost | null>(null);
   const [showUpload, setShowUpload] = useState(false);
   const [likingId, setLikingId] = useState<string | null>(null);
-  const [commenting, setCommenting] = useState(false);
-  const [votingComment, setVotingComment] = useState(false);
-  const [openingId, setOpeningId] = useState<string | null>(null);
 
   const loadPosts = useCallback(async () => {
     setLoading(true);
@@ -46,134 +53,51 @@ export default function GalleryExplorer() {
   }, []);
 
   useEffect(() => {
+    if (initialPosts.length > 0) return;
     void loadPosts();
-  }, [loadPosts]);
+  }, [initialPosts.length, loadPosts]);
 
   const filteredPosts = useMemo(
     () => filterGalleryPosts({ posts, category, query, sort }),
     [posts, category, query, sort]
   );
 
+  const gradeSources = useMemo(
+    () => collectAuthorGradeSources(posts),
+    [posts]
+  );
+  const gradesByNickname = useMemberGradeLookup(gradeSources);
+  const authorNicknames = useMemo(
+    () => gradeSources.map((item) => item.author),
+    [gradeSources]
+  );
+  const looksByNickname = useCosmeticLookup(authorNicknames);
+
   const updatePost = (updated: GalleryPost) => {
     setPosts((current) =>
       current.map((post) => (post.id === updated.id ? updated : post))
     );
-    setSelectedPost((current) =>
-      current?.id === updated.id ? updated : current
-    );
-  };
-
-  const handleOpen = async (post: GalleryPost) => {
-    setOpeningId(post.id);
-    setSelectedPost(post);
-
-    try {
-      const viewKey = `gallery-view-${post.id}`;
-      let latest = post;
-
-      if (!sessionStorage.getItem(viewKey)) {
-        sessionStorage.setItem(viewKey, "1");
-        const viewRes = await fetch(`/api/gallery/${post.id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "view" }),
-        });
-        const viewData = await viewRes.json();
-        if (viewRes.ok) {
-          latest = viewData.post as GalleryPost;
-        }
-      }
-
-      const detailRes = await fetch(`/api/gallery/${post.id}`);
-      const detailData = await detailRes.json();
-      if (detailRes.ok) {
-        latest = detailData.post as GalleryPost;
-      }
-
-      updatePost(latest);
-      setSelectedPost(latest);
-    } catch {
-      setError("게시물 상세 정보를 불러오지 못했습니다.");
-    } finally {
-      setOpeningId(null);
-    }
   };
 
   const handleLike = async (id: string) => {
     setLikingId(id);
 
     try {
-      const response = await fetch(`/api/gallery/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "like" }),
+      const response = await fetchEngagementAction(`/api/gallery/${id}`, {
+        action: "like",
       });
       const data = await response.json();
 
+      if (response.status === 401) return;
       if (!response.ok) {
         throw new Error(data.error ?? "좋아요 처리에 실패했습니다.");
       }
 
-      const updated = data.post as GalleryPost;
-      updatePost(updated);
+      updatePost(data.post as GalleryPost);
     } catch (err) {
       setError(err instanceof Error ? err.message : "좋아요 처리에 실패했습니다.");
     } finally {
       setLikingId(null);
-    }
-  };
-
-  const handleComment = async (id: string, author: string, content: string) => {
-    setCommenting(true);
-
-    try {
-      const response = await fetch(`/api/gallery/${id}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ author, content }),
-      });
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error ?? "댓글 등록에 실패했습니다.");
-      }
-
-      updatePost(data.post as GalleryPost);
-    } catch (err) {
-      setCommenting(false);
-      throw err;
-    }
-
-    setCommenting(false);
-  };
-
-  const handleCommentVote = async (
-    postId: string,
-    commentId: string,
-    delta: { up: number; down: number }
-  ) => {
-    setVotingComment(true);
-
-    try {
-      const response = await fetch(`/api/gallery/${postId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "comment-vote",
-          commentId,
-          up: delta.up,
-          down: delta.down,
-        }),
-      });
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error ?? "투표 처리에 실패했습니다.");
-      }
-
-      updatePost(data.post as GalleryPost);
-    } finally {
-      setVotingComment(false);
     }
   };
 
@@ -182,19 +106,19 @@ export default function GalleryExplorer() {
   };
 
   return (
-    <div className="mt-8 space-y-6">
-      <div className="rounded-3xl border border-orange-100 bg-white p-5 shadow-sm">
+    <div className="mt-4 space-y-4 sm:mt-8 sm:space-y-6">
+      <div className="portal-panel p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-sm font-semibold text-slate-700">갤러리 탐색</p>
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="text-sm font-semibold text-stone-700">갤러리 탐색</p>
+            <p className="mt-1 text-xs text-stone-500">
               총 {filteredPosts.length}개의 사진
             </p>
           </div>
           <button
             type="button"
             onClick={() => setShowUpload(true)}
-            className="rounded-full bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-600"
+            className="portal-btn px-4 py-2 text-sm"
           >
             + 사진 올리기
           </button>
@@ -205,7 +129,7 @@ export default function GalleryExplorer() {
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="제목, 작성자, 위치 검색..."
-          className="mt-4 w-full rounded-2xl border border-orange-100 bg-orange-50/50 px-4 py-3 text-sm outline-none focus:border-orange-300"
+          className="mt-4 w-full rounded-2xl border border-signature/20 bg-signature-light/40 px-4 py-3 text-sm outline-none focus:border-signature"
         />
 
         <div className="mt-4 flex flex-wrap gap-2">
@@ -214,10 +138,10 @@ export default function GalleryExplorer() {
               key={item}
               type="button"
               onClick={() => setCategory(item)}
-              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+              className={`portal-filter-chip rounded-full transition ${
                 category === item
-                  ? "bg-orange-500 text-white"
-                  : "bg-orange-50 text-slate-600 ring-1 ring-orange-100 hover:bg-orange-100"
+                  ? "bg-signature text-white"
+                  : "bg-signature-light text-stone-600 ring-1 ring-signature/20 hover:bg-signature-muted"
               }`}
             >
               {item}
@@ -236,36 +160,37 @@ export default function GalleryExplorer() {
       </div>
 
       {loading ? (
-        <div className="flex min-h-[280px] items-center justify-center rounded-3xl border border-orange-100 bg-orange-50 text-sm text-slate-500">
+        <div className="flex min-h-[280px] items-center justify-center rounded-3xl border border-signature/20 bg-signature-light/40 text-sm text-stone-500">
           갤러리 불러오는 중...
         </div>
       ) : error && posts.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-orange-200 bg-orange-50/60 px-6 py-12 text-center">
+        <div className="rounded-3xl border border-dashed border-signature/30 bg-signature-light/40 px-6 py-12 text-center">
           <p className="text-sm text-red-600">{error}</p>
         </div>
       ) : filteredPosts.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-orange-200 bg-orange-50/60 px-6 py-16 text-center">
+        <div className="rounded-3xl border border-dashed border-signature/30 bg-signature-light/40 px-6 py-16 text-center">
           <p className="text-4xl">📷</p>
-          <p className="mt-4 font-semibold text-slate-700">
+          <p className="mt-4 font-semibold text-stone-700">
             조건에 맞는 사진이 없습니다
           </p>
           <button
             type="button"
             onClick={() => setShowUpload(true)}
-            className="mt-4 rounded-full bg-orange-500 px-4 py-2 text-sm font-semibold text-white"
+            className="portal-btn mt-4 px-4 py-2 text-sm"
           >
             첫 사진 올리기
           </button>
         </div>
       ) : (
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="gallery-ig-grid grid grid-cols-3 gap-[2px] sm:gap-1 md:grid-cols-3 lg:grid-cols-4">
           {filteredPosts.map((post) => (
             <GalleryCard
               key={post.id}
               post={post}
-              onOpen={handleOpen}
               onLike={handleLike}
-              liking={likingId === post.id || openingId === post.id}
+              liking={likingId === post.id}
+              gradesByNickname={gradesByNickname}
+              looksByNickname={looksByNickname}
             />
           ))}
         </div>
@@ -273,19 +198,6 @@ export default function GalleryExplorer() {
 
       {error && posts.length > 0 && (
         <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600">{error}</p>
-      )}
-
-      {selectedPost && (
-        <GalleryDetailModal
-          post={selectedPost}
-          onClose={() => setSelectedPost(null)}
-          onLike={handleLike}
-          onComment={handleComment}
-          onCommentVote={handleCommentVote}
-          liking={likingId === selectedPost.id}
-          commenting={commenting}
-          votingComment={votingComment}
-        />
       )}
 
       {showUpload && (
@@ -313,8 +225,8 @@ function SortButton({
       onClick={onClick}
       className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
         active
-          ? "bg-slate-800 text-white"
-          : "bg-white text-slate-600 ring-1 ring-orange-100 hover:bg-orange-50"
+          ? "bg-stone-800 text-white"
+          : "bg-white text-stone-600 ring-1 ring-signature/20 hover:bg-signature-light"
       }`}
     >
       {children}

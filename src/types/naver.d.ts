@@ -36,6 +36,7 @@ declare global {
 
       class Map {
         constructor(element: HTMLElement | string, options: MapOptions);
+        getCenter(): LatLng;
         panTo(latlng: LatLng): void;
         setZoom(zoom: number): void;
         fitBounds(bounds: LatLngBounds, margin?: FitBoundsMargin): void;
@@ -59,6 +60,7 @@ declare global {
         setMap(map: Map | null): void;
         setPosition(position: LatLng): void;
         getPosition(): LatLng;
+        setIcon(icon: MarkerIcon): void;
       }
 
       interface PolylineOptions {
@@ -115,4 +117,4 @@ declare global {
 }
 
 export {};
-
+

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 export default function GlobalError({
   reset,
@@ -17,7 +17,7 @@ export default function GlobalError({
           <button
             type="button"
             onClick={reset}
-            className="rounded-full bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-orange-600"
+            className="rounded-full bg-signature-dark px-5 py-2.5 text-sm font-semibold text-white hover:bg-signature-darker"
           >
             다시 시도
           </button>

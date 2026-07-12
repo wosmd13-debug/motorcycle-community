@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import dynamic from "next/dynamic";
 import { useCallback, useState } from "react";
@@ -10,7 +10,7 @@ import type { RidingSpot } from "@/lib/mock-data";
 const NaverMap = dynamic(() => import("@/components/NaverMap"), {
   ssr: false,
   loading: () => (
-    <div className="flex min-h-[420px] items-center justify-center rounded-3xl border border-orange-100 bg-orange-50 text-sm text-slate-500">
+    <div className="flex min-h-[420px] items-center justify-center rounded-3xl border border-signature/20 bg-signature-light text-sm text-slate-500">
       네이버 지도 불러오는 중...
     </div>
   ),
@@ -19,7 +19,7 @@ const NaverMap = dynamic(() => import("@/components/NaverMap"), {
 const OpenStreetMap = dynamic(() => import("@/components/OpenStreetMap"), {
   ssr: false,
   loading: () => (
-    <div className="flex min-h-[420px] items-center justify-center rounded-3xl border border-orange-100 bg-orange-50 text-sm text-slate-500">
+    <div className="flex min-h-[420px] items-center justify-center rounded-3xl border border-signature/20 bg-signature-light text-sm text-slate-500">
       지도 불러오는 중...
     </div>
   ),

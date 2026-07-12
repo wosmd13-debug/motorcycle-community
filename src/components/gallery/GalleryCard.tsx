@@ -1,68 +1,102 @@
 "use client";
 
-import Image from "next/image";
+import Link from "next/link";
+import EngagementLikeButton from "@/components/engagement/EngagementLikeButton";
+import AuthorWithGrade from "@/components/ranking/AuthorWithGrade";
 import {
-  formatCommentDate,
   formatGalleryDate,
   type GalleryPost,
 } from "@/lib/gallery";
+import type { MemberGradeId } from "@/lib/ranking";
+import type { ShopCosmeticLook } from "@/lib/shop";
 
 type GalleryCardProps = {
   post: GalleryPost;
-  onOpen: (post: GalleryPost) => void;
   onLike: (id: string) => void;
   liking?: boolean;
+  gradesByNickname?: Record<string, MemberGradeId>;
+  looksByNickname?: Record<string, ShopCosmeticLook>;
 };
 
 export default function GalleryCard({
   post,
-  onOpen,
   onLike,
   liking = false,
+  gradesByNickname,
+  looksByNickname,
 }: GalleryCardProps) {
+  const spotlight = looksByNickname?.[post.author]?.gallerySpotlightActive;
+
   return (
-    <article className="overflow-hidden rounded-3xl border border-orange-100 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md">
-      <button
-        type="button"
-        onClick={() => onOpen(post)}
+    <article
+      className={`gallery-ig-card group relative overflow-hidden bg-stone-100 dark:bg-stone-900 ${
+        spotlight ? "shop-gallery-spotlight" : ""
+      }`}
+    >
+      <Link
+        href={`/gallery/${post.id}`}
         className="block w-full text-left"
+        aria-label={`${post.title} 상세 보기`}
       >
-        <div className="relative flex h-60 w-full items-center justify-center bg-slate-100 p-3">
-          <Image
+        <div className="relative aspect-square w-full overflow-hidden bg-stone-200 dark:bg-stone-800">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             src={post.imageUrl}
             alt={post.title}
-            fill
-            className="object-contain p-2"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+            draggable={false}
+            loading="lazy"
           />
-        </div>
-      </button>
 
-      <div className="p-5">
-        <span className="inline-flex rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-semibold text-orange-700">
-          {post.category}
-        </span>
-        <h2 className="mt-2 text-lg font-bold text-slate-800">{post.title}</h2>
-        <p className="mt-1 text-sm text-slate-500">{post.location}</p>
+          <div className="gallery-ig-overlay absolute inset-0 flex flex-col justify-between bg-gradient-to-b from-black/45 via-transparent to-black/55 p-2.5 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100 sm:p-3">
+            <div className="flex items-start justify-between gap-2">
+              <span className="rounded-full bg-black/45 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur-sm">
+                {post.category}
+              </span>
+              <span className="text-[10px] font-medium text-white/85">
+                {formatGalleryDate(post.createdAt)}
+              </span>
+            </div>
 
-        <div className="mt-4 flex items-end justify-between gap-3 text-sm">
-          <div>
-            <p className="text-slate-500">by {post.author}</p>
-            <p className="text-xs text-slate-400">{formatGalleryDate(post.createdAt)}</p>
-            <div className="mt-2 flex gap-3 text-xs text-slate-400">
-              <span>👁 {post.views}</span>
-              <span>💬 {post.comments.length}</span>
+            <div className="min-w-0">
+              <h2 className="truncate text-sm font-bold text-white drop-shadow">
+                {post.title}
+              </h2>
+              <p className="mt-0.5 truncate text-[11px] text-white/85">
+                {post.location}
+              </p>
+              <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-white/90">
+                <AuthorWithGrade
+                  author={post.author}
+                  authorGradeId={post.authorGradeId}
+                  gradesByNickname={gradesByNickname}
+                  looksByNickname={looksByNickname}
+                  nicknameClassName="text-white/90"
+                  className="inline-flex min-w-0 max-w-full flex-wrap items-center gap-1"
+                />
+                <span className="text-white/70">·</span>
+                <span>👁 {post.views}</span>
+                <span>💬 {post.comments.length}</span>
+              </div>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => onLike(post.id)}
-            disabled={liking}
-            className="rounded-full bg-orange-50 px-3 py-1.5 font-semibold text-orange-600 transition hover:bg-orange-100 disabled:opacity-60"
-          >
-            ❤️ {post.likes}
-          </button>
         </div>
+      </Link>
+
+      <div
+        className="absolute bottom-2 right-2 z-10 opacity-100 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100"
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+        }}
+      >
+        <EngagementLikeButton
+          likes={post.likes}
+          liking={liking}
+          onLike={() => onLike(post.id)}
+          label="❤️"
+          className="rounded-full bg-black/55 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur-sm transition hover:bg-black/70 disabled:opacity-60"
+        />
       </div>
     </article>
   );

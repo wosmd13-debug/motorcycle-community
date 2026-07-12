@@ -1,15 +1,16 @@
 type PageHeaderProps = {
-  emoji: string;
   title: string;
   description: string;
 };
 
-export default function PageHeader({ emoji, title, description }: PageHeaderProps) {
+export default function PageHeader({ title, description }: PageHeaderProps) {
   return (
-    <section className="rounded-3xl bg-gradient-to-r from-orange-400 to-amber-300 px-6 py-8 text-white shadow-lg sm:px-8">
-      <p className="text-4xl">{emoji}</p>
-      <h1 className="mt-3 text-3xl font-bold sm:text-4xl">{title}</h1>
-      <p className="mt-2 max-w-2xl text-sm leading-6 text-orange-50 sm:text-base">
+    <section className="portal-panel overflow-hidden">
+      <div className="portal-panel-head">
+        <h1 className="portal-panel-title">{title}</h1>
+        <span className="portal-badge hidden sm:inline-flex">RIDE</span>
+      </div>
+      <p className="border-l-4 border-signature/30 bg-signature-light/40 px-4 py-3 text-sm leading-6 text-[var(--text-secondary)]">
         {description}
       </p>
     </section>

@@ -7,6 +7,7 @@ import {
   parseWeeklyOpenHoursFromBody,
   type WeeklyOpenHours,
 } from "@/lib/rider-cafe-hours";
+import { matchesDetailRegion, normalizeDetailRegion } from "@/lib/regions";
 
 export const riderCafeCategories = [
   "전체",
@@ -26,7 +27,12 @@ export type RiderCafeRegion = Exclude<
   "전체"
 >;
 
-const LEGACY_CAFE_REGIONS = new Set(["충청", "전라", "경상"]);
+const LEGACY_CAFE_REGIONS = new Set([
+  "충청",
+  "전라",
+  "경상",
+  "서울·경기",
+]);
 
 export function isLegacyCafeRegion(region: string): boolean {
   return LEGACY_CAFE_REGIONS.has(region);
@@ -71,6 +77,7 @@ export function migrateRiderCafeRegion(
   if (fromAddress) return fromAddress;
 
   const legacyFallback: Record<string, RiderCafeRegion> = {
+    "서울·경기": "수도권",
     충청: "충남",
     전라: "전남",
     경상: "경남",
@@ -102,6 +109,7 @@ export type RiderCafeEntry = {
   id: string;
   name: string;
   author: string;
+  authorId?: string;
   address: string;
   region: RiderCafeRegion;
   imageUrl: string;
@@ -113,6 +121,8 @@ export type RiderCafeEntry = {
   directions?: string;
   website?: string;
   likes: number;
+  /** 서버 전용 — API 응답에서는 제거 */
+  likedBy?: string[];
   views: number;
   createdAt: string;
 };
@@ -126,6 +136,7 @@ type LegacyRiderCafeEntry = RiderCafeEntry & {
 export type CreateRiderCafeInput = {
   name: string;
   author: string;
+  authorId: string;
   address: string;
   region: RiderCafeRegion;
   imageUrl: string;
@@ -138,6 +149,7 @@ export type UpdateRiderCafeInput = {
   author?: string;
   address?: string;
   region?: RiderCafeRegion;
+  imageUrl?: string;
   description?: string;
   amenities?: string[];
 } & RiderCafeBusinessInfo;
@@ -199,7 +211,7 @@ export const seedRiderCafes: RiderCafeEntry[] = [
     region: "경남",
     imageUrl:
       "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=1200&q=80",
-    description: "바이크 주차 공간이 넓고 해안 뷰가 좋은 라이더 카페.",
+    description: "바이크 주차 공간이 넓고 해안 뷰가 좋은 바이크 카페.",
     amenities: ["바이크 주차", "테라스", "음료·디저트"],
     phone: "055-860-1234",
     weeklyHours: buildWeeklyHours({
@@ -221,7 +233,7 @@ export const seedRiderCafes: RiderCafeEntry[] = [
   },
   {
     id: "seed-cafe-2",
-    name: "속초 라이더 카페",
+    name: "속초 바이크 카페",
     author: "강원러너",
     address: "강원 속초시 중앙로 45",
     region: "강원",
@@ -310,7 +322,7 @@ export function filterRiderCafes(options: {
   const { entries, region = "전체", query = "", sort = "latest" } = options;
 
   const filtered = entries.filter((entry) => {
-    if (region !== "전체" && entry.region !== region) return false;
+    if (!matchesDetailRegion(entry.region, region)) return false;
 
     if (query.trim()) {
       const q = query.trim().toLowerCase();
@@ -373,6 +385,24 @@ export function formatRiderCafeDate(iso: string): string {
   });
 }
 
+export function canManageRiderCafe(
+  user:
+    | {
+        id: string;
+        nickname: string;
+        isAdmin?: boolean;
+        isOperator?: boolean;
+      }
+    | null
+    | undefined,
+  entry: RiderCafeEntry
+): boolean {
+  if (!user) return false;
+  if (user.isAdmin || user.isOperator) return true;
+  if (entry.authorId) return entry.authorId === user.id;
+  return entry.author === user.nickname;
+}
+
 export function mapPlaceRegionToCafeRegion(
   region: string,
   address = ""
@@ -380,11 +410,5 @@ export function mapPlaceRegionToCafeRegion(
   const fromAddress = address ? inferCafeRegionFromAddress(address) : null;
   if (fromAddress) return fromAddress;
 
-  if (region.includes("서울") || region.includes("경기")) return "수도권";
-  if (region === "강원") return "강원";
-  if (region === "충청") return "충남";
-  if (region === "전라") return "전남";
-  if (region === "경상") return "경남";
-  if (region === "제주") return "제주";
-  return null;
+  return normalizeDetailRegion(region);
 }

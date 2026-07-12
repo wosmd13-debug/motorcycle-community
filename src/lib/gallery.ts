@@ -15,9 +15,13 @@ export type GalleryCategory = Exclude<
 export type GalleryComment = {
   id: string;
   author: string;
+  authorId?: string;
+  authorGradeId?: import("@/lib/ranking").MemberGradeId;
   content: string;
   upvotes: number;
   downvotes: number;
+  /** 서버 전용 — API 응답에서는 제거 */
+  votesBy?: Record<string, CommentVoteChoice>;
   createdAt: string;
 };
 
@@ -27,11 +31,15 @@ export type GalleryPost = {
   id: string;
   title: string;
   author: string;
+  authorId?: string;
+  authorGradeId?: import("@/lib/ranking").MemberGradeId;
   location: string;
   category: GalleryCategory;
   imageUrl: string;
   caption?: string;
   likes: number;
+  /** 서버 전용 — API 응답에서는 제거 */
+  likedBy?: string[];
   views: number;
   comments: GalleryComment[];
   createdAt: string;
@@ -40,6 +48,8 @@ export type GalleryPost = {
 export type CreateGalleryPostInput = {
   title: string;
   author: string;
+  authorId: string;
+  authorGradeId?: import("@/lib/ranking").MemberGradeId;
   location: string;
   category: GalleryCategory;
   imageUrl: string;
@@ -210,4 +220,22 @@ export function formatGalleryDate(iso: string): string {
     month: "long",
     day: "numeric",
   });
+}
+
+export function canManageGalleryPost(
+  user:
+    | {
+        id: string;
+        nickname: string;
+        isAdmin?: boolean;
+        isOperator?: boolean;
+      }
+    | null
+    | undefined,
+  post: GalleryPost
+): boolean {
+  if (!user) return false;
+  if (user.isAdmin || user.isOperator) return true;
+  if (post.authorId) return post.authorId === user.id;
+  return post.author === user.nickname;
 }

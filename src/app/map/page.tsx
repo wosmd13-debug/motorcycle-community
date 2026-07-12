@@ -1,17 +1,17 @@
 import PageHeader from "@/components/PageHeader";
 import MapPageContent from "@/components/map/MapPageContent";
-import { ridingSpots } from "@/lib/mock-data";
 
 export default function MapPage() {
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
-      <PageHeader
-        emoji="🗺️"
-        title="라이딩 지도"
-        description="전국 바리 코스 동선과 라이더들이 추천하는 인기 스팟을 지도에서 확인해보세요."
-      />
+    <div className="portal-page py-4">
+      <div className="portal-container space-y-4">
+        <PageHeader
+          title="지도"
+          description="전국 지도를 네이버 지도로 확인할 수 있습니다. 코스·동선은 투어코스 메뉴에서 이용해 주세요."
+        />
 
-      <MapPageContent spots={ridingSpots} />
+        <MapPageContent />
+      </div>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { RidingSpot } from "@/lib/mock-data";
@@ -32,7 +32,7 @@ function buildInfoContent(spot: RidingSpot) {
     <div style="padding:12px 14px;min-width:180px;border-radius:12px;background:#fff;box-shadow:0 4px 12px rgba(0,0,0,.12);font-family:sans-serif;">
       <strong style="font-size:14px;color:#1e293b;">${spot.name}</strong>
       <p style="margin:6px 0 0;font-size:12px;color:#64748b;">${spot.region}</p>
-      <p style="margin:4px 0 0;font-size:12px;color:#f97316;font-weight:600;">${spot.distance}</p>
+      <p style="margin:4px 0 0;font-size:12px;color:#22c55e;font-weight:600;">${spot.distance}</p>
     </div>
   `;
 }
@@ -202,9 +202,8 @@ export default function NaverMap({
 
   if (!CLIENT_ID) {
     return (
-      <div className="flex min-h-[420px] flex-col items-center justify-center rounded-3xl border border-dashed border-orange-200 bg-gradient-to-br from-sky-50 to-orange-50 p-8 text-center">
-        <p className="text-5xl">🔑</p>
-        <h2 className="mt-4 text-xl font-bold text-slate-800">
+      <div className="flex min-h-[420px] flex-col items-center justify-center rounded-3xl border border-dashed border-signature/30 bg-gradient-to-br from-sky-50 to-signature-light p-8 text-center">
+        <h2 className="text-xl font-bold text-slate-800">
           네이버 지도 API 키가 필요합니다
         </h2>
       </div>
@@ -212,17 +211,17 @@ export default function NaverMap({
   }
 
   return (
-    <div className="relative h-[420px] overflow-hidden rounded-3xl border border-orange-100 bg-slate-100 shadow-sm">
+    <div className="relative h-[420px] overflow-hidden rounded-3xl border border-signature/20 bg-slate-100 shadow-sm">
       <span className="absolute right-3 top-3 z-20 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-semibold text-green-700 shadow-sm ring-1 ring-green-100">
         네이버 지도
       </span>
       {!mapReady && !initError && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center bg-orange-50 text-sm text-slate-500">
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-signature-light text-sm text-slate-500">
           {sdkLoading ? "네이버 지도 SDK 불러오는 중..." : "네이버 지도 불러오는 중..."}
         </div>
       )}
       {initError && (
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-orange-50 p-6 text-center text-sm text-slate-600">
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-signature-light p-6 text-center text-sm text-slate-600">
           <p>{initError}</p>
           <button
             type="button"
@@ -230,7 +229,7 @@ export default function NaverMap({
               reloadSdk();
               setBootAttempt((value) => value + 1);
             }}
-            className="rounded-full bg-orange-500 px-4 py-2 text-xs font-semibold text-white hover:bg-orange-600"
+            className="rounded-full bg-signature-dark px-4 py-2 text-xs font-semibold text-white hover:bg-signature-darker"
           >
             다시 불러오기
           </button>

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 export default function MapPageError({
   reset,
@@ -16,7 +16,7 @@ export default function MapPageError({
       <button
         type="button"
         onClick={reset}
-        className="rounded-full bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-orange-600"
+        className="rounded-full bg-signature-dark px-5 py-2.5 text-sm font-semibold text-white hover:bg-signature-darker"
       >
         다시 시도
       </button>

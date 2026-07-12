@@ -1,9 +1,13 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Noto_Sans_KR } from "next/font/google";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
-import { NaverMapsProvider } from "@/components/map/NaverMapsProvider";
-import { USE_NAVER_MAP } from "@/lib/map-config";
+import NavigationScrollReset from "@/components/portal/NavigationScrollReset";
+import RegisterWelcomeModal from "@/components/auth/RegisterWelcomeModal";
+import { AuthProvider } from "@/components/auth/AuthProvider";
+import ThemeInitScript from "@/components/theme/ThemeInitScript";
+import { ThemeProvider } from "@/components/theme/ThemeProvider";
+import { getCurrentUser } from "@/lib/auth-server";
 import "./globals.css";
 
 const notoSans = Noto_Sans_KR({
@@ -13,32 +17,41 @@ const notoSans = Noto_Sans_KR({
 });
 
 export const metadata: Metadata = {
-  title: "라이더모임 — 오토바이 라이더 커뮤니티",
+  title: "바이크커뮤니티 — 오토바이 라이더 커뮤니티",
   description:
-    "오토바이를 취미로 타는 라이더들을 위한 커뮤니티. 게시판, 라이딩 지도, 갤러리, 날씨 정보를 한곳에서.",
+    "오토바이를 취미로 타는 라이더들을 위한 커뮤니티. 자유게시판, 라이딩 지도, 갤러리, 날씨 정보를 한곳에서.",
 };
 
-export default function RootLayout({
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const content = (
-    <>
-      <Header />
-      <main className="flex-1">{children}</main>
-      <Footer />
-    </>
-  );
+  const initialUser = await getCurrentUser();
 
   return (
-    <html lang="ko" className={`${notoSans.variable} h-full antialiased`}>
+    <html
+      lang="ko"
+      className={`${notoSans.variable} h-full antialiased`}
+      suppressHydrationWarning
+    >
       <body className="flex min-h-full flex-col">
-        {USE_NAVER_MAP ? (
-          <NaverMapsProvider>{content}</NaverMapsProvider>
-        ) : (
-          content
-        )}
+        <ThemeInitScript />
+        <ThemeProvider>
+          <AuthProvider initialUser={initialUser}>
+            <NavigationScrollReset />
+            <RegisterWelcomeModal />
+            <Header />
+            <main className="flex min-w-0 w-full flex-1 flex-col overflow-x-clip">{children}</main>
+            <Footer />
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

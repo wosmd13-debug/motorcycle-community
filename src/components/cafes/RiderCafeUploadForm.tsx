@@ -1,5 +1,7 @@
 "use client";
 
+import PortalModal from "@/components/portal/PortalModal";
+
 import { useState } from "react";
 import {
   RiderCafeBasicFields,
@@ -88,10 +90,10 @@ export default function RiderCafeUploadForm({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4">
+    <PortalModal onClose={onClose}>
       <form
         onSubmit={handleSubmit}
-        className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl sm:p-8"
+        className="portal-modal-panel max-w-xl overflow-y-auto p-4 shadow-2xl sm:p-8"
       >
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold text-slate-800">☕ 라이더 카페 등록</h2>
@@ -145,11 +147,11 @@ export default function RiderCafeUploadForm({
         <button
           type="submit"
           disabled={submitting}
-          className="mt-6 w-full rounded-2xl bg-orange-500 py-3 text-sm font-bold text-white transition hover:bg-orange-600 disabled:opacity-60"
+          className="portal-btn mt-6 w-full py-3 text-sm disabled:opacity-60"
         >
           {submitting ? "등록 중..." : "라이더 카페 등록하기"}
         </button>
       </form>
-    </div>
+    </PortalModal>
   );
 }

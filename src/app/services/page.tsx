@@ -1,0 +1,34 @@
+import PageHeader from "@/components/PageHeader";
+import ServiceExplorer from "@/components/services/ServiceExplorer";
+import { readBariRoutes } from "@/lib/bari-route-store";
+import { getServicePlaces } from "@/lib/places-data";
+
+type ServicesPageProps = {
+  searchParams: Promise<{ q?: string; id?: string }>;
+};
+
+export default async function ServicesPage({ searchParams }: ServicesPageProps) {
+  const { q, id } = await searchParams;
+  const [initialPlaces, initialBariRoutes] = await Promise.all([
+    Promise.resolve(getServicePlaces()),
+    readBariRoutes(),
+  ]);
+
+  return (
+    <div className="portal-page py-4">
+      <div className="portal-container space-y-4">
+        <PageHeader
+          title="주유소 지도"
+          description="라이딩 코스 주변 주유소를 지도에서 찾고, 네이버 내비로 바로 안내받을 수 있습니다. OPINET API 키를 설정하면 주변 실시간 유가도 확인할 수 있습니다. 세차장 홍보는 자유홍보 게시판의 세차장 카테고리를 이용해 주세요."
+        />
+
+        <ServiceExplorer
+          initialPlaces={initialPlaces}
+          initialBariRoutes={initialBariRoutes}
+          initialQuery={q ?? ""}
+          initialOpenId={id ?? ""}
+        />
+      </div>
+    </div>
+  );
+}

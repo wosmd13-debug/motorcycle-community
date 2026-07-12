@@ -1,16 +1,25 @@
 import PageHeader from "@/components/PageHeader";
 import WeatherDashboard from "@/components/weather/WeatherDashboard";
+import { fetchWeather } from "@/lib/weather-service";
 
-export default function WeatherPage() {
+export const dynamic = "force-dynamic";
+
+export default async function WeatherPage() {
+  const result = await fetchWeather({ city: "Seoul,KR", fresh: true });
+
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
-      <PageHeader
-        emoji="☀️"
-        title="라이딩 날씨"
-        description="출발 전 기온, 바람, 강수 정보를 확인하고 안전하게 라이딩하세요."
-      />
+    <div className="portal-page py-4">
+      <div className="portal-container space-y-4">
+        <PageHeader
+          title="라이딩 날씨"
+          description="출발 전 GO/NO-GO 판단 — 강수, 바람, 체감온도, 미세먼지, 일몰까지 한눈에 확인하세요."
+        />
 
-      <WeatherDashboard />
+        <WeatherDashboard
+          initialWeather={result.ok ? result.data : null}
+          initialError={result.ok ? null : result.error}
+        />
+      </div>
     </div>
   );
 }

@@ -5,7 +5,16 @@ import {
 } from "@/lib/map-container";
 
 const SCRIPT_ID = "naver-maps-sdk";
-const SDK_SRC_PREFIX = "https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=";
+const SDK_BASE_URL = "https://oapi.map.naver.com/openapi/v3/maps.js";
+
+/** v3 SDK는 ncpKeyId 사용 (ncpClientId는 레거시) */
+export function buildNaverMapsSdkUrl(clientId: string): string {
+  const param =
+    process.env.NEXT_PUBLIC_NAVER_MAP_SDK_PARAM === "ncpClientId"
+      ? "ncpClientId"
+      : "ncpKeyId";
+  return `${SDK_BASE_URL}?${param}=${encodeURIComponent(clientId)}`;
+}
 
 export type NaverMapFailReason = "script" | "sdk" | "container" | "auth" | "map";
 export type NaverSdkWaitResult = "ready" | "auth" | "timeout";
@@ -153,7 +162,8 @@ function injectSdkScript(clientId: string): Promise<boolean> {
     ensureNaverMapAuthHandler();
 
     const existing = document.getElementById(SCRIPT_ID) as HTMLScriptElement | null;
-    if (existing?.src.includes("oapi.map.naver.com/openapi/v3/maps.js")) {
+    const expectedUrl = buildNaverMapsSdkUrl(clientId);
+    if (existing?.src === expectedUrl) {
       void waitForNaverSdk(20000).then((result) => resolve(result === "ready"));
       return;
     }
@@ -163,7 +173,7 @@ function injectSdkScript(clientId: string): Promise<boolean> {
     const script = document.createElement("script");
     script.id = SCRIPT_ID;
     script.type = "text/javascript";
-    script.src = `${SDK_SRC_PREFIX}${encodeURIComponent(clientId)}`;
+    script.src = buildNaverMapsSdkUrl(clientId);
     script.async = false;
     script.defer = false;
 

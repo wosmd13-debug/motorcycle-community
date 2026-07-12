@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { useLoginRedirect } from "@/components/auth/useLoginRedirect";
 import type { CommentVoteChoice } from "@/lib/gallery";
 
 type CommentVoteButtonsProps = {
@@ -9,8 +11,8 @@ type CommentVoteButtonsProps = {
   downvotes: number;
   onVote: (
     commentId: string,
-    delta: { up: number; down: number }
-  ) => Promise<void>;
+    choice: CommentVoteChoice
+  ) => Promise<CommentVoteChoice | null | void>;
   disabled?: boolean;
   storagePrefix?: string;
 };
@@ -20,6 +22,7 @@ function voteStorageKey(commentId: string, prefix: string) {
 }
 
 function readVote(commentId: string, prefix: string): CommentVoteChoice | null {
+  if (typeof sessionStorage === "undefined") return null;
   const value = sessionStorage.getItem(voteStorageKey(commentId, prefix));
   return value === "up" || value === "down" ? value : null;
 }
@@ -37,20 +40,15 @@ function writeVote(
   }
 }
 
-function getVoteDelta(
-  current: CommentVoteChoice | null,
-  next: CommentVoteChoice
-): { up: number; down: number; nextVote: CommentVoteChoice | null } {
-  if (next === "up") {
-    if (current === "up") return { up: -1, down: 0, nextVote: null };
-    if (current === "down") return { up: 1, down: -1, nextVote: "up" };
-    return { up: 1, down: 0, nextVote: "up" };
-  }
-
-  if (current === "down") return { up: 0, down: -1, nextVote: null };
-  if (current === "up") return { up: -1, down: 1, nextVote: "down" };
-  return { up: 0, down: 1, nextVote: "down" };
-}
+const voteBtnClass = (active: boolean, tone: "up" | "down") =>
+  [
+    "inline-flex min-h-11 min-w-[5.5rem] flex-1 items-center justify-center rounded-full px-3 py-2.5 text-xs font-semibold touch-manipulation transition disabled:opacity-60 sm:flex-none",
+    active
+      ? tone === "up"
+        ? "bg-signature text-white"
+        : "bg-stone-700 text-white"
+      : "bg-white text-stone-600 ring-1 ring-signature/20 hover:bg-signature-light",
+  ].join(" ");
 
 export default function CommentVoteButtons({
   commentId,
@@ -60,6 +58,8 @@ export default function CommentVoteButtons({
   disabled = false,
   storagePrefix = "gallery-comment-vote",
 }: CommentVoteButtonsProps) {
+  const { user } = useAuth();
+  const ensureLoggedIn = useLoginRedirect();
   const [currentVote, setCurrentVote] = useState<CommentVoteChoice | null>(null);
   const [voting, setVoting] = useState(false);
 
@@ -69,45 +69,52 @@ export default function CommentVoteButtons({
 
   const handleVote = async (choice: CommentVoteChoice) => {
     if (voting || disabled) return;
+    if (!ensureLoggedIn()) return;
 
-    const delta = getVoteDelta(currentVote, choice);
     setVoting(true);
-
     try {
-      await onVote(commentId, { up: delta.up, down: delta.down });
-      writeVote(commentId, delta.nextVote, storagePrefix);
-      setCurrentVote(delta.nextVote);
+      const myVote = await onVote(commentId, choice);
+      if (myVote === undefined) return;
+      writeVote(commentId, myVote, storagePrefix);
+      setCurrentVote(myVote);
     } finally {
       setVoting(false);
     }
   };
 
   return (
-    <div className="mt-3 flex items-center gap-2">
-      <button
-        type="button"
-        onClick={() => handleVote("up")}
-        disabled={disabled || voting}
-        className={`rounded-full px-3 py-1 text-xs font-semibold transition disabled:opacity-60 ${
-          currentVote === "up"
-            ? "bg-orange-500 text-white"
-            : "bg-white text-slate-600 ring-1 ring-orange-100 hover:bg-orange-50"
-        }`}
-      >
-        👍 추천 {upvotes}
-      </button>
-      <button
-        type="button"
-        onClick={() => handleVote("down")}
-        disabled={disabled || voting}
-        className={`rounded-full px-3 py-1 text-xs font-semibold transition disabled:opacity-60 ${
-          currentVote === "down"
-            ? "bg-slate-700 text-white"
-            : "bg-white text-slate-600 ring-1 ring-orange-100 hover:bg-orange-50"
-        }`}
-      >
-        👎 비추천 {downvotes}
-      </button>
+    <div className="mt-3 space-y-2">
+      <div className="flex w-full items-stretch gap-2 sm:w-auto sm:items-center">
+        <button
+          type="button"
+          onClick={() => void handleVote("up")}
+          disabled={disabled || voting}
+          className={voteBtnClass(currentVote === "up", "up")}
+        >
+          추천 {upvotes}
+        </button>
+        <button
+          type="button"
+          onClick={() => void handleVote("down")}
+          disabled={disabled || voting}
+          className={voteBtnClass(currentVote === "down", "down")}
+        >
+          비추천 {downvotes}
+        </button>
+      </div>
+      {!user ? (
+        <p className="text-[11px] leading-5 text-stone-400">
+          투표는{" "}
+          <button
+            type="button"
+            onClick={() => ensureLoggedIn()}
+            className="font-semibold text-signature-dark underline-offset-2 hover:underline"
+          >
+            로그인
+          </button>
+          후 이용할 수 있습니다.
+        </p>
+      ) : null}
     </div>
   );
 }
