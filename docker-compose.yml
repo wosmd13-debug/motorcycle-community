@@ -1,9 +1,22 @@
 # 단일 VPS 배포용. data/와 uploads는 볼륨으로 영속화하세요.
 # 사용: docker compose up -d --build
+#
+# NEXT_PUBLIC_* 는 이미지 빌드 시 박히므로 .env.production 값을 build-arg로 넘깁니다.
+# 첫 실행 전 (Linux):
+#   mkdir -p data public/uploads
+#   sudo chown -R 1001:1001 data public/uploads
 
 services:
   web:
-    build: .
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
+        NEXT_PUBLIC_CONTACT_EMAIL: ${NEXT_PUBLIC_CONTACT_EMAIL:-}
+        NEXT_PUBLIC_SITE_OPERATOR_NAME: ${NEXT_PUBLIC_SITE_OPERATOR_NAME:-}
+        NEXT_PUBLIC_CONTACT_PHONE: ${NEXT_PUBLIC_CONTACT_PHONE:-}
+        NEXT_PUBLIC_NAVER_MAP_CLIENT_ID: ${NEXT_PUBLIC_NAVER_MAP_CLIENT_ID:-}
+        NEXT_PUBLIC_USE_NAVER_MAP: ${NEXT_PUBLIC_USE_NAVER_MAP:-}
     ports:
       - "3000:3000"
     env_file:

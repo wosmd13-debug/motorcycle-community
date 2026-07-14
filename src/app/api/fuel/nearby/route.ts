@@ -4,8 +4,12 @@ import {
   isOpinetConfigured,
   type FuelProductCode,
 } from "@/lib/opinet-service";
+import { rateLimitExternalApi } from "@/lib/request-guards";
 
 export async function GET(request: NextRequest) {
+  const limited = rateLimitExternalApi(request, "fuel");
+  if (limited) return limited;
+
   const { searchParams } = request.nextUrl;
   const lat = Number(searchParams.get("lat"));
   const lng = Number(searchParams.get("lng"));

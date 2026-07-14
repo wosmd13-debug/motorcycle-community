@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import MarketplaceDetailView from "@/components/marketplace/MarketplaceDetailView";
+import { toPublicEngagementItem } from "@/lib/engagement";
 import { getMarketplaceItem } from "@/lib/marketplace-store";
 
 export const dynamic = "force-dynamic";
@@ -29,7 +30,7 @@ export default async function MarketplaceDetailPage({
           ← 중고거래 목록
         </Link>
 
-        <MarketplaceDetailView initialItem={item} />
+        <MarketplaceDetailView initialItem={toPublicEngagementItem(item)} />
       </div>
     </div>
   );

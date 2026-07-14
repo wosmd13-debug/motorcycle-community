@@ -226,7 +226,7 @@ export const seedRiderCafes: RiderCafeEntry[] = [
     closedDays: "설·추석 당일 휴무",
     directions:
       "남해고속도로 남해 IC → 설리 방면 3km. 카페 앞 바이크 전용 주차 10대 가능.",
-    website: "https://example.com/namhae-wind",
+    website: "",
     likes: 18,
     views: 94,
     createdAt: "2026-07-05T10:00:00.000Z",

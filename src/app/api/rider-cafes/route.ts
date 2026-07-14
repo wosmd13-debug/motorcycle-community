@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireCurrentUserFromRequest } from "@/lib/auth-server";
 import { toPublicEngagementItem } from "@/lib/engagement";
 import {
   parseRiderCafeBusinessFields,
@@ -7,6 +6,7 @@ import {
   type RiderCafeRegion,
 } from "@/lib/rider-cafe";
 import { createRiderCafe, readRiderCafes } from "@/lib/rider-cafe-store";
+import { requireUserWithRateLimit } from "@/lib/request-guards";
 
 const postRegions = riderCafeCategories.filter(
   (region): region is RiderCafeRegion => region !== "전체"
@@ -28,7 +28,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await requireCurrentUserFromRequest(request);
+    const user = await requireUserWithRateLimit(request, "write");
     if (user instanceof NextResponse) return user;
 
     const body = await request.json();

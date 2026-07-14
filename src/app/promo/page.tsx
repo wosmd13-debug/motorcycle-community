@@ -1,6 +1,7 @@
 import PageHeader from "@/components/PageHeader";
 import PromoExplorer from "@/components/promo/PromoExplorer";
 import PromoWarningBanner from "@/components/promo/PromoWarningBanner";
+import { toPublicEngagementList } from "@/lib/engagement";
 import { readPromoPosts } from "@/lib/promo-store";
 import { redirect } from "next/navigation";
 
@@ -17,7 +18,7 @@ export default async function PromoPage({ searchParams }: PromoPageProps) {
     redirect(`/promo/${id}`);
   }
 
-  const initialPosts = await readPromoPosts();
+  const initialPosts = toPublicEngagementList(await readPromoPosts());
 
   return (
     <div className="portal-page py-4">

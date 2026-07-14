@@ -10,26 +10,48 @@ const LIKE_LIMIT = 60;
 const VOTE_LIMIT = 80;
 const VIEW_LIMIT = 120;
 const AUTH_LIMIT = 20;
+const WRITE_LIMIT = 40;
+const COMMENT_LIMIT = 80;
+const REPORT_LIMIT = 20;
+const EXTERNAL_API_LIMIT = 90;
 const WINDOW_MS = 60 * 60 * 1000;
 const AUTH_WINDOW_MS = 15 * 60 * 1000;
 
+type RateLimitedAction =
+  | "like"
+  | "comment-vote"
+  | "upload"
+  | "write"
+  | "comment"
+  | "report";
+
+function limitForAction(action: RateLimitedAction): number {
+  switch (action) {
+    case "like":
+      return LIKE_LIMIT;
+    case "comment-vote":
+      return VOTE_LIMIT;
+    case "upload":
+      return 40;
+    case "write":
+      return WRITE_LIMIT;
+    case "comment":
+      return COMMENT_LIMIT;
+    case "report":
+      return REPORT_LIMIT;
+  }
+}
+
 export async function requireUserWithRateLimit(
   request: NextRequest,
-  action: "like" | "comment-vote" | "upload"
+  action: RateLimitedAction
 ): Promise<PublicUser | NextResponse> {
   const user = await requireCurrentUserFromRequest(request);
   if (user instanceof NextResponse) return user;
 
-  const limit =
-    action === "like"
-      ? LIKE_LIMIT
-      : action === "comment-vote"
-        ? VOTE_LIMIT
-        : 40;
-
   const result = checkRateLimit(
     clientKeyFromRequest(request, action, user.id),
-    limit,
+    limitForAction(action),
     WINDOW_MS
   );
 
@@ -43,6 +65,27 @@ export async function requireUserWithRateLimit(
   }
 
   return user;
+}
+
+/** 날씨·경로·유가 등 외부 API 호출 보호 */
+export function rateLimitExternalApi(
+  request: NextRequest,
+  kind: "weather" | "directions" | "fuel"
+): NextResponse | null {
+  const result = checkRateLimit(
+    clientKeyFromRequest(request, kind),
+    EXTERNAL_API_LIMIT,
+    WINDOW_MS
+  );
+  if (!result.ok) {
+    return NextResponse.json(
+      {
+        error: `요청이 너무 많습니다. ${result.retryAfterSec}초 후 다시 시도해 주세요.`,
+      },
+      { status: 429 }
+    );
+  }
+  return null;
 }
 
 export function rateLimitAuthAttempt(

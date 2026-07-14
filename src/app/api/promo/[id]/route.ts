@@ -8,10 +8,7 @@ import {
   viewPromoPost,
   votePromoComment,
 } from "@/lib/promo-store";
-import {
-  getCurrentUserFromRequest,
-  requireCurrentUserFromRequest,
-} from "@/lib/auth-server";
+import { getCurrentUserFromRequest } from "@/lib/auth-server";
 import {
   canManagePromoPost,
   parsePromoBusinessFields,
@@ -256,7 +253,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
   const { id } = await context.params;
 
   try {
-    const user = await requireCurrentUserFromRequest(request);
+    const user = await requireUserWithRateLimit(request, "comment");
     if (user instanceof NextResponse) return user;
 
     const body = await request.json();

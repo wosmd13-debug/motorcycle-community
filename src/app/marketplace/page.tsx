@@ -1,6 +1,7 @@
 import PageHeader from "@/components/PageHeader";
 import MarketplaceExplorer from "@/components/marketplace/MarketplaceExplorer";
 import MarketplaceTradeNotice from "@/components/marketplace/MarketplaceTradeNotice";
+import { toPublicEngagementList } from "@/lib/engagement";
 import { readMarketplaceItems } from "@/lib/marketplace-store";
 import { redirect } from "next/navigation";
 
@@ -19,7 +20,7 @@ export default async function MarketplacePage({
     redirect(`/marketplace/${id}`);
   }
 
-  const initialItems = await readMarketplaceItems();
+  const initialItems = toPublicEngagementList(await readMarketplaceItems());
 
   return (
     <div className="portal-page py-4">

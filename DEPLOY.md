@@ -34,7 +34,9 @@
 ## 코드에 이미 반영된 준비 사항
 
 - Docker / standalone 빌드, data·uploads 볼륨
-- 업로드·좋아요·댓글투표 로그인 + rate limit
+- 업로드·좋아요·댓글투표·글쓰기·신고 rate limit
+- SSR에서 likedBy/votesBy 비노출, AUTH_SECRET 취약값 차단
+- robots.txt / sitemap / Open Graph 메타데이터
 - 이미지 매직바이트 검증, 삭제 시 업로드 파일 정리
 - 게시판·영상 작성자 본인 수정/삭제
 - 백업 스크립트, 진단 API production 차단
@@ -46,23 +48,44 @@
 
 Ubuntu + Docker 또는 Node 20+. DNS A레코드 → 서버 IP. 방화벽 80/443.
 
+앞단에 **Nginx/Caddy**로 HTTPS를 연결하고, `X-Forwarded-For`는 프록시에서만 신뢰하세요.
+(앱을 3000 포트로 직접 공개하면 rate limit IP가 위조될 수 있습니다.)
+
+---
+
 ## 2. 환경 변수
 
-`.env.example` → `.env.production` 복사 후:
+`.env.example` → `.env.production` 복사 후 반드시 설정:
 
-- `AUTH_SECRET` (긴 랜덤)
-- `ADMIN_LOGIN_IDS`
-- `NEXT_PUBLIC_SITE_URL`
-- `NEXT_PUBLIC_CONTACT_EMAIL`
+| 변수 | 설명 |
+|------|------|
+| `AUTH_SECRET` | **32자 이상** 랜덤 문자열 (예시/개발용 값 금지) |
+| `ADMIN_LOGIN_IDS` | 운영자 로그인 ID (쉼표 구분) |
+| `NEXT_PUBLIC_SITE_URL` | `https://실제도메인` |
+| `NEXT_PUBLIC_CONTACT_EMAIL` | 문의 메일 |
+| `NEXT_PUBLIC_NAVER_MAP_CLIENT_ID` 등 | 지도·날씨·유가 키 |
+
+`NEXT_PUBLIC_*` 는 **이미지 빌드 시** 들어가므로, 값을 바꾼 뒤에는 `docker compose up -d --build`로 다시 빌드하세요.
+
+---
 
 ## 3. Docker 실행
 
 ```bash
 cp .env.example .env.production
+# .env.production 내용을 실제 값으로 수정
+
+mkdir -p data public/uploads
+sudo chown -R 1001:1001 data public/uploads
+
 docker compose up -d --build
 ```
 
 앞단에 Nginx/Caddy로 HTTPS 연결.
+
+볼륨 권한(`1001:1001`)을 맞추지 않으면 회원가입·업로드·글쓰기가 500으로 실패할 수 있습니다.
+
+---
 
 ## 4. 백업
 
@@ -73,6 +96,8 @@ chmod +x scripts/backup.sh
 
 cron으로 매일 실행 권장.
 
+---
+
 ## 5. 오픈 전 스모크 (PC + 모바일)
 
 1. 목록/상세 로딩
@@ -81,6 +106,9 @@ cron으로 매일 실행 권장.
 4. 좋아요·댓글·투표
 5. 미션·상점
 6. 모바일 메뉴·모달
+7. `/robots.txt`, `/sitemap.xml` 응답 확인
+
+---
 
 ## 6. 트래픽 증가 시
 

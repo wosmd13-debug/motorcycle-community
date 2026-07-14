@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireCurrentUserFromRequest } from "@/lib/auth-server";
 import { boardCategories, type BoardCategory } from "@/lib/board";
 import { createBoardPost, readBoardPosts } from "@/lib/board-store";
 import { toPublicEngagementItem } from "@/lib/engagement";
 import { getMemberRankingByUserId } from "@/lib/ranking-server";
+import { requireUserWithRateLimit } from "@/lib/request-guards";
 
 const postCategories = boardCategories.filter(
   (category): category is BoardCategory => category !== "전체"
@@ -25,7 +25,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await requireCurrentUserFromRequest(request);
+    const user = await requireUserWithRateLimit(request, "write");
     if (user instanceof NextResponse) return user;
 
     const body = await request.json();

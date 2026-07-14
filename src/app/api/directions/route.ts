@@ -3,8 +3,12 @@ import {
   buildDirectionsQuery,
   fetchMotorcycleDirections,
 } from "@/lib/directions-server";
+import { rateLimitExternalApi } from "@/lib/request-guards";
 
 export async function GET(request: NextRequest) {
+  const limited = rateLimitExternalApi(request, "directions");
+  if (limited) return limited;
+
   const { searchParams } = request.nextUrl;
   const start = searchParams.get("start");
   const goal = searchParams.get("goal");

@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireCurrentUserFromRequest } from "@/lib/auth-server";
 import { validateMemberRouteInput } from "@/lib/member-route";
 import type { RouteDifficulty, RouteType, RouteWaypoint } from "@/lib/routes-data";
 import { isDetailRegion } from "@/lib/regions";
@@ -7,6 +6,7 @@ import {
   createMemberRoute,
   readMemberRoutes,
 } from "@/lib/member-route-store";
+import { requireUserWithRateLimit } from "@/lib/request-guards";
 
 export async function GET(request: NextRequest) {
   try {
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await requireCurrentUserFromRequest(request);
+    const user = await requireUserWithRateLimit(request, "write");
     if (user instanceof NextResponse) return user;
 
     const body = await request.json();

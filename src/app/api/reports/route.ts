@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  requireAdminFromRequest,
-  requireCurrentUserFromRequest,
-} from "@/lib/auth-server";
+import { requireAdminFromRequest } from "@/lib/auth-server";
 import { getContentTitle } from "@/lib/content-delete";
 import {
   createReport,
@@ -16,6 +13,7 @@ import {
   type ReportReason,
   type ReportTargetType,
 } from "@/lib/reports";
+import { requireUserWithRateLimit } from "@/lib/request-guards";
 
 export async function GET(request: NextRequest) {
   const admin = await requireAdminFromRequest(request);
@@ -33,7 +31,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const user = await requireCurrentUserFromRequest(request);
+  const user = await requireUserWithRateLimit(request, "report");
   if (user instanceof NextResponse) return user;
 
   try {

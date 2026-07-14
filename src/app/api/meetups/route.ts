@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireCurrentUserFromRequest } from "@/lib/auth-server";
 import {
   meetupPaces,
   meetupRegions,
@@ -7,6 +6,7 @@ import {
   type MeetupRegion,
 } from "@/lib/meetup";
 import { createMeetup, readMeetups } from "@/lib/meetup-store";
+import { requireUserWithRateLimit } from "@/lib/request-guards";
 
 const postRegions = meetupRegions.filter(
   (region): region is MeetupRegion => region !== "전체"
@@ -26,7 +26,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await requireCurrentUserFromRequest(request);
+    const user = await requireUserWithRateLimit(request, "write");
     if (user instanceof NextResponse) return user;
 
     const body = await request.json();

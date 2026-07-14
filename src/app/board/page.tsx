@@ -1,6 +1,7 @@
 import BoardExplorer from "@/components/board/BoardExplorer";
 import { boardCategories } from "@/lib/board";
 import { readBoardPosts } from "@/lib/board-store";
+import { toPublicEngagementList } from "@/lib/engagement";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -25,7 +26,7 @@ export default async function BoardPage({ searchParams }: BoardPageProps) {
     redirect(`/board/${id}`);
   }
 
-  const initialPosts = await readBoardPosts();
+  const initialPosts = toPublicEngagementList(await readBoardPosts());
 
   return (
     <div className="portal-page">

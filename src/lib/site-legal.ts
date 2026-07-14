@@ -1,4 +1,4 @@
-/** 배포 전 .env 로 실제 정보로 교체하세요. */
+/** 법적 고지·푸터. 배포 시 NEXT_PUBLIC_* 환경 변수로 덮어쓰세요. */
 export const siteLegalInfo = {
   serviceName: "바이크커뮤니티",
   serviceNameEn: "Bike Community",
@@ -6,9 +6,9 @@ export const siteLegalInfo = {
   contactEmail:
     process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "wosmd13@naver.com",
   contactPhone: process.env.NEXT_PUBLIC_CONTACT_PHONE ?? "",
-  siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? "https://bikecommunity.example.com",
+  siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
   effectiveDate: "2026-07-07",
-  lastUpdated: "2026-07-12",
+  lastUpdated: "2026-07-14",
 } as const;
 
 export const legalDocuments = [

@@ -8,10 +8,7 @@ import {
   viewVideo,
   voteVideoComment,
 } from "@/lib/video-store";
-import {
-  getCurrentUserFromRequest,
-  requireCurrentUserFromRequest,
-} from "@/lib/auth-server";
+import { getCurrentUserFromRequest } from "@/lib/auth-server";
 import {
   canManageVideo,
   parseTagsInput,
@@ -244,7 +241,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
   const { id } = await context.params;
 
   try {
-    const user = await requireCurrentUserFromRequest(request);
+    const user = await requireUserWithRateLimit(request, "comment");
     if (user instanceof NextResponse) return user;
 
     const body = await request.json();

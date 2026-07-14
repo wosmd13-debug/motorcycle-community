@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import PromoDetailView from "@/components/promo/PromoDetailView";
+import { toPublicEngagementItem } from "@/lib/engagement";
 import { getPromoPost } from "@/lib/promo-store";
 
 export const dynamic = "force-dynamic";
@@ -27,7 +28,7 @@ export default async function PromoDetailPage({ params }: PromoDetailPageProps) 
           ← 자유홍보 목록
         </Link>
 
-        <PromoDetailView initialPost={post} />
+        <PromoDetailView initialPost={toPublicEngagementItem(post)} />
       </div>
     </div>
   );

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireCurrentUserFromRequest } from "@/lib/auth-server";
 import { galleryCategories, type GalleryCategory } from "@/lib/gallery";
 import { createGalleryPost, readGalleryPosts } from "@/lib/gallery-store";
 import { toPublicEngagementItem } from "@/lib/engagement";
+import { requireUserWithRateLimit } from "@/lib/request-guards";
 import { getMemberRankingByUserId } from "@/lib/ranking-server";
 
 const postCategories = galleryCategories.filter(
@@ -25,7 +25,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await requireCurrentUserFromRequest(request);
+    const user = await requireUserWithRateLimit(request, "write");
     if (user instanceof NextResponse) return user;
 
     const body = await request.json();

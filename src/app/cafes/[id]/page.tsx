@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import RiderCafeDetailView from "@/components/cafes/RiderCafeDetailView";
+import { toPublicEngagementItem } from "@/lib/engagement";
 import { getRiderCafe } from "@/lib/rider-cafe-store";
 
 export const dynamic = "force-dynamic";
@@ -29,7 +30,7 @@ export default async function RiderCafeDetailPage({
           ← 카페 목록
         </Link>
 
-        <RiderCafeDetailView initialEntry={entry} />
+        <RiderCafeDetailView initialEntry={toPublicEngagementItem(entry)} />
       </div>
     </div>
   );

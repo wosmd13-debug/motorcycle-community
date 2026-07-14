@@ -11,12 +11,28 @@ export type SessionPayload = {
   exp: number;
 };
 
+const WEAK_AUTH_SECRETS = new Set([
+  "dev-only-auth-secret-change-me",
+  "dev-local-auth-secret-change-me",
+  "운영환경에서_긴_랜덤_문자열로_변경하세요",
+  "change-me",
+  "secret",
+]);
+
 function getAuthSecret(): string {
   const secret = process.env.AUTH_SECRET?.trim();
-  if (secret) return secret;
   if (process.env.NODE_ENV === "production") {
-    throw new Error("AUTH_SECRET 환경 변수가 필요합니다.");
+    if (!secret) {
+      throw new Error("AUTH_SECRET 환경 변수가 필요합니다.");
+    }
+    if (secret.length < 32 || WEAK_AUTH_SECRETS.has(secret)) {
+      throw new Error(
+        "AUTH_SECRET 은 32자 이상의 난수로 설정하세요. 예시/개발용 값은 사용할 수 없습니다."
+      );
+    }
+    return secret;
   }
+  if (secret) return secret;
   return "dev-only-auth-secret-change-me";
 }
 

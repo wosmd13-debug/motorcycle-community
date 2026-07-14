@@ -1,5 +1,6 @@
 import PageHeader from "@/components/PageHeader";
 import VideoExplorer from "@/components/videos/VideoExplorer";
+import { toPublicEngagementList } from "@/lib/engagement";
 import { readVideos } from "@/lib/video-store";
 import { redirect } from "next/navigation";
 
@@ -16,7 +17,7 @@ export default async function VideosPage({ searchParams }: VideosPageProps) {
     redirect(`/videos/${id}`);
   }
 
-  const initialVideos = await readVideos();
+  const initialVideos = toPublicEngagementList(await readVideos());
 
   return (
     <div className="portal-page py-4">

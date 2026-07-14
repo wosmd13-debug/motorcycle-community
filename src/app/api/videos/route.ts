@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireCurrentUserFromRequest } from "@/lib/auth-server";
 import { toPublicEngagementItem } from "@/lib/engagement";
+import { requireUserWithRateLimit } from "@/lib/request-guards";
 import {
   parseTagsInput,
   parseYouTubeVideoId,
@@ -29,7 +29,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await requireCurrentUserFromRequest(request);
+    const user = await requireUserWithRateLimit(request, "write");
     if (user instanceof NextResponse) return user;
 
     const body = await request.json();

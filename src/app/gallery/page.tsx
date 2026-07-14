@@ -1,5 +1,6 @@
 import PageHeader from "@/components/PageHeader";
 import GalleryExplorer from "@/components/gallery/GalleryExplorer";
+import { toPublicEngagementList } from "@/lib/engagement";
 import { readGalleryPosts } from "@/lib/gallery-store";
 import { redirect } from "next/navigation";
 
@@ -16,7 +17,7 @@ export default async function GalleryPage({ searchParams }: GalleryPageProps) {
     redirect(`/gallery/${id}`);
   }
 
-  const initialPosts = await readGalleryPosts();
+  const initialPosts = toPublicEngagementList(await readGalleryPosts());
 
   return (
     <div className="portal-page">

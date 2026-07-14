@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import VideoDetailView from "@/components/videos/VideoDetailView";
+import { toPublicEngagementItem } from "@/lib/engagement";
 import { getVideo } from "@/lib/video-store";
 
 export const dynamic = "force-dynamic";
@@ -27,7 +28,7 @@ export default async function VideoDetailPage({ params }: VideoDetailPageProps) 
           ← 영상 목록
         </Link>
 
-        <VideoDetailView initialVideo={video} />
+        <VideoDetailView initialVideo={toPublicEngagementItem(video)} />
       </div>
     </div>
   );

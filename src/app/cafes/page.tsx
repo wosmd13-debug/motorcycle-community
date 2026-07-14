@@ -1,6 +1,7 @@
 import PageHeader from "@/components/PageHeader";
 import RiderCafeExplorer from "@/components/cafes/RiderCafeExplorer";
 import { readBariRoutes } from "@/lib/bari-route-store";
+import { toPublicEngagementList } from "@/lib/engagement";
 import { readRiderCafes } from "@/lib/rider-cafe-store";
 import { redirect } from "next/navigation";
 
@@ -18,7 +19,7 @@ export default async function CafesPage({ searchParams }: CafesPageProps) {
   }
 
   const [initialEntries, initialBariRoutes] = await Promise.all([
-    readRiderCafes(),
+    readRiderCafes().then(toPublicEngagementList),
     readBariRoutes(),
   ]);
 

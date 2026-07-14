@@ -1,5 +1,59 @@
 [
   {
+    "id": "b0ee5781-54d9-484b-9bc6-60e2f44e5d34",
+    "title": "카페하라 예산점. 사장님이 직접 찍어주십니다 ㅎㅎ",
+    "author": "운영자",
+    "authorId": "b8eaa383-c378-495c-bc2c-2b70d32c283e",
+    "authorGradeId": "operator",
+    "location": "[예산] 카페하라",
+    "category": "라이딩",
+    "imageUrl": "/uploads/gallery/1783705879498-f288fd52-fcfc-44df-ba20-a0052744005a.jpg",
+    "caption": "예산시장 갔다가 카페하라 유명하다 해서 잠시 쉴 겸 들렸습니다 ㅎㅎ",
+    "likes": 2,
+    "views": 2,
+    "comments": [],
+    "createdAt": "2026-07-10T17:51:21.862Z"
+  },
+  {
+    "id": "f66d001e-c370-4b5b-8fa2-82deefe849e9",
+    "title": "96바이커즈(공주 바이콩즈)",
+    "author": "청주_s1000r_31",
+    "authorId": "9315ca39-7107-43a5-8b37-1737e185ea81",
+    "location": "공주 바이콩즈",
+    "category": "크루",
+    "imageUrl": "/uploads/gallery/1783661443838-f3aac0fa-737f-436b-a055-fedd59994306.jpg",
+    "caption": "제가 만든 96바이커즈 맴버들끼리 공주에 있는 바이콩즈 갔다왔습니다~",
+    "likes": 2,
+    "views": 3,
+    "comments": [
+      {
+        "id": "43c7623d-1151-4f5e-8d2b-bae31917af80",
+        "author": "서울_팻보이_34",
+        "authorId": "e39fd865-692d-47bf-970c-73632080a2f0",
+        "authorGradeId": "beginner",
+        "content": "나중에 공주도 함 가봐야겠네요",
+        "upvotes": 2,
+        "downvotes": 0,
+        "createdAt": "2026-07-11T03:44:30.139Z",
+        "votesBy": {
+          "b8eaa383-c378-495c-bc2c-2b70d32c283e": "up"
+        }
+      },
+      {
+        "id": "20b156a8-8fef-422c-9d7c-d26b2432bc08",
+        "author": "운영자",
+        "content": "와우..! 정말 멋지네요! 저도 저기 카페 한 번 방문해야겠어요!",
+        "upvotes": 2,
+        "downvotes": 0,
+        "createdAt": "2026-07-10T05:32:01.594Z",
+        "votesBy": {
+          "b8eaa383-c378-495c-bc2c-2b70d32c283e": "up"
+        }
+      }
+    ],
+    "createdAt": "2026-07-10T05:30:44.241Z"
+  },
+  {
     "id": "ac6d7426-a381-4328-ad07-659279925948",
     "title": "카페 바이콩즈",
     "author": "주말 라이더",
@@ -7,16 +61,24 @@
     "category": "크루",
     "imageUrl": "/uploads/gallery/1783256441889-9d834a71-172f-4712-ab01-b7f007b6c1ff.jpg",
     "caption": "주말 충남 공주에 있는 바이콩즈라는 카페 찍고 왔슴돠~",
-    "likes": 1,
+    "likes": 24,
     "createdAt": "2026-07-05T13:00:41.933Z",
-    "views": 3,
+    "views": 8,
     "comments": [
+      {
+        "id": "662f90da-9d9c-4b87-98a1-12e5ea58fe00",
+        "author": "청주_s1000r_31",
+        "content": "믓집니다!!!",
+        "upvotes": 3,
+        "downvotes": 0,
+        "createdAt": "2026-07-09T07:01:15.678Z"
+      },
       {
         "id": "9ca242b2-896b-45ba-918a-7ea1ec9806c2",
         "author": "울산 발바리",
         "content": "오..! 사진 멋지게 찍어주셨네요 ㅎㅎ",
         "createdAt": "2026-07-05T13:06:32.520Z",
-        "upvotes": 3,
+        "upvotes": 7,
         "downvotes": 0
       }
     ]
@@ -29,96 +91,26 @@
     "category": "바이크",
     "imageUrl": "/uploads/gallery/1783256053709-46150a7d-8fba-4b75-a433-415d149d8b58.jpg",
     "caption": "슈퍼메테오650 입문!",
-    "likes": 1,
+    "likes": 6,
     "createdAt": "2026-07-05T12:54:13.776Z",
-    "views": 3,
+    "views": 8,
     "comments": [
+      {
+        "id": "9bb03fe2-94b0-422a-850d-40c9555e2b72",
+        "author": "청주_s1000r_31",
+        "content": "멋지네요 슈퍼메테오! 안라무복하세요 :)",
+        "upvotes": 3,
+        "downvotes": 0,
+        "createdAt": "2026-07-09T03:15:29.379Z"
+      },
       {
         "id": "f175fd08-6590-4823-b68e-8fa8aab90066",
         "author": "육교로 달린다",
         "content": "슈퍼메테오650 괜찮나요?? 지금 인터셉터랑 고민중인데...",
-        "upvotes": 3,
+        "upvotes": 7,
         "downvotes": 0,
         "createdAt": "2026-07-05T13:07:45.161Z"
       }
     ]
-  },
-  {
-    "id": "seed-1",
-    "title": "속초 해변 일출 라이딩",
-    "author": "새벽라이더",
-    "location": "강원 속초",
-    "category": "라이딩",
-    "imageUrl": "https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?auto=format&fit=crop&w=1200&q=80",
-    "caption": "일출 직후 해안도로를 달리며 찍은 인증샷입니다.",
-    "likes": 42,
-    "createdAt": "2026-07-04T05:30:00.000Z",
-    "views": 0,
-    "comments": []
-  },
-  {
-    "id": "seed-2",
-    "title": "지리산 능선 코스 인증샷",
-    "author": "산악크루",
-    "location": "전남 구례",
-    "category": "인증",
-    "imageUrl": "https://images.unsplash.com/photo-1464207688109-390f021e1304?auto=format&fit=crop&w=1200&q=80",
-    "caption": "구례에서 출발해 능선 뷰 포인트에서 휴식.",
-    "likes": 38,
-    "createdAt": "2026-07-03T09:15:00.000Z",
-    "views": 0,
-    "comments": []
-  },
-  {
-    "id": "seed-3",
-    "title": "제주 해안도로 투어",
-    "author": "제주라이더",
-    "location": "제주 서귀포",
-    "category": "풍경",
-    "imageUrl": "https://images.unsplash.com/photo-1449965408869-eaa3f722e40c?auto=format&fit=crop&w=1200&q=80",
-    "caption": "1132번 해안도로의 에메랄드빛 바다.",
-    "likes": 55,
-    "createdAt": "2026-07-02T14:00:00.000Z",
-    "views": 0,
-    "comments": []
-  },
-  {
-    "id": "seed-4",
-    "title": "가을 단풍 라이딩",
-    "author": "단풍매니아",
-    "location": "충북 제천",
-    "category": "풍경",
-    "imageUrl": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1200&q=80",
-    "caption": "제천 의림지 인근 단풍 구간.",
-    "likes": 29,
-    "createdAt": "2026-07-01T11:20:00.000Z",
-    "views": 0,
-    "comments": []
-  },
-  {
-    "id": "seed-5",
-    "title": "첫 바이크 데뷔 기념",
-    "author": "신입라이더",
-    "location": "경기 용인",
-    "category": "바이크",
-    "imageUrl": "https://images.unsplash.com/photo-1558981404-c648eb53f013?auto=format&fit=crop&w=1200&q=80",
-    "caption": "첫 바이크와 함께한 기념 촬영.",
-    "likes": 61,
-    "createdAt": "2026-06-30T16:45:00.000Z",
-    "views": 0,
-    "comments": []
-  },
-  {
-    "id": "seed-6",
-    "title": "크루 단체 라이딩",
-    "author": "서울크루",
-    "location": "서울 한강",
-    "category": "크루",
-    "imageUrl": "https://images.unsplash.com/photo-1527482795227-404130088fed?auto=format&fit=crop&w=1200&q=80",
-    "caption": "주말 아침 한강 코스 단체 라이딩.",
-    "likes": 47,
-    "createdAt": "2026-06-29T08:00:00.000Z",
-    "views": 0,
-    "comments": []
   }
 ]

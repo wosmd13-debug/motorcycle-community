@@ -125,3 +125,10 @@ export function toPublicEngagementItem<T extends { likedBy?: string[]; comments?
   return clone;
 }
 
+/** SSR/클라이언트 props용 — 목록 전체를 공개용으로 정제 */
+export function toPublicEngagementList<
+  T extends { likedBy?: string[]; comments?: unknown },
+>(items: T[]): T[] {
+  return items.map((item) => toPublicEngagementItem(item));
+}
+

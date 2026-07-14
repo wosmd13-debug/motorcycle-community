@@ -207,7 +207,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
   const { id } = await context.params;
 
   try {
-    const user = await requireCurrentUserFromRequest(request);
+    const user = await requireUserWithRateLimit(request, "comment");
     if (user instanceof NextResponse) return user;
 
     const body = await request.json();

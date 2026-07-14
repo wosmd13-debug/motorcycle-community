@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { rateLimitExternalApi } from "@/lib/request-guards";
 import { fetchWeather } from "@/lib/weather-service";
 
 export async function GET(request: NextRequest) {
+  const limited = rateLimitExternalApi(request, "weather");
+  if (limited) return limited;
+
   const { searchParams } = request.nextUrl;
   const city = searchParams.get("city") ?? undefined;
   const lat = searchParams.get("lat") ?? undefined;

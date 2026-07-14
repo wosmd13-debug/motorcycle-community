@@ -282,7 +282,7 @@ export const seedPromoPosts: PromoPost[] = [
     phone: "031-555-7890",
     businessHours: "매일 09:00 - 21:00",
     businessStatus: "영업중",
-    linkUrl: "https://example.com",
+    linkUrl: "",
     imageUrls: [
       "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1400&q=80",
     ],

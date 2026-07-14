@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import GalleryDetailView from "@/components/gallery/GalleryDetailView";
+import { toPublicEngagementItem } from "@/lib/engagement";
 import { getGalleryPost } from "@/lib/gallery-store";
 
 export const dynamic = "force-dynamic";
@@ -27,7 +28,7 @@ export default async function GalleryDetailPage({ params }: GalleryDetailPagePro
           ← 갤러리 목록
         </Link>
 
-        <GalleryDetailView initialPost={post} />
+        <GalleryDetailView initialPost={toPublicEngagementItem(post)} />
       </div>
     </div>
   );

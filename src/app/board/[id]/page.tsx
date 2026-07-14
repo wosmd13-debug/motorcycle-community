@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import BoardDetailView from "@/components/board/BoardDetailView";
 import { getBoardPost } from "@/lib/board-store";
+import { toPublicEngagementItem } from "@/lib/engagement";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +28,7 @@ export default async function BoardDetailPage({ params }: BoardDetailPageProps) 
           ← 게시판 목록
         </Link>
 
-        <BoardDetailView initialPost={post} />
+        <BoardDetailView initialPost={toPublicEngagementItem(post)} />
       </div>
     </div>
   );

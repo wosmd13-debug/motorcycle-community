@@ -10,6 +10,7 @@ import {
   addMaintenanceLog,
   getUserBikeGarage,
 } from "@/lib/bike-garage-store";
+import { requireUserWithRateLimit } from "@/lib/request-guards";
 
 export async function GET(request: NextRequest) {
   try {
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await requireCurrentUserFromRequest(request);
+    const user = await requireUserWithRateLimit(request, "write");
     if (user instanceof NextResponse) return user;
 
     const body = await request.json();

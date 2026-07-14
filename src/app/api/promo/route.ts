@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireCurrentUserFromRequest } from "@/lib/auth-server";
 import { toPublicEngagementItem } from "@/lib/engagement";
+import { requireUserWithRateLimit } from "@/lib/request-guards";
 import { parseYouTubeVideoId } from "@/lib/videos";
 import { promoCategories, promoDisplayTypes, parsePromoBusinessFields, type PromoCategory, type PromoDisplayType } from "@/lib/promo";
 import { createPromoPost, readPromoPosts } from "@/lib/promo-store";
@@ -25,7 +25,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await requireCurrentUserFromRequest(request);
+    const user = await requireUserWithRateLimit(request, "write");
     if (user instanceof NextResponse) return user;
 
     const body = await request.json();
