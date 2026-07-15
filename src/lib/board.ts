@@ -311,10 +311,13 @@ export function normalizeBoardPost(post: BoardPost): BoardPost {
 }
 
 export function formatBoardDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("ko-KR", {
+  return new Date(iso).toLocaleString("ko-KR", {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
   });
 }
 
@@ -331,9 +334,12 @@ export function formatBoardListTime(iso: string): string {
     });
   }
 
-  return date.toLocaleDateString("ko-KR", {
+  return date.toLocaleString("ko-KR", {
     month: "2-digit",
     day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
   });
 }
 

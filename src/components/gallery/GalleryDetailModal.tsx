@@ -191,7 +191,7 @@ export default function GalleryDetailModal({
                     key={comment.id}
                     className="rounded-2xl bg-orange-50/70 px-4 py-3"
                   >
-                    <div className="flex items-center justify-between gap-3">
+                    <div className="flex flex-wrap items-center gap-2">
                       <AuthorWithGrade
                         author={comment.author}
                         authorGradeId={comment.authorGradeId}

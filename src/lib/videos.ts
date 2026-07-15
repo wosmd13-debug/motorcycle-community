@@ -233,10 +233,13 @@ export function normalizeVideoPost(video: VideoPost): VideoPost {
 }
 
 export function formatVideoDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("ko-KR", {
+  return new Date(iso).toLocaleString("ko-KR", {
     year: "numeric",
     month: "long",
     day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
   });
 }
 

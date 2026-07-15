@@ -83,7 +83,7 @@ export default function BoardPostRow({
         </div>
       </div>
 
-      <div className="hidden shrink-0 text-right text-[11px] text-[var(--text-faint)] sm:block sm:w-16">
+      <div className="hidden shrink-0 text-right text-[11px] text-[var(--text-faint)] sm:block sm:min-w-[4.5rem]">
         <p>{formatBoardListTime(post.createdAt)}</p>
       </div>
     </Link>

@@ -221,7 +221,7 @@ export default function VideoDetailModal({
                     key={comment.id}
                     className="bg-signature-light/50 px-4 py-3"
                   >
-                    <div className="flex items-center justify-between gap-3">
+                    <div className="flex flex-wrap items-center gap-2">
                       <AuthorWithGrade
                         author={comment.author}
                         nicknameClassName="text-sm font-semibold text-stone-800"
