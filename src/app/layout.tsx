@@ -22,24 +22,24 @@ const siteUrl = siteLegalInfo.siteUrl.replace(/\/$/, "");
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "바이크커뮤니티 — 오토바이 라이더 커뮤니티",
-    template: "%s | 바이크커뮤니티",
+    default: "anra — 바이크 커뮤니티",
+    template: "%s | anra",
   },
   description:
     "오토바이를 취미로 타는 라이더들을 위한 커뮤니티. 자유게시판, 라이딩 지도, 갤러리, 날씨 정보를 한곳에서.",
-  applicationName: siteLegalInfo.serviceName,
+  applicationName: "anra",
   openGraph: {
     type: "website",
     locale: "ko_KR",
     url: siteUrl,
-    siteName: siteLegalInfo.serviceName,
-    title: "바이크커뮤니티 — 오토바이 라이더 커뮤니티",
+    siteName: "anra",
+    title: "anra — 바이크 커뮤니티",
     description:
       "오토바이를 취미로 타는 라이더들을 위한 커뮤니티. 자유게시판, 라이딩 지도, 갤러리, 날씨 정보를 한곳에서.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "바이크커뮤니티 — 오토바이 라이더 커뮤니티",
+    title: "anra — 바이크 커뮤니티",
     description:
       "오토바이를 취미로 타는 라이더들을 위한 커뮤니티. 자유게시판, 라이딩 지도, 갤러리, 날씨 정보를 한곳에서.",
   },

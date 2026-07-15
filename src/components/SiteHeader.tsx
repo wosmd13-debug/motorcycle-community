@@ -27,12 +27,11 @@ export default function SiteHeader() {
     <header className="sticky top-0 z-50 w-full overflow-visible border-b-2 border-signature bg-[var(--header-bg)] shadow-sm safe-top">
       <div className="portal-container flex flex-wrap items-center gap-x-2 gap-y-2 py-2 sm:gap-4 sm:py-3">
         <Link href="/" className="group min-w-0 shrink-0">
-          <p className="text-lg font-bold tracking-tight sm:text-xl">
-            <span className="text-signature">bike</span>
-            <span className="text-[var(--text-primary)]">community</span>
+          <p className="text-lg font-bold tracking-tight text-signature sm:text-xl">
+            anra
           </p>
           <p className="text-[10px] font-medium text-[var(--text-muted)] group-hover:text-signature-dark sm:text-[11px]">
-            바이크커뮤니티
+            바이크 커뮤니티
           </p>
         </Link>
 

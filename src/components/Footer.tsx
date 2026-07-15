@@ -14,19 +14,9 @@ export default function Footer() {
 
         <div className="text-center">
 
-          <p className="text-sm font-bold">
+          <p className="text-sm font-bold text-signature">anra</p>
 
-            <span className="text-signature">바이크</span>
-
-            <span className="text-[var(--text-primary)]">커뮤니티</span>
-
-          </p>
-
-          <p className="mt-1 text-xs text-[var(--text-muted)]">
-
-            오토바이 라이더를 위한 커뮤니티
-
-          </p>
+          <p className="mt-1 text-xs text-[var(--text-muted)]">바이크 커뮤니티</p>
 
         </div>
 
