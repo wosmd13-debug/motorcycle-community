@@ -23,6 +23,7 @@ import {
   rateLimitAnonymousView,
   requireUserWithRateLimit,
 } from "@/lib/request-guards";
+import { sanitizePublicUploadUrls } from "@/lib/upload-files";
 import type { PublicUser } from "@/lib/users";
 
 const postCategories = boardCategories.filter(
@@ -153,7 +154,11 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         body.content !== undefined ? String(body.content).trim() : undefined;
       const category = body.category as BoardCategory | undefined;
       const imageUrls = Array.isArray(body.imageUrls)
-        ? body.imageUrls.map((url: unknown) => String(url).trim()).filter(Boolean)
+        ? sanitizePublicUploadUrls(
+            body.imageUrls
+              .map((url: unknown) => String(url).trim())
+              .filter(Boolean)
+          )
         : undefined;
 
       if (title !== undefined && !title) {

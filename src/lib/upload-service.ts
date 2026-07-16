@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import { promises as fs } from "fs";
 import path from "path";
 import { NextRequest, NextResponse } from "next/server";
@@ -6,7 +7,7 @@ import {
   checkRateLimit,
   clientKeyFromRequest,
 } from "@/lib/rate-limit";
-import { detectImageMime } from "@/lib/upload-files";
+import { detectImageMime, getPublicUploadsRoot } from "@/lib/upload-files";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -72,12 +73,12 @@ export async function handleAuthenticatedImageUpload(
     // 클라이언트가 보낸 MIME과 실제 내용이 다르면 실제 내용 기준으로 저장
     const mime = detected;
     const extension = mime.split("/")[1]?.replace("jpeg", "jpg") ?? "jpg";
-    const filename = `${Date.now()}-${crypto.randomUUID()}.${extension}`;
-    const uploadDir = path.join(process.cwd(), "public", "uploads", folder);
+    const filename = `${Date.now()}-${randomUUID()}.${extension}`;
+    const uploadDir = path.join(getPublicUploadsRoot(), folder);
     const filePath = path.join(uploadDir, filename);
 
-    await fs.mkdir(uploadDir, { recursive: true });
-    await fs.writeFile(filePath, buffer);
+    await fs.mkdir(uploadDir, { recursive: true, mode: 0o775 });
+    await fs.writeFile(filePath, buffer, { mode: 0o664 });
 
     return NextResponse.json({
       imageUrl: `/uploads/${folder}/${filename}`,

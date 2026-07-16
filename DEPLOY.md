@@ -113,3 +113,69 @@ cron으로 매일 실행 권장.
 ## 6. 트래픽 증가 시
 
 Postgres + 오브젝트 스토리지로 이전을 검토하세요.
+
+---
+
+## 7. 운영 중 코드 업데이트 (배포 후 수정 반영)
+
+로컬(Cursor)에서 코드를 고친 뒤 **운영 VPS**에 반영하는 순서입니다.
+
+### A. 로컬에서 확인
+
+```bash
+npm run build
+```
+
+빌드 오류가 없어야 합니다.
+
+### B. 서버에 코드 올리기
+
+Git 사용 시:
+
+```bash
+# 로컬
+git add .
+git commit -m "설명"
+git push
+
+# VPS (SSH 접속 후 프로젝트 폴더)
+git pull
+./scripts/deploy-update.sh
+```
+
+Git 없이 FTP/SCP로 올리는 경우, **전체 프로젝트**가 아니라 변경 파일만 올린 뒤 VPS에서 `docker compose up -d --build`를 실행하세요.
+
+### C. 반드시 다시 빌드하는 경우
+
+`.env.production`에서 아래 값을 바꿨을 때:
+
+- `NEXT_PUBLIC_SITE_URL` (실제 도메인, 예: `https://anra.kr`)
+- `NEXT_PUBLIC_NAVER_MAP_CLIENT_ID`
+- `NEXT_PUBLIC_CONTACT_EMAIL` 등 `NEXT_PUBLIC_*`
+
+```bash
+docker compose up -d --build
+```
+
+### D. 운영 환경 체크리스트
+
+| 항목 | 확인 |
+|------|------|
+| `.env.production`의 `NEXT_PUBLIC_SITE_URL` | `https://실제도메인` (끝에 `/` 없음) |
+| 네이버 Maps Web URL | `https://실제도메인` 등록 (localhost와 별도) |
+| HTTPS | Nginx/Caddy 앞단에서 443 연결 |
+| `data/` · `public/uploads` | Docker 볼륨으로 유지, 삭제하지 않기 |
+| 프로세스 1개 | `docker compose ps`에서 web 컨테이너 1개만 |
+
+### E. 업데이트 후 스모크 테스트
+
+1. PC·**모바일**에서 `/gallery` — 제목이 가로로 읽히는지
+2. `/map` — 네이버 지도 (또는 OSM 폴백)
+3. 로그인 · 글쓰기 · 업로드
+4. `/sitemap.xml` URL이 실제 도메인인지 (localhost가 아닌지)
+
+### F. 백업 (업데이트 전 권장)
+
+```bash
+./scripts/backup.sh
+```

@@ -44,14 +44,14 @@ export default function BoardPostRow({
         </div>
       ) : (
         <div
-          className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-sm text-[11px] font-bold ring-1 sm:h-14 sm:w-14 ${meta.badgeClass}`}
+          className={`board-category-fallback flex h-12 w-12 shrink-0 items-center justify-center rounded-sm text-[10px] font-bold ring-1 sm:h-14 sm:w-14 sm:text-[11px] ${meta.badgeClass}`}
         >
           {post.category}
         </div>
       )}
 
       <div className="min-w-0 flex-1">
-        <p className="line-clamp-2 text-[13px] leading-5 text-[var(--text-primary)] sm:text-sm">
+        <p className="board-post-title board-post-title-clamp text-[13px] leading-snug text-[var(--text-primary)] sm:text-sm sm:leading-5">
           {post.title}
           {post.comments.length > 0 && (
             <span className="ml-1 font-semibold text-[#e03131]">

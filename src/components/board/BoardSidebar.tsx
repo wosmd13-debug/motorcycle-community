@@ -42,7 +42,7 @@ export default function BoardSidebar({ posts }: BoardSidebarProps) {
                 >
                   {index + 1}
                 </span>
-                <span className="min-w-0 flex-1 truncate text-[12px] text-[var(--text-secondary)]">
+                <span className="board-post-title board-post-title-clamp min-w-0 flex-1 text-[12px] text-[var(--text-secondary)]">
                   {post.title}
                 </span>
                 <span className="shrink-0 text-[10px] text-[var(--text-faint)]">

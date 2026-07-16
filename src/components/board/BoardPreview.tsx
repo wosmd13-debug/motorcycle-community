@@ -53,7 +53,7 @@ export default async function BoardPreview() {
                   좋아요 {post.likes} · 조회 {post.views}
                 </span>
               </div>
-              <p className="mt-2 font-medium text-slate-800">{post.title}</p>
+              <p className="board-post-title board-post-title-clamp mt-2 font-medium text-slate-800">{post.title}</p>
             </Link>
           ))
         )}

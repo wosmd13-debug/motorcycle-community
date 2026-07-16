@@ -18,7 +18,7 @@ function PostRow({ post }: { post: BoardPost }) {
           </div>
       )}
 
-      <p className="min-w-0 flex-1 truncate text-sm text-stone-800 group-hover:text-signature-dark">
+      <p className="board-post-title board-post-title-clamp min-w-0 flex-1 text-sm text-stone-800 group-hover:text-signature-dark">
         {post.title}
       </p>
 

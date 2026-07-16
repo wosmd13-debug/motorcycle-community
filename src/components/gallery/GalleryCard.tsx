@@ -58,8 +58,8 @@ export default function GalleryCard({
               </span>
             </div>
 
-            <div className="min-w-0">
-              <h2 className="truncate text-sm font-bold text-white drop-shadow">
+            <div className="min-w-0 w-full">
+              <h2 className="gallery-ig-title truncate text-sm font-bold text-white drop-shadow">
                 {post.title}
               </h2>
               <p className="mt-0.5 truncate text-[11px] text-white/85">
@@ -82,6 +82,13 @@ export default function GalleryCard({
           </div>
         </div>
       </Link>
+
+      <div className="gallery-ig-mobile-meta border-t border-stone-200/80 bg-white px-2.5 py-2 dark:border-stone-700 dark:bg-stone-950">
+        <h2 className="gallery-ig-title line-clamp-2 text-[13px] font-bold leading-snug text-stone-800 dark:text-stone-100">
+          {post.title}
+        </h2>
+        <p className="mt-0.5 truncate text-[11px] text-stone-500">{post.location}</p>
+      </div>
 
       <div
         className="absolute bottom-2 right-2 z-10 opacity-100 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100"

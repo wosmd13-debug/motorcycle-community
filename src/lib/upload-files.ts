@@ -1,6 +1,64 @@
 import { promises as fs } from "fs";
 import path from "path";
 
+const UPLOADS_ROOT = path.join(process.cwd(), "public", "uploads");
+
+export function getPublicUploadsRoot(): string {
+  return UPLOADS_ROOT;
+}
+
+/** 게시 API에 허용할 업로드 URL만 통과 (/uploads/... ) */
+export function sanitizePublicUploadUrls(urls: string[]): string[] {
+  return urls.filter(
+    (url) =>
+      typeof url === "string" &&
+      url.startsWith("/uploads/") &&
+      !url.includes("..") &&
+      !url.includes("\\")
+  );
+}
+
+function resolveUploadAbsolutePath(segments: string[]): string | null {
+  if (segments.some((segment) => !segment || segment === "." || segment === "..")) {
+    return null;
+  }
+
+  const filePath = path.join(UPLOADS_ROOT, ...segments);
+  const resolved = path.resolve(filePath);
+  if (!resolved.startsWith(path.resolve(UPLOADS_ROOT))) {
+    return null;
+  }
+
+  return resolved;
+}
+
+export function mimeFromUploadFilename(filename: string): DetectedImageMime | null {
+  const lower = filename.toLowerCase();
+  if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
+  if (lower.endsWith(".png")) return "image/png";
+  if (lower.endsWith(".webp")) return "image/webp";
+  return null;
+}
+
+/** 운영(standalone)에서도 런타임 업로드 파일을 읽습니다. */
+export async function readPublicUploadFile(
+  segments: string[]
+): Promise<{ buffer: Buffer; mime: DetectedImageMime } | null> {
+  const filePath = resolveUploadAbsolutePath(segments);
+  if (!filePath) return null;
+
+  try {
+    const buffer = await fs.readFile(filePath);
+    const mime =
+      detectImageMime(buffer) ??
+      mimeFromUploadFilename(segments[segments.length - 1] ?? "");
+    if (!mime) return null;
+    return { buffer, mime };
+  } catch {
+    return null;
+  }
+}
+
 /**
  * /uploads/... 경로만 삭제. 외부 URL·경로 조작은 무시합니다.
  */

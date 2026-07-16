@@ -209,11 +209,28 @@ export default function BoardDetailView({ initialPost }: BoardDetailViewProps) {
     <>
       <article className="portal-panel mt-4 overflow-hidden">
         <div className="border-b border-signature/10 px-5 py-4 sm:px-8 sm:py-5">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <BoardCategoryBadge category={post.category} size="md" />
-              <p className="mt-2 text-xs text-stone-500">{meta.summary}</p>
-              <h1 className="mt-2 text-2xl font-bold text-stone-800 sm:text-3xl">
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                {canManage && (
+                  <OperatorContentActions
+                    onEdit={() => setShowEdit(true)}
+                    onDelete={() => void handleDelete()}
+                    deleting={deleting}
+                    compact
+                  />
+                )}
+                <ReportButton
+                  targetType="board"
+                  targetId={post.id}
+                  targetTitle={post.title}
+                />
+              </div>
+            </div>
+            <div className="min-w-0 w-full">
+              <p className="text-xs text-stone-500">{meta.summary}</p>
+              <h1 className="board-post-title board-post-title-detail mt-2 text-xl font-bold text-stone-800 sm:text-2xl sm:text-3xl">
                 {post.title}
               </h1>
               <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-stone-500">
@@ -226,21 +243,6 @@ export default function BoardDetailView({ initialPost }: BoardDetailViewProps) {
                 <span aria-hidden>·</span>
                 <span>{formatBoardDate(post.createdAt)}</span>
               </p>
-            </div>
-            <div className="flex flex-wrap items-center justify-end gap-2">
-              {canManage && (
-                <OperatorContentActions
-                  onEdit={() => setShowEdit(true)}
-                  onDelete={() => void handleDelete()}
-                  deleting={deleting}
-                  compact
-                />
-              )}
-              <ReportButton
-                targetType="board"
-                targetId={post.id}
-                targetTitle={post.title}
-              />
             </div>
           </div>
         </div>

@@ -487,24 +487,71 @@ body {
   background: color-mix(in srgb, var(--border-default) 70%, transparent);
 }
 
+.gallery-ig-grid > * {
+  min-width: 0;
+}
+
+.gallery-ig-title {
+  word-break: keep-all;
+  overflow-wrap: normal;
+}
+
+/* 게시판 제목 — 모바일에서 글자가 세로로 쌓이지 않도록 */
+.board-post-title {
+  word-break: keep-all;
+  overflow-wrap: normal;
+  line-height: 1.4;
+}
+
+/* Tailwind line-clamp 대체 — 빌드 시 -webkit-box-orient 제거로 세로 글자 쌓임 방지 */
+.board-post-title-clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 10;
+  line-clamp: 10;
+  overflow: hidden;
+  word-break: keep-all;
+  overflow-wrap: normal;
+  line-height: 1.4;
+  /* autoprefixer: ignore next */
+  -webkit-box-orient: vertical;
+}
+
+/* 글 상세·모달 — 제목 영역 전체 너비 사용 */
+.board-post-title-detail {
+  width: 100%;
+  max-width: 100%;
+  white-space: normal;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.board-category-fallback {
+  word-break: keep-all;
+  white-space: nowrap;
+  writing-mode: horizontal-tb;
+  line-height: 1.2;
+}
+
+.board-featured-grid > * {
+  min-width: 0;
+}
+
+.gallery-ig-mobile-meta {
+  display: none;
+}
+
 .gallery-ig-card {
   isolation: isolate;
 }
 
 @media (hover: none) and (pointer: coarse) {
   .gallery-ig-overlay {
-    opacity: 1;
-    background: linear-gradient(
-      to top,
-      rgba(0, 0, 0, 0.62) 0%,
-      rgba(0, 0, 0, 0.12) 42%,
-      transparent 68%
-    );
-    justify-content: flex-end;
+    opacity: 0;
+    pointer-events: none;
   }
 
-  .gallery-ig-overlay > :first-child {
-    display: none;
+  .gallery-ig-mobile-meta {
+    display: block;
   }
 }
 
@@ -649,11 +696,7 @@ body {
   position: sticky;
   top: 0;
   z-index: 1;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.75rem;
+  display: block;
   border-bottom: 1px solid color-mix(in srgb, var(--signature) 10%, transparent);
   background: var(--surface);
   padding: 1rem 1.25rem;
@@ -665,7 +708,6 @@ body {
   align-items: center;
   justify-content: flex-end;
   gap: 0.5rem;
-  margin-left: auto;
 }
 
 .portal-filter-chip {

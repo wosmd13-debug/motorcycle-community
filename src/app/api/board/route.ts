@@ -4,6 +4,7 @@ import { createBoardPost, readBoardPosts } from "@/lib/board-store";
 import { toPublicEngagementItem } from "@/lib/engagement";
 import { getMemberRankingByUserId } from "@/lib/ranking-server";
 import { requireUserWithRateLimit } from "@/lib/request-guards";
+import { sanitizePublicUploadUrls } from "@/lib/upload-files";
 
 const postCategories = boardCategories.filter(
   (category): category is BoardCategory => category !== "전체"
@@ -32,9 +33,11 @@ export async function POST(request: NextRequest) {
     const title = String(body.title ?? "").trim();
     const content = String(body.content ?? "").trim();
     const category = body.category as BoardCategory;
-    const imageUrls = Array.isArray(body.imageUrls)
-      ? body.imageUrls.map((url: unknown) => String(url).trim()).filter(Boolean)
-      : [];
+    const imageUrls = sanitizePublicUploadUrls(
+      Array.isArray(body.imageUrls)
+        ? body.imageUrls.map((url: unknown) => String(url).trim()).filter(Boolean)
+        : []
+    );
 
     if (!title || !content) {
       return NextResponse.json(

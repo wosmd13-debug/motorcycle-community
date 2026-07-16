@@ -182,7 +182,7 @@ export default function GalleryExplorer({
           </button>
         </div>
       ) : (
-        <div className="gallery-ig-grid grid grid-cols-3 gap-[2px] sm:gap-1 md:grid-cols-3 lg:grid-cols-4">
+        <div className="gallery-ig-grid grid grid-cols-2 gap-1 sm:grid-cols-3 sm:gap-1 lg:grid-cols-4">
           {filteredPosts.map((post) => (
             <GalleryCard
               key={post.id}

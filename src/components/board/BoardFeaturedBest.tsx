@@ -26,7 +26,7 @@ export default function BoardFeaturedBest({ posts }: BoardFeaturedBestProps) {
         <span className="text-[11px] text-[var(--text-faint)]">추천·조회·댓글 기준</span>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 p-3 sm:grid-cols-4 sm:gap-4 sm:p-4">
+      <div className="board-featured-grid grid grid-cols-1 gap-3 p-3 sm:grid-cols-2 sm:gap-4 sm:p-4 lg:grid-cols-4">
         {posts.map((post) => {
           const thumbnail = getBoardThumbnail(post);
 
@@ -50,7 +50,7 @@ export default function BoardFeaturedBest({ posts }: BoardFeaturedBestProps) {
                   </div>
                 )}
               </div>
-              <p className="line-clamp-2 px-2 py-2 text-[12px] leading-4 text-[var(--text-primary)] group-hover:text-signature-dark sm:text-[13px]">
+              <p className="board-post-title board-post-title-clamp px-2 py-2 text-[12px] leading-snug text-[var(--text-primary)] group-hover:text-signature-dark sm:text-[13px] sm:leading-4">
                 {post.title}
                 {post.comments.length > 0 && (
                   <span className="ml-1 font-semibold text-[#e03131]">

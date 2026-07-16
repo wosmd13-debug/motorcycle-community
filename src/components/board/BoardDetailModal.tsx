@@ -95,42 +95,48 @@ export default function BoardDetailModal({
     <PortalModal onClose={onClose}>
       <div className="portal-modal-panel max-w-3xl shadow-2xl">
         <div className="portal-modal-header">
-          <div className="min-w-0 flex-1">
-            <BoardCategoryBadge category={post.category} size="md" />
-            <p className="mt-2 text-xs text-stone-500">{meta.summary}</p>
-            <h2 className="mt-2 text-xl font-bold text-stone-800">{post.title}</h2>
-            <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-stone-500">
-              <AuthorWithGrade
-                author={post.author}
-                authorGradeId={post.authorGradeId}
-                gradesByNickname={gradesByNickname}
-                nicknameClassName="font-medium text-stone-700"
-              />
-              <span aria-hidden>·</span>
-              <span>{formatBoardDate(post.createdAt)}</span>
-            </p>
-          </div>
-          <div className="portal-modal-header-actions">
-            {onEdit && onDelete && canManageBoardPost(user, post) && (
-              <OperatorContentActions
-                onEdit={onEdit}
-                onDelete={onDelete}
-                deleting={deleting}
-                compact
-              />
-            )}
-            <button
-              type="button"
-            onClick={onClose}
-              className="rounded-full px-3 py-1 text-sm text-stone-500 hover:bg-stone-100"
-            >
-              닫기
-            </button>
-            <ReportButton
-              targetType="board"
-              targetId={post.id}
-              targetTitle={post.title}
-            />
+          <div className="flex w-full min-w-0 flex-col gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <BoardCategoryBadge category={post.category} size="md" />
+              <div className="portal-modal-header-actions">
+                {onEdit && onDelete && canManageBoardPost(user, post) && (
+                  <OperatorContentActions
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                    deleting={deleting}
+                    compact
+                  />
+                )}
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="rounded-full px-3 py-1 text-sm text-stone-500 hover:bg-stone-100"
+                >
+                  닫기
+                </button>
+                <ReportButton
+                  targetType="board"
+                  targetId={post.id}
+                  targetTitle={post.title}
+                />
+              </div>
+            </div>
+            <div className="min-w-0 w-full">
+              <p className="text-xs text-stone-500">{meta.summary}</p>
+              <h2 className="board-post-title board-post-title-detail mt-2 text-xl font-bold text-stone-800">
+                {post.title}
+              </h2>
+              <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-stone-500">
+                <AuthorWithGrade
+                  author={post.author}
+                  authorGradeId={post.authorGradeId}
+                  gradesByNickname={gradesByNickname}
+                  nicknameClassName="font-medium text-stone-700"
+                />
+                <span aria-hidden>·</span>
+                <span>{formatBoardDate(post.createdAt)}</span>
+              </p>
+            </div>
           </div>
         </div>
 
