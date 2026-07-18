@@ -22,16 +22,11 @@ export function useCosmeticLookup(nicknames: string[]) {
     if (unique.length === 0) return;
 
     ensureCosmeticLooks(unique);
-    setLooksByNickname((current) => ({
-      ...current,
-      ...getCachedCosmeticLooks(unique),
-    }));
+    setLooksByNickname(getCachedCosmeticLooks(unique));
 
     return subscribeCosmeticLooks(() => {
-      setLooksByNickname((current) => ({
-        ...current,
-        ...getCachedCosmeticLooks(unique),
-      }));
+      ensureCosmeticLooks(unique);
+      setLooksByNickname(getCachedCosmeticLooks(unique));
     });
   }, [key, unique]);
 

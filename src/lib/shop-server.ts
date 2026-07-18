@@ -260,11 +260,19 @@ export async function getCosmeticLookByNicknameMap(
     readAllInventories(),
   ]);
 
-  const wanted = nicknames?.length ? new Set(nicknames) : null;
   const map: Record<string, ShopCosmeticLook> = {};
 
+  if (nicknames?.length) {
+    for (const nickname of nicknames) {
+      const user = users.find((entry) => entry.nickname === nickname);
+      map[nickname] = user
+        ? buildCosmeticLook(inventories[user.id])
+        : {};
+    }
+    return map;
+  }
+
   for (const user of users) {
-    if (wanted && !wanted.has(user.nickname)) continue;
     const inventory = inventories[user.id];
     if (!inventory) continue;
     const look = buildCosmeticLook(inventory);

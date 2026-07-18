@@ -9,6 +9,7 @@ import CommentVoteButtons from "@/components/gallery/CommentVoteButtons";
 import PortalModal from "@/components/portal/PortalModal";
 import AuthorWithGrade from "@/components/ranking/AuthorWithGrade";
 import { useMemberGradeLookup } from "@/hooks/useMemberGradeLookup";
+import { useCosmeticLookup } from "@/hooks/useCosmeticLookup";
 import {
   formatCommentDate,
   formatGalleryDate,
@@ -52,6 +53,12 @@ export default function GalleryDetailModal({
     [post]
   );
   const gradesByNickname = useMemberGradeLookup(gradeSources);
+  const authorNicknames = useMemo(
+    () => gradeSources.map((item) => item.author),
+    [gradeSources]
+  );
+  const looksByNickname = useCosmeticLookup(authorNicknames);
+  const gallerySpotlight = looksByNickname[post.author]?.gallerySpotlightActive;
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -108,7 +115,11 @@ export default function GalleryDetailModal({
           </div>
         </div>
 
-        <div className="flex min-h-[240px] w-full items-center justify-center bg-slate-100 p-4 sm:min-h-[360px]">
+        <div
+          className={`flex min-h-[240px] w-full items-center justify-center bg-slate-100 p-4 sm:min-h-[360px] ${
+            gallerySpotlight ? "shop-gallery-spotlight" : ""
+          }`}
+        >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={post.imageUrl}
@@ -134,6 +145,7 @@ export default function GalleryDetailModal({
                 author={post.author}
                 authorGradeId={post.authorGradeId}
                 gradesByNickname={gradesByNickname}
+                looksByNickname={looksByNickname}
                 nicknameClassName="font-medium text-slate-700"
               />
             </div>
@@ -196,6 +208,7 @@ export default function GalleryDetailModal({
                         author={comment.author}
                         authorGradeId={comment.authorGradeId}
                         gradesByNickname={gradesByNickname}
+                        looksByNickname={looksByNickname}
                       />
                       <p className="text-xs text-slate-400">
                         {formatCommentDate(comment.createdAt)}

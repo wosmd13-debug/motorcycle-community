@@ -9,6 +9,7 @@ import CommentVoteButtons from "@/components/gallery/CommentVoteButtons";
 import GalleryEditForm from "@/components/gallery/GalleryEditForm";
 import AuthorWithGrade from "@/components/ranking/AuthorWithGrade";
 import { useMemberGradeLookup } from "@/hooks/useMemberGradeLookup";
+import { useCosmeticLookup } from "@/hooks/useCosmeticLookup";
 import { fetchEngagementAction } from "@/lib/engagement-client";
 import {
   canManageGalleryPost,
@@ -41,6 +42,12 @@ export default function GalleryDetailView({ initialPost }: GalleryDetailViewProp
     [post]
   );
   const gradesByNickname = useMemberGradeLookup(gradeSources);
+  const authorNicknames = useMemo(
+    () => gradeSources.map((item) => item.author),
+    [gradeSources]
+  );
+  const looksByNickname = useCosmeticLookup(authorNicknames);
+  const gallerySpotlight = looksByNickname[post.author]?.gallerySpotlightActive;
 
   const canManage = user ? canManageGalleryPost(user, post) : false;
 
@@ -248,7 +255,11 @@ export default function GalleryDetailView({ initialPost }: GalleryDetailViewProp
           </div>
         </div>
 
-        <div className="flex min-h-[280px] w-full items-center justify-center bg-signature-light/30 p-4 sm:min-h-[420px]">
+        <div
+          className={`flex min-h-[280px] w-full items-center justify-center bg-signature-light/30 p-4 sm:min-h-[420px] ${
+            gallerySpotlight ? "shop-gallery-spotlight" : ""
+          }`}
+        >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={post.imageUrl}
@@ -274,6 +285,7 @@ export default function GalleryDetailView({ initialPost }: GalleryDetailViewProp
                 author={post.author}
                 authorGradeId={post.authorGradeId}
                 gradesByNickname={gradesByNickname}
+                looksByNickname={looksByNickname}
                 nicknameClassName="font-medium text-stone-700"
               />
             </div>
@@ -342,6 +354,7 @@ export default function GalleryDetailView({ initialPost }: GalleryDetailViewProp
                         author={comment.author}
                         authorGradeId={comment.authorGradeId}
                         gradesByNickname={gradesByNickname}
+                        looksByNickname={looksByNickname}
                       />
                       <p className="text-xs text-stone-400">
                         {formatCommentDate(comment.createdAt)}

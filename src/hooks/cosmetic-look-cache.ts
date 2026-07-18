@@ -95,3 +95,17 @@ export function subscribeCosmeticLooks(listener: () => void) {
     listeners.delete(listener);
   };
 }
+
+/** 구매·장착 후 캐시를 비워 최신 코스메틱을 다시 불러옵니다. */
+export function invalidateCosmeticLooks(nicknames?: string[]) {
+  if (!nicknames?.length) {
+    for (const key of Object.keys(cache)) {
+      delete cache[key];
+    }
+  } else {
+    for (const nickname of nicknames) {
+      delete cache[nickname];
+    }
+  }
+  notify();
+}

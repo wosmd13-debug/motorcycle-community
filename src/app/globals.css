@@ -496,11 +496,20 @@ body {
   overflow-wrap: normal;
 }
 
-/* 게시판 제목 — 모바일에서 글자가 세로로 쌓이지 않도록 */
+/* 게시판 제목 — 모바일에서 가로 표시, 최대 10줄, 한 줄 최소 10글자 폭 */
 .board-post-title {
   word-break: keep-all;
   overflow-wrap: normal;
   line-height: 1.4;
+  writing-mode: horizontal-tb;
+  text-orientation: mixed;
+}
+
+.board-post-title-wrap {
+  min-width: 0;
+  flex: 1 1 0%;
+  width: 100%;
+  max-width: 100%;
 }
 
 /* Tailwind line-clamp 대체 — 빌드 시 -webkit-box-orient 제거로 세로 글자 쌓임 방지 */
@@ -509,20 +518,29 @@ body {
   -webkit-line-clamp: 10;
   line-clamp: 10;
   overflow: hidden;
+  width: 100%;
+  max-width: 100%;
+  min-width: 10ch;
   word-break: keep-all;
   overflow-wrap: normal;
   line-height: 1.4;
+  writing-mode: horizontal-tb;
+  text-orientation: mixed;
   /* autoprefixer: ignore next */
   -webkit-box-orient: vertical;
 }
 
-/* 글 상세·모달 — 제목 영역 전체 너비 사용 */
+/* 글 상세·모달 — 제목 영역 전체 너비, 가로 줄바꿈 (줄 수 제한 없음) */
 .board-post-title-detail {
+  display: block;
   width: 100%;
   max-width: 100%;
+  min-width: 10ch;
   white-space: normal;
   word-break: keep-all;
   overflow-wrap: anywhere;
+  writing-mode: horizontal-tb;
+  text-orientation: mixed;
 }
 
 .board-category-fallback {
@@ -588,6 +606,17 @@ body {
 .shop-author {
   position: relative;
   z-index: 1;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.shop-author-frame {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.shop-author-name {
+  min-width: 0;
 }
 
 .shop-author .inline-flex.shrink-0 {

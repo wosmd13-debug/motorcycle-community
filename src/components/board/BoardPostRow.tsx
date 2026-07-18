@@ -50,7 +50,7 @@ export default function BoardPostRow({
         </div>
       )}
 
-      <div className="min-w-0 flex-1">
+      <div className="board-post-title-wrap">
         <p className="board-post-title board-post-title-clamp text-[13px] leading-snug text-[var(--text-primary)] sm:text-sm sm:leading-5">
           {post.title}
           {post.comments.length > 0 && (

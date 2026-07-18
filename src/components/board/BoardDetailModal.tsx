@@ -13,6 +13,7 @@ import CommentVoteButtons from "@/components/gallery/CommentVoteButtons";
 import AuthorWithGrade from "@/components/ranking/AuthorWithGrade";
 import ReportButton from "@/components/report/ReportButton";
 import { useMemberGradeLookup } from "@/hooks/useMemberGradeLookup";
+import { useCosmeticLookup } from "@/hooks/useCosmeticLookup";
 import {
   boardCategoryMeta,
   canManageBoardPost,
@@ -64,6 +65,12 @@ export default function BoardDetailModal({
     [post]
   );
   const gradesByNickname = useMemberGradeLookup(gradeSources);
+  const authorNicknames = useMemo(
+    () => gradeSources.map((item) => item.author),
+    [gradeSources]
+  );
+  const looksByNickname = useCosmeticLookup(authorNicknames);
+  const postHighlight = looksByNickname[post.author]?.postHighlightActive;
 
   const meta = boardCategoryMeta[post.category];
 
@@ -93,7 +100,11 @@ export default function BoardDetailModal({
 
   return (
     <PortalModal onClose={onClose}>
-      <div className="portal-modal-panel max-w-3xl shadow-2xl">
+      <div
+        className={`portal-modal-panel max-w-3xl shadow-2xl ${
+          postHighlight ? "shop-post-highlight" : ""
+        }`}
+      >
         <div className="portal-modal-header">
           <div className="flex w-full min-w-0 flex-col gap-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -131,6 +142,7 @@ export default function BoardDetailModal({
                   author={post.author}
                   authorGradeId={post.authorGradeId}
                   gradesByNickname={gradesByNickname}
+                  looksByNickname={looksByNickname}
                   nicknameClassName="font-medium text-stone-700"
                 />
                 <span aria-hidden>·</span>
@@ -224,6 +236,7 @@ export default function BoardDetailModal({
                         author={comment.author}
                         authorGradeId={comment.authorGradeId}
                         gradesByNickname={gradesByNickname}
+                        looksByNickname={looksByNickname}
                       />
                       <span className="text-xs text-stone-400">
                         {formatCommentDate(comment.createdAt)}

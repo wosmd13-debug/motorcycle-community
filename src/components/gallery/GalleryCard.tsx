@@ -88,6 +88,20 @@ export default function GalleryCard({
           {post.title}
         </h2>
         <p className="mt-0.5 truncate text-[11px] text-stone-500">{post.location}</p>
+        <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-stone-600 dark:text-stone-300">
+          <AuthorWithGrade
+            author={post.author}
+            authorGradeId={post.authorGradeId}
+            gradesByNickname={gradesByNickname}
+            looksByNickname={looksByNickname}
+            nicknameClassName="font-medium text-stone-700 dark:text-stone-200"
+            className="inline-flex min-w-0 max-w-full flex-wrap items-center gap-1"
+            badgeSize="sm"
+          />
+          <span className="text-stone-400">·</span>
+          <span>👁 {post.views}</span>
+          <span>💬 {post.comments.length}</span>
+        </div>
       </div>
 
       <div

@@ -38,14 +38,16 @@ export default function AuthorWithGrade({
     { author, authorGradeId },
     gradesByNickname
   );
+  const hasMapEntry =
+    looksByNickname != null && Object.prototype.hasOwnProperty.call(looksByNickname, author);
   const needsAuto =
-    autoCosmetic && cosmeticLook == null && looksByNickname == null;
+    autoCosmetic && cosmeticLook == null && !hasMapEntry;
   const autoLook = useAuthorCosmeticLook(author, needsAuto);
   const look =
-    cosmeticLook ?? looksByNickname?.[author] ?? autoLook ?? {};
-  const nameClass = ["shop-author-name", nicknameClassName, look.nicknameClassName]
-    .filter(Boolean)
-    .join(" ");
+    cosmeticLook ?? (hasMapEntry ? looksByNickname![author] : undefined) ?? autoLook ?? {};
+  const nameClass = look.nicknameClassName
+    ? ["shop-author-name", look.nicknameClassName].join(" ")
+    : ["shop-author-name", nicknameClassName].filter(Boolean).join(" ");
   const showGrade =
     !hideGrade &&
     (Boolean(authorGradeId) ||

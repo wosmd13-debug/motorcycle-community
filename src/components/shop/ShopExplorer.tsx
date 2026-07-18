@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import AuthorWithGrade from "@/components/ranking/AuthorWithGrade";
+import { invalidateCosmeticLooks } from "@/hooks/cosmetic-look-cache";
 import type { ShopCosmeticLook, ShopEquipped, ShopItemKind } from "@/lib/shop";
 import type { MemberGradeId } from "@/lib/ranking";
 
@@ -148,6 +149,9 @@ export default function ShopExplorer({
         throw new Error(data.error ?? "처리에 실패했습니다.");
       }
       setDashboard(data.dashboard as ShopDashboard);
+      if (user?.nickname) {
+        invalidateCosmeticLooks([user.nickname]);
+      }
       setToast(successMessage);
       window.setTimeout(() => setToast(null), 2200);
     } catch (err) {

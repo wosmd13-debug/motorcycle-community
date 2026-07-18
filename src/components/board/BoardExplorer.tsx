@@ -74,7 +74,7 @@ export default function BoardExplorer({
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
       <div className="min-w-0">
-        <BoardFeaturedBest posts={featuredPosts} />
+        <BoardFeaturedBest posts={featuredPosts} looksByNickname={looksByNickname} />
 
         <div className="border border-[var(--dc-border)] bg-[var(--surface)]">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--dc-border-light)] px-4 py-3">

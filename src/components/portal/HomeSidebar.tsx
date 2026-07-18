@@ -33,7 +33,9 @@ async function PopularBoardRanking() {
             >
               {index + 1}
             </span>
-            <span className="board-post-title board-post-title-clamp min-w-0 flex-1 text-stone-700">{post.title}</span>
+            <span className="board-post-title-wrap min-w-0 flex-1">
+              <span className="board-post-title board-post-title-clamp text-stone-700">{post.title}</span>
+            </span>
             {post.comments.length > 0 && (
               <span className="shrink-0 text-xs font-semibold text-portal-accent">
                 [{post.comments.length}]

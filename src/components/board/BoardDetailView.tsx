@@ -12,6 +12,7 @@ import CommentVoteButtons from "@/components/gallery/CommentVoteButtons";
 import AuthorWithGrade from "@/components/ranking/AuthorWithGrade";
 import ReportButton from "@/components/report/ReportButton";
 import { useMemberGradeLookup } from "@/hooks/useMemberGradeLookup";
+import { useCosmeticLookup } from "@/hooks/useCosmeticLookup";
 import {
   boardCategoryMeta,
   canManageBoardPost,
@@ -45,6 +46,12 @@ export default function BoardDetailView({ initialPost }: BoardDetailViewProps) {
     [post]
   );
   const gradesByNickname = useMemberGradeLookup(gradeSources);
+  const authorNicknames = useMemo(
+    () => gradeSources.map((item) => item.author),
+    [gradeSources]
+  );
+  const looksByNickname = useCosmeticLookup(authorNicknames);
+  const postHighlight = looksByNickname[post.author]?.postHighlightActive;
 
   const meta = boardCategoryMeta[post.category];
   const canManage = canManageBoardPost(user, post);
@@ -207,7 +214,11 @@ export default function BoardDetailView({ initialPost }: BoardDetailViewProps) {
 
   return (
     <>
-      <article className="portal-panel mt-4 overflow-hidden">
+      <article
+        className={`portal-panel mt-4 overflow-hidden ${
+          postHighlight ? "shop-post-highlight" : ""
+        }`}
+      >
         <div className="border-b border-signature/10 px-5 py-4 sm:px-8 sm:py-5">
           <div className="space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -238,6 +249,7 @@ export default function BoardDetailView({ initialPost }: BoardDetailViewProps) {
                   author={post.author}
                   authorGradeId={post.authorGradeId}
                   gradesByNickname={gradesByNickname}
+                  looksByNickname={looksByNickname}
                   nicknameClassName="font-medium text-stone-700"
                 />
                 <span aria-hidden>·</span>
@@ -336,6 +348,7 @@ export default function BoardDetailView({ initialPost }: BoardDetailViewProps) {
                         author={comment.author}
                         authorGradeId={comment.authorGradeId}
                         gradesByNickname={gradesByNickname}
+                        looksByNickname={looksByNickname}
                       />
                       <span className="text-xs text-stone-400">
                         {formatCommentDate(comment.createdAt)}
