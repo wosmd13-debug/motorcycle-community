@@ -61,17 +61,11 @@ export default function SearchResults({ results }: SearchResultsProps) {
                       <span className="text-xs text-stone-400">{item.date}</span>
                     )}
                   </div>
-                  {item.source === "board" ? (
-                    <div className="board-post-title-wrap mt-2">
-                      <h3 className="board-post-title board-post-title-clamp text-base font-bold text-stone-800">
-                        {item.title}
-                      </h3>
-                    </div>
-                  ) : (
-                    <h3 className="mt-2 text-base font-bold text-stone-800">
+                  <div className="board-post-title-wrap mt-2">
+                    <h3 className="board-post-title board-post-title-clamp text-base font-bold text-stone-800">
                       {item.title}
                     </h3>
-                  )}
+                  </div>
                   <p className="mt-1 text-sm text-signature-dark">
                     {item.subtitle}
                   </p>

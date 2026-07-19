@@ -92,7 +92,7 @@ export default function GalleryDetailModal({
             <span className="inline-flex rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-700">
               {post.category}
             </span>
-            <h2 className="mt-2 text-xl font-bold text-slate-800 sm:text-2xl">
+            <h2 className="board-post-title board-post-title-detail mt-2 text-xl font-bold text-slate-800 sm:text-2xl">
               {post.title}
             </h2>
             <p className="mt-1 text-sm text-slate-500">{post.location}</p>

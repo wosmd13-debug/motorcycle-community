@@ -215,7 +215,7 @@ export default function GalleryDetailView({ initialPost }: GalleryDetailViewProp
             <span className="inline-flex rounded-full bg-signature-light px-3 py-1 text-xs font-semibold text-signature-dark">
               {post.category}
             </span>
-            <h1 className="mt-2 text-2xl font-bold text-stone-800 sm:text-3xl">
+            <h1 className="board-post-title board-post-title-detail mt-2 text-2xl font-bold text-stone-800 sm:text-3xl">
               {post.title}
             </h1>
             <p className="mt-1 text-sm text-stone-500">{post.location}</p>

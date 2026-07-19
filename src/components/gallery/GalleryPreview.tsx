@@ -30,7 +30,7 @@ export default function GalleryPreview() {
             <Link
               key={post.id}
               href={`/gallery/${post.id}`}
-              className="flex items-center gap-3 rounded-2xl p-2 transition hover:bg-signature-light"
+              className="flex min-w-0 items-center gap-3 rounded-2xl p-2 transition hover:bg-signature-light"
             >
               <div className="relative h-12 w-12 overflow-hidden rounded-2xl bg-signature-light ring-1 ring-signature/20">
                 <Image
@@ -41,8 +41,8 @@ export default function GalleryPreview() {
                   sizes="48px"
                 />
               </div>
-              <div>
-                <p className="font-medium text-stone-800">{post.title}</p>
+              <div className="board-post-title-wrap min-w-0 flex-1">
+                <p className="board-post-title board-post-title-clamp font-medium text-stone-800">{post.title}</p>
                 <p className="text-xs text-stone-500">{post.location}</p>
               </div>
             </Link>

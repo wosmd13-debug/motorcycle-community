@@ -491,12 +491,7 @@ body {
   min-width: 0;
 }
 
-.gallery-ig-title {
-  word-break: keep-all;
-  overflow-wrap: normal;
-}
-
-/* 게시판 제목 — 모바일에서 가로 표시, 최대 10줄, 한 줄 최소 10글자 폭 */
+.gallery-ig-title,
 .board-post-title {
   word-break: keep-all;
   overflow-wrap: normal;
@@ -505,7 +500,8 @@ body {
   text-orientation: mixed;
 }
 
-.board-post-title-wrap {
+.board-post-title-wrap,
+.gallery-ig-title-wrap {
   min-width: 0;
   flex: 1 1 0%;
   width: 100%;
@@ -513,7 +509,8 @@ body {
 }
 
 /* Tailwind line-clamp 대체 — 빌드 시 -webkit-box-orient 제거로 세로 글자 쌓임 방지 */
-.board-post-title-clamp {
+.board-post-title-clamp,
+.gallery-ig-title-clamp {
   display: -webkit-box;
   -webkit-line-clamp: 10;
   line-clamp: 10;
@@ -531,7 +528,8 @@ body {
 }
 
 /* 글 상세·모달 — 제목 영역 전체 너비, 가로 줄바꿈 (줄 수 제한 없음) */
-.board-post-title-detail {
+.board-post-title-detail,
+.gallery-ig-title-detail {
   display: block;
   width: 100%;
   max-width: 100%;
@@ -543,6 +541,18 @@ body {
   text-orientation: mixed;
 }
 
+.gallery-ig-mobile-meta {
+  display: none;
+  min-width: 0;
+}
+
+.gallery-ig-mobile-meta .board-post-title-wrap,
+.gallery-ig-mobile-meta .gallery-ig-title-wrap {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+}
+
 .board-category-fallback {
   word-break: keep-all;
   white-space: nowrap;
@@ -552,10 +562,6 @@ body {
 
 .board-featured-grid > * {
   min-width: 0;
-}
-
-.gallery-ig-mobile-meta {
-  display: none;
 }
 
 .gallery-ig-card {
@@ -608,6 +614,7 @@ body {
   z-index: 1;
   min-width: 0;
   max-width: 100%;
+  writing-mode: horizontal-tb;
 }
 
 .shop-author-frame {
