@@ -577,6 +577,36 @@ body {
   .gallery-ig-mobile-meta {
     display: block;
   }
+
+  /* 모바일·로그인(코스메틱) 후에도 제목 가로 유지 */
+  .board-post-title-wrap,
+  .gallery-ig-mobile-meta .board-post-title-wrap,
+  .gallery-ig-mobile-meta .gallery-ig-title-wrap {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    flex: none;
+  }
+
+  .board-post-title-clamp,
+  .gallery-ig-title-clamp {
+    display: -webkit-box !important;
+    -webkit-box-orient: vertical !important;
+    box-orient: vertical;
+    writing-mode: horizontal-tb !important;
+    text-orientation: mixed !important;
+    word-break: keep-all !important;
+    overflow-wrap: normal !important;
+    min-width: 10ch;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .gallery-ig-mobile-meta .shop-author {
+    width: 100%;
+    max-width: 100%;
+  }
 }
 
 /* Point shop cosmetics */
@@ -624,6 +654,9 @@ body {
 
 .shop-author-name {
   min-width: 0;
+  writing-mode: horizontal-tb;
+  text-orientation: mixed;
+  word-break: keep-all;
 }
 
 .shop-author .inline-flex.shrink-0 {

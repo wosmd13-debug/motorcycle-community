@@ -210,48 +210,52 @@ export default function GalleryDetailView({ initialPost }: GalleryDetailViewProp
   return (
     <>
       <article className="portal-panel mt-4 overflow-hidden">
-        <div className="flex flex-wrap items-start justify-between gap-3 border-b border-signature/10 px-5 py-4 sm:px-8 sm:py-5">
-          <div className="min-w-0 flex-1">
-            <span className="inline-flex rounded-full bg-signature-light px-3 py-1 text-xs font-semibold text-signature-dark">
-              {post.category}
-            </span>
-            <h1 className="board-post-title board-post-title-detail mt-2 text-2xl font-bold text-stone-800 sm:text-3xl">
-              {post.title}
-            </h1>
-            <p className="mt-1 text-sm text-stone-500">{post.location}</p>
-          </div>
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            {canManage && (
-              <div className="flex flex-wrap items-center gap-2">
-                {user?.isOperator && (
-                  <span className="rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-700">
-                    운영자
-                  </span>
+        <div className="border-b border-signature/10 px-5 py-4 sm:px-8 sm:py-5">
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="inline-flex rounded-full bg-signature-light px-3 py-1 text-xs font-semibold text-signature-dark">
+                {post.category}
+              </span>
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                {canManage && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    {user?.isOperator && (
+                      <span className="rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-700">
+                        운영자
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setShowEdit(true)}
+                      className="rounded-full border border-signature/30 bg-white px-3 py-1.5 text-xs font-semibold text-signature-dark hover:bg-signature-light"
+                    >
+                      수정
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void handleDelete()}
+                      disabled={deleting}
+                      className="rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100 disabled:opacity-60"
+                    >
+                      {deleting ? "삭제 중..." : "삭제"}
+                    </button>
+                  </div>
                 )}
-                <button
-                  type="button"
-                  onClick={() => setShowEdit(true)}
-                  className="rounded-full border border-signature/30 bg-white px-3 py-1.5 text-xs font-semibold text-signature-dark hover:bg-signature-light"
-                >
-                  수정
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void handleDelete()}
-                  disabled={deleting}
-                  className="rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100 disabled:opacity-60"
-                >
-                  {deleting ? "삭제 중..." : "삭제"}
-                </button>
+                <EngagementLikeButton
+                  likes={post.likes}
+                  liking={liking}
+                  onLike={() => void handleLike()}
+                  label="❤️"
+                  className="portal-btn px-4 py-2 text-sm disabled:opacity-60"
+                />
               </div>
-            )}
-            <EngagementLikeButton
-              likes={post.likes}
-              liking={liking}
-              onLike={() => void handleLike()}
-              label="❤️"
-              className="portal-btn px-4 py-2 text-sm disabled:opacity-60"
-            />
+            </div>
+            <div className="min-w-0 w-full">
+              <h1 className="board-post-title board-post-title-detail text-2xl font-bold text-stone-800 sm:text-3xl">
+                {post.title}
+              </h1>
+              <p className="mt-1 text-sm text-stone-500">{post.location}</p>
+            </div>
           </div>
         </div>
 

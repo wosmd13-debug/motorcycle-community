@@ -54,8 +54,8 @@ export default function SiteHeader() {
             <ThemeToggle />
           </div>
 
-          <div className="site-header-touch-only lg:hidden [&_a]:px-2 [&_a]:py-1 [&_a]:text-[11px] [&_button]:px-2 [&_button]:py-1 [&_button]:text-[11px]">
-            <AuthNavActions />
+          <div className="site-header-touch-only max-w-[min(100%,14rem)] min-w-0 shrink lg:hidden">
+            <AuthNavActions compact />
           </div>
 
           <div className="site-header-desktop-only hidden lg:block">

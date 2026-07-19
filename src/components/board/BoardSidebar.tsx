@@ -31,7 +31,7 @@ export default function BoardSidebar({ posts }: BoardSidebarProps) {
             <li key={post.id}>
               <Link
                 href={`/board/${post.id}`}
-                className="flex w-full items-center gap-2 px-3 py-2 text-left transition hover:bg-[var(--dc-hover)]"
+                className="flex w-full min-w-0 items-center gap-2 px-3 py-2 text-left transition hover:bg-[var(--dc-hover)]"
               >
                 <span
                   className={`flex h-5 w-5 shrink-0 items-center justify-center text-[11px] font-bold ${
@@ -42,11 +42,11 @@ export default function BoardSidebar({ posts }: BoardSidebarProps) {
                 >
                   {index + 1}
                 </span>
-                <span className="board-post-title-wrap min-w-0 flex-1">
-                  <span className="board-post-title board-post-title-clamp text-[12px] text-[var(--text-secondary)]">
-                    {post.title}
-                  </span>
-                </span>
+            <div className="board-post-title-wrap min-w-0 w-full max-w-full flex-1">
+              <p className="board-post-title board-post-title-clamp text-[12px] text-[var(--text-secondary)]">
+                {post.title}
+              </p>
+            </div>
                 <span className="shrink-0 text-[10px] text-[var(--text-faint)]">
                   {getBoardPopularityScore(post)}
                 </span>

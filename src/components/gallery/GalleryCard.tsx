@@ -84,13 +84,13 @@ export default function GalleryCard({
       </Link>
 
       <div className="gallery-ig-mobile-meta border-t border-stone-200/80 bg-white px-2.5 py-2 dark:border-stone-700 dark:bg-stone-950">
-        <div className="board-post-title-wrap">
-          <h2 className="board-post-title board-post-title-clamp text-[13px] font-bold leading-snug text-stone-800 dark:text-stone-100">
+        <div className="board-post-title-wrap block w-full max-w-full">
+          <p className="board-post-title board-post-title-clamp text-[13px] font-bold leading-snug text-stone-800 dark:text-stone-100">
             {post.title}
-          </h2>
+          </p>
         </div>
         <p className="mt-0.5 truncate text-[11px] text-stone-500">{post.location}</p>
-        <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-stone-600 dark:text-stone-300">
+        <div className="mt-1.5 flex w-full min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-stone-600 dark:text-stone-300">
           <AuthorWithGrade
             author={post.author}
             authorGradeId={post.authorGradeId}

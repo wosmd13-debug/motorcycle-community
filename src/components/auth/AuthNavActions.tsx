@@ -9,11 +9,14 @@ import type { MemberRankEntry } from "@/lib/ranking";
 
 type AuthNavActionsProps = {
   layout?: "inline" | "stacked";
+  /** 모바일 상단 헤더: 버튼·뱃지를 줄여 제목 영역 레이아웃 깨짐 방지 */
+  compact?: boolean;
   onNavigate?: () => void;
 };
 
 export default function AuthNavActions({
   layout = "inline",
+  compact = false,
   onNavigate,
 }: AuthNavActionsProps) {
   const { user, loading, logout } = useAuth();
@@ -24,10 +27,14 @@ export default function AuthNavActions({
   const isStacked = layout === "stacked";
   const containerClass = isStacked
     ? "flex flex-col gap-2"
-    : "flex shrink-0 items-center gap-2";
+    : compact
+      ? "flex max-w-full min-w-0 flex-wrap items-center justify-end gap-1"
+      : "flex shrink-0 items-center gap-2";
   const buttonClass = isStacked
     ? "w-full border border-signature/30 bg-[var(--surface)] px-3 py-2.5 text-sm font-semibold text-center"
-    : "border border-signature/30 bg-[var(--surface)] px-3 py-1.5 text-xs font-semibold";
+    : compact
+      ? "border border-signature/30 bg-[var(--surface)] px-2 py-1 text-[10px] font-semibold whitespace-nowrap"
+      : "border border-signature/30 bg-[var(--surface)] px-3 py-1.5 text-xs font-semibold";
 
   useEffect(() => {
     if (!user) {
@@ -89,32 +96,45 @@ export default function AuthNavActions({
           onClick={onNavigate}
           className={`${buttonClass} border-red-200 bg-red-50 text-red-700 hover:bg-red-100 dark:border-red-900 dark:bg-red-950/50 dark:text-red-300 dark:hover:bg-red-950`}
         >
-          신고관리
+          {compact ? "신고" : "신고관리"}
         </Link>
       )}
       <Link
         href="/profile"
         onClick={onNavigate}
-        className={`${isStacked ? "w-full truncate px-1 py-1 text-sm font-semibold text-signature-dark" : "max-w-[160px] truncate text-xs font-semibold text-signature-dark hover:underline"}`}
+        className={
+          compact
+            ? "max-w-[5.5rem] truncate px-1 py-1 text-[10px] font-semibold text-signature-dark hover:underline"
+            : isStacked
+              ? "w-full truncate px-1 py-1 text-sm font-semibold text-signature-dark"
+              : "max-w-[160px] truncate text-xs font-semibold text-signature-dark hover:underline"
+        }
       >
-        <AuthorWithGrade
-          author={user.nickname}
-          authorGradeId={user.isOperator ? "operator" : ranking?.grade?.id}
-          nicknameClassName={
-            isStacked
-              ? "truncate text-sm font-semibold text-signature-dark"
-              : "truncate text-xs font-semibold text-signature-dark"
-          }
-          className="inline-flex max-w-full flex-wrap items-center gap-1"
-        />
+        {compact ? (
+          user.nickname
+        ) : (
+          <AuthorWithGrade
+            author={user.nickname}
+            authorGradeId={user.isOperator ? "operator" : ranking?.grade?.id}
+            nicknameClassName={
+              isStacked
+                ? "truncate text-sm font-semibold text-signature-dark"
+                : "truncate text-xs font-semibold text-signature-dark"
+            }
+            className="inline-flex max-w-full flex-wrap items-center gap-1"
+            hideGrade={compact}
+          />
+        )}
       </Link>
-      <Link
-        href="/profile"
-        onClick={onNavigate}
-        className={`${buttonClass} font-medium text-[var(--text-secondary)] hover:bg-signature-light`}
-      >
-        정보수정
-      </Link>
+      {!compact && (
+        <Link
+          href="/profile"
+          onClick={onNavigate}
+          className={`${buttonClass} font-medium text-[var(--text-secondary)] hover:bg-signature-light`}
+        >
+          정보수정
+        </Link>
+      )}
       <button
         type="button"
         onClick={() => {
