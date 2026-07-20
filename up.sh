@@ -3,13 +3,28 @@
 set -e
 cd "$(dirname "$0")"
 
+echo "==> 0/5 설정 확인"
 if [[ ! -f .env.production ]]; then
-  echo "오류: .env.production 파일이 없습니다."
-  echo "  cp .env.production.example .env.production 후 값을 입력하세요."
-  exit 1
+  if [[ -f /root/motorcycle-community-old/.env.production ]]; then
+    cp /root/motorcycle-community-old/.env.production .env.production
+    echo "    .env.production 복사 완료 (old 폴더)"
+  else
+    echo "오류: .env.production 파일이 없습니다."
+    exit 1
+  fi
 fi
 
-echo "==> 0/5 설정 확인"
+# localhost 로 되어 있으면 자동 수정 (수동 sed/grep 오타 방지)
+if grep -q '^NEXT_PUBLIC_SITE_URL=http://localhost' .env.production 2>/dev/null \
+  || ! grep -q '^NEXT_PUBLIC_SITE_URL=https://' .env.production 2>/dev/null; then
+  echo "    NEXT_PUBLIC_SITE_URL 자동 수정 → https://byanra.com"
+  if grep -q '^NEXT_PUBLIC_SITE_URL=' .env.production; then
+    sed -i 's|^NEXT_PUBLIC_SITE_URL=.*|NEXT_PUBLIC_SITE_URL=https://byanra.com|' .env.production
+  else
+    echo 'NEXT_PUBLIC_SITE_URL=https://byanra.com' >> .env.production
+  fi
+fi
+
 # Docker build-arg는 .env.production 을 직접 읽지 않으므로 export 필요
 set -a
 # shellcheck disable=SC1091
@@ -17,9 +32,8 @@ source .env.production
 set +a
 
 if [[ "${NEXT_PUBLIC_SITE_URL:-}" != https://* ]]; then
-  echo "오류: .env.production 의 NEXT_PUBLIC_SITE_URL 이 https:// 실제 도메인이 아닙니다."
+  echo "오류: NEXT_PUBLIC_SITE_URL 설정 실패"
   echo "  현재 값: ${NEXT_PUBLIC_SITE_URL:-비어 있음}"
-  echo "  예: NEXT_PUBLIC_SITE_URL=https://byanra.com"
   exit 1
 fi
 echo "    SITE_URL=$NEXT_PUBLIC_SITE_URL"
