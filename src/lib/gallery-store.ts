@@ -9,10 +9,12 @@ import {
   type GalleryPost,
 } from "@/lib/gallery";
 import { applyCommentVoteChoice, toggleLikeByUser } from "@/lib/engagement";
+import { withJsonStoreLock } from "@/lib/json-store-lock";
 import { deleteUploadedPublicUrls } from "@/lib/upload-files";
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const DATA_FILE = path.join(DATA_DIR, "gallery.json");
+const STORE_LOCK_KEY = "gallery";
 
 async function ensureDataFile() {
   await fs.mkdir(DATA_DIR, { recursive: true });
@@ -44,7 +46,9 @@ export async function readGalleryPosts(): Promise<GalleryPost[]> {
   );
 
   if (needsMigration) {
-    await writeGalleryPosts(normalized);
+    await withJsonStoreLock(STORE_LOCK_KEY, async () => {
+      await writeGalleryPosts(normalized);
+    });
   }
 
   return normalized;
@@ -58,43 +62,49 @@ async function writeGalleryPosts(posts: GalleryPost[]) {
 export async function createGalleryPost(
   input: CreateGalleryPostInput
 ): Promise<GalleryPost> {
-  const posts = await readGalleryPosts();
-  const post: GalleryPost = {
-    id: crypto.randomUUID(),
-    ...input,
-    likes: 0,
-    views: 0,
-    comments: [],
-    createdAt: new Date().toISOString(),
-  };
+  return withJsonStoreLock(STORE_LOCK_KEY, async () => {
+    const posts = await readGalleryPosts();
+    const post: GalleryPost = {
+      id: crypto.randomUUID(),
+      ...input,
+      likes: 0,
+      views: 0,
+      comments: [],
+      createdAt: new Date().toISOString(),
+    };
 
-  posts.unshift(post);
-  await writeGalleryPosts(posts);
-  return post;
+    posts.unshift(post);
+    await writeGalleryPosts(posts);
+    return post;
+  });
 }
 
 export async function likeGalleryPost(
   id: string,
   userId: string
 ): Promise<{ post: GalleryPost; liked: boolean } | null> {
-  const posts = await readGalleryPosts();
-  const index = posts.findIndex((post) => post.id === id);
-  if (index === -1) return null;
+  return withJsonStoreLock(STORE_LOCK_KEY, async () => {
+    const posts = await readGalleryPosts();
+    const index = posts.findIndex((post) => post.id === id);
+    if (index === -1) return null;
 
-  const { item, liked } = toggleLikeByUser(posts[index], userId);
-  posts[index] = item;
-  await writeGalleryPosts(posts);
-  return { post: posts[index], liked };
+    const { item, liked } = toggleLikeByUser(posts[index], userId);
+    posts[index] = item;
+    await writeGalleryPosts(posts);
+    return { post: posts[index], liked };
+  });
 }
 
 export async function viewGalleryPost(id: string): Promise<GalleryPost | null> {
-  const posts = await readGalleryPosts();
-  const index = posts.findIndex((post) => post.id === id);
-  if (index === -1) return null;
+  return withJsonStoreLock(STORE_LOCK_KEY, async () => {
+    const posts = await readGalleryPosts();
+    const index = posts.findIndex((post) => post.id === id);
+    if (index === -1) return null;
 
-  posts[index] = { ...posts[index], views: posts[index].views + 1 };
-  await writeGalleryPosts(posts);
-  return posts[index];
+    posts[index] = { ...posts[index], views: posts[index].views + 1 };
+    await writeGalleryPosts(posts);
+    return posts[index];
+  });
 }
 
 export async function addGalleryComment(
@@ -106,28 +116,30 @@ export async function addGalleryComment(
     content: string;
   }
 ): Promise<GalleryPost | null> {
-  const posts = await readGalleryPosts();
-  const index = posts.findIndex((post) => post.id === id);
-  if (index === -1) return null;
+  return withJsonStoreLock(STORE_LOCK_KEY, async () => {
+    const posts = await readGalleryPosts();
+    const index = posts.findIndex((post) => post.id === id);
+    if (index === -1) return null;
 
-  const comment: GalleryComment = {
-    id: crypto.randomUUID(),
-    author: input.author,
-    authorId: input.authorId,
-    authorGradeId: input.authorGradeId,
-    content: input.content,
-    upvotes: 0,
-    downvotes: 0,
-    createdAt: new Date().toISOString(),
-  };
+    const comment: GalleryComment = {
+      id: crypto.randomUUID(),
+      author: input.author,
+      authorId: input.authorId,
+      authorGradeId: input.authorGradeId,
+      content: input.content,
+      upvotes: 0,
+      downvotes: 0,
+      createdAt: new Date().toISOString(),
+    };
 
-  posts[index] = {
-    ...posts[index],
-    comments: [comment, ...posts[index].comments],
-  };
+    posts[index] = {
+      ...posts[index],
+      comments: [comment, ...posts[index].comments],
+    };
 
-  await writeGalleryPosts(posts);
-  return posts[index];
+    await writeGalleryPosts(posts);
+    return posts[index];
+  });
 }
 
 export async function voteGalleryComment(
@@ -136,24 +148,26 @@ export async function voteGalleryComment(
   userId: string,
   choice: CommentVoteChoice
 ): Promise<{ post: GalleryPost; myVote: CommentVoteChoice | null } | null> {
-  const posts = await readGalleryPosts();
-  const postIndex = posts.findIndex((post) => post.id === postId);
-  if (postIndex === -1) return null;
+  return withJsonStoreLock(STORE_LOCK_KEY, async () => {
+    const posts = await readGalleryPosts();
+    const postIndex = posts.findIndex((post) => post.id === postId);
+    if (postIndex === -1) return null;
 
-  const commentIndex = posts[postIndex].comments.findIndex(
-    (comment) => comment.id === commentId
-  );
-  if (commentIndex === -1) return null;
+    const commentIndex = posts[postIndex].comments.findIndex(
+      (comment) => comment.id === commentId
+    );
+    if (commentIndex === -1) return null;
 
-  const { comment, myVote } = applyCommentVoteChoice(
-    posts[postIndex].comments[commentIndex],
-    userId,
-    choice
-  );
-  posts[postIndex].comments[commentIndex] = comment;
+    const { comment, myVote } = applyCommentVoteChoice(
+      posts[postIndex].comments[commentIndex],
+      userId,
+      choice
+    );
+    posts[postIndex].comments[commentIndex] = comment;
 
-  await writeGalleryPosts(posts);
-  return { post: posts[postIndex], myVote };
+    await writeGalleryPosts(posts);
+    return { post: posts[postIndex], myVote };
+  });
 }
 
 export async function getGalleryPost(id: string): Promise<GalleryPost | null> {
@@ -162,15 +176,17 @@ export async function getGalleryPost(id: string): Promise<GalleryPost | null> {
 }
 
 export async function deleteGalleryPost(id: string): Promise<boolean> {
-  const posts = await readGalleryPosts();
-  const target = posts.find((post) => post.id === id);
-  if (!target) return false;
+  return withJsonStoreLock(STORE_LOCK_KEY, async () => {
+    const posts = await readGalleryPosts();
+    const target = posts.find((post) => post.id === id);
+    if (!target) return false;
 
-  await deleteUploadedPublicUrls([target.imageUrl]);
+    await deleteUploadedPublicUrls([target.imageUrl]);
 
-  const next = posts.filter((post) => post.id !== id);
-  await writeGalleryPosts(next);
-  return true;
+    const next = posts.filter((post) => post.id !== id);
+    await writeGalleryPosts(next);
+    return true;
+  });
 }
 
 export type UpdateGalleryPostInput = {
@@ -185,23 +201,25 @@ export async function updateGalleryPost(
   id: string,
   input: UpdateGalleryPostInput
 ): Promise<GalleryPost | null> {
-  const posts = await readGalleryPosts();
-  const index = posts.findIndex((post) => post.id === id);
-  if (index === -1) return null;
+  return withJsonStoreLock(STORE_LOCK_KEY, async () => {
+    const posts = await readGalleryPosts();
+    const index = posts.findIndex((post) => post.id === id);
+    if (index === -1) return null;
 
-  const previous = posts[index];
-  if (
-    input.imageUrl !== undefined &&
-    input.imageUrl !== previous.imageUrl
-  ) {
-    await deleteUploadedPublicUrls([previous.imageUrl]);
-  }
+    const previous = posts[index];
+    if (
+      input.imageUrl !== undefined &&
+      input.imageUrl !== previous.imageUrl
+    ) {
+      await deleteUploadedPublicUrls([previous.imageUrl]);
+    }
 
-  posts[index] = {
-    ...posts[index],
-    ...input,
-  };
+    posts[index] = {
+      ...posts[index],
+      ...input,
+    };
 
-  await writeGalleryPosts(posts);
-  return posts[index];
+    await writeGalleryPosts(posts);
+    return posts[index];
+  });
 }

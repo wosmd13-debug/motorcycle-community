@@ -9,9 +9,11 @@ import {
   type CreateBoardPostInput,
 } from "@/lib/board";
 import { applyCommentVoteChoice, toggleLikeByUser } from "@/lib/engagement";
+import { withJsonStoreLock } from "@/lib/json-store-lock";
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const DATA_FILE = path.join(DATA_DIR, "board.json");
+const STORE_LOCK_KEY = "board";
 
 async function ensureDataFile() {
   await fs.mkdir(DATA_DIR, { recursive: true });
@@ -45,7 +47,9 @@ export async function readBoardPosts(): Promise<BoardPost[]> {
   );
 
   if (needsMigration) {
-    await writeBoardPosts(normalized);
+    await withJsonStoreLock(STORE_LOCK_KEY, async () => {
+      await writeBoardPosts(normalized);
+    });
   }
 
   return normalized;
@@ -59,20 +63,22 @@ async function writeBoardPosts(posts: BoardPost[]) {
 export async function createBoardPost(
   input: CreateBoardPostInput
 ): Promise<BoardPost> {
-  const posts = await readBoardPosts();
-  const post: BoardPost = {
-    id: crypto.randomUUID(),
-    ...input,
-    imageUrls: input.imageUrls ?? [],
-    likes: 0,
-    views: 0,
-    comments: [],
-    createdAt: new Date().toISOString(),
-  };
+  return withJsonStoreLock(STORE_LOCK_KEY, async () => {
+    const posts = await readBoardPosts();
+    const post: BoardPost = {
+      id: crypto.randomUUID(),
+      ...input,
+      imageUrls: input.imageUrls ?? [],
+      likes: 0,
+      views: 0,
+      comments: [],
+      createdAt: new Date().toISOString(),
+    };
 
-  posts.unshift(post);
-  await writeBoardPosts(posts);
-  return post;
+    posts.unshift(post);
+    await writeBoardPosts(posts);
+    return post;
+  });
 }
 
 export async function getBoardPost(id: string): Promise<BoardPost | null> {
@@ -84,52 +90,58 @@ export async function likeBoardPost(
   id: string,
   userId: string
 ): Promise<{ post: BoardPost; liked: boolean } | null> {
-  const posts = await readBoardPosts();
-  const index = posts.findIndex((post) => post.id === id);
-  if (index === -1) return null;
+  return withJsonStoreLock(STORE_LOCK_KEY, async () => {
+    const posts = await readBoardPosts();
+    const index = posts.findIndex((post) => post.id === id);
+    if (index === -1) return null;
 
-  const { item, liked } = toggleLikeByUser(posts[index], userId);
-  posts[index] = item;
-  await writeBoardPosts(posts);
-  return { post: posts[index], liked };
+    const { item, liked } = toggleLikeByUser(posts[index], userId);
+    posts[index] = item;
+    await writeBoardPosts(posts);
+    return { post: posts[index], liked };
+  });
 }
 
 export async function viewBoardPost(id: string): Promise<BoardPost | null> {
-  const posts = await readBoardPosts();
-  const index = posts.findIndex((post) => post.id === id);
-  if (index === -1) return null;
+  return withJsonStoreLock(STORE_LOCK_KEY, async () => {
+    const posts = await readBoardPosts();
+    const index = posts.findIndex((post) => post.id === id);
+    if (index === -1) return null;
 
-  posts[index] = { ...posts[index], views: posts[index].views + 1 };
-  await writeBoardPosts(posts);
-  return posts[index];
+    posts[index] = { ...posts[index], views: posts[index].views + 1 };
+    await writeBoardPosts(posts);
+    return posts[index];
+  });
 }
 
 export async function addBoardComment(
   id: string,
   input: { author: string; authorId?: string; authorGradeId?: import("@/lib/ranking").MemberGradeId; content: string }
 ): Promise<BoardPost | null> {
-  const posts = await readBoardPosts();
-  const index = posts.findIndex((post) => post.id === id);
-  if (index === -1) return null;
+  return withJsonStoreLock(STORE_LOCK_KEY, async () => {
+    const posts = await readBoardPosts();
+    const index = posts.findIndex((post) => post.id === id);
+    if (index === -1) return null;
 
-  const comment: BoardComment = {
-    id: crypto.randomUUID(),
-    author: input.author,
-    authorId: input.authorId,
-    authorGradeId: input.authorGradeId,
-    content: input.content,
-    upvotes: 0,
-    downvotes: 0,
-    createdAt: new Date().toISOString(),
-  };
+    const comment: BoardComment = {
+      id: crypto.randomUUID(),
+      author: input.author,
+      authorId: input.authorId,
+      authorGradeId: input.authorGradeId,
+      content: input.content,
+      upvotes: 0,
+      downvotes: 0,
+      createdAt: new Date().toISOString(),
+    };
 
-  posts[index] = {
-    ...posts[index],
-    comments: [comment, ...posts[index].comments],
-  };
+    posts[index] = {
+      ...posts[index],
+      comments: [comment, ...posts[index].comments],
+    };
 
-  await writeBoardPosts(posts);
-  return posts[index];
+    await writeBoardPosts(posts);
+    return posts[index];
+  });
 }
 
 export async function voteBoardComment(
@@ -138,37 +150,41 @@ export async function voteBoardComment(
   userId: string,
   choice: CommentVoteChoice
 ): Promise<{ post: BoardPost; myVote: CommentVoteChoice | null } | null> {
-  const posts = await readBoardPosts();
-  const postIndex = posts.findIndex((post) => post.id === postId);
-  if (postIndex === -1) return null;
+  return withJsonStoreLock(STORE_LOCK_KEY, async () => {
+    const posts = await readBoardPosts();
+    const postIndex = posts.findIndex((post) => post.id === postId);
+    if (postIndex === -1) return null;
 
-  const commentIndex = posts[postIndex].comments.findIndex(
-    (comment) => comment.id === commentId
-  );
-  if (commentIndex === -1) return null;
+    const commentIndex = posts[postIndex].comments.findIndex(
+      (comment) => comment.id === commentId
+    );
+    if (commentIndex === -1) return null;
 
-  const { comment, myVote } = applyCommentVoteChoice(
-    posts[postIndex].comments[commentIndex],
-    userId,
-    choice
-  );
-  posts[postIndex].comments[commentIndex] = comment;
+    const { comment, myVote } = applyCommentVoteChoice(
+      posts[postIndex].comments[commentIndex],
+      userId,
+      choice
+    );
+    posts[postIndex].comments[commentIndex] = comment;
 
-  await writeBoardPosts(posts);
-  return { post: posts[postIndex], myVote };
+    await writeBoardPosts(posts);
+    return { post: posts[postIndex], myVote };
+  });
 }
 
 export async function deleteBoardPost(id: string): Promise<boolean> {
-  const posts = await readBoardPosts();
-  const target = posts.find((post) => post.id === id);
-  if (!target) return false;
+  return withJsonStoreLock(STORE_LOCK_KEY, async () => {
+    const posts = await readBoardPosts();
+    const target = posts.find((post) => post.id === id);
+    if (!target) return false;
 
-  const { deleteUploadedPublicUrls } = await import("@/lib/upload-files");
-  await deleteUploadedPublicUrls(target.imageUrls ?? []);
+    const { deleteUploadedPublicUrls } = await import("@/lib/upload-files");
+    await deleteUploadedPublicUrls(target.imageUrls ?? []);
 
-  const next = posts.filter((post) => post.id !== id);
-  await writeBoardPosts(next);
-  return true;
+    const next = posts.filter((post) => post.id !== id);
+    await writeBoardPosts(next);
+    return true;
+  });
 }
 
 export type UpdateBoardPostInput = {
@@ -182,24 +198,26 @@ export async function updateBoardPost(
   id: string,
   input: UpdateBoardPostInput
 ): Promise<BoardPost | null> {
-  const posts = await readBoardPosts();
-  const index = posts.findIndex((post) => post.id === id);
-  if (index === -1) return null;
+  return withJsonStoreLock(STORE_LOCK_KEY, async () => {
+    const posts = await readBoardPosts();
+    const index = posts.findIndex((post) => post.id === id);
+    if (index === -1) return null;
 
-  const previous = posts[index];
-  if (input.imageUrls) {
-    const removed = (previous.imageUrls ?? []).filter(
-      (url) => !input.imageUrls!.includes(url)
-    );
-    const { deleteUploadedPublicUrls } = await import("@/lib/upload-files");
-    await deleteUploadedPublicUrls(removed);
-  }
+    const previous = posts[index];
+    if (input.imageUrls) {
+      const removed = (previous.imageUrls ?? []).filter(
+        (url) => !input.imageUrls!.includes(url)
+      );
+      const { deleteUploadedPublicUrls } = await import("@/lib/upload-files");
+      await deleteUploadedPublicUrls(removed);
+    }
 
-  posts[index] = {
-    ...posts[index],
-    ...input,
-  };
+    posts[index] = {
+      ...posts[index],
+      ...input,
+    };
 
-  await writeBoardPosts(posts);
-  return posts[index];
+    await writeBoardPosts(posts);
+    return posts[index];
+  });
 }

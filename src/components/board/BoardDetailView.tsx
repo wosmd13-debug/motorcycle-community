@@ -167,7 +167,10 @@ export default function BoardDetailView({ initialPost }: BoardDetailViewProps) {
       });
       const data = await response.json();
 
-      if (response.status === 401) return;
+      if (response.status === 401) {
+        setCommentError("로그인이 필요합니다. 다시 로그인해 주세요.");
+        return;
+      }
       if (!response.ok) {
         throw new Error(data.error ?? "댓글 등록에 실패했습니다.");
       }
