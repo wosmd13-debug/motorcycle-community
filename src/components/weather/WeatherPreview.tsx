@@ -39,10 +39,10 @@ export default async function WeatherPreview({ compact = false }: WeatherPreview
               </p>
             </>
           ) : (
-            <p className="text-xs leading-5 text-slate-500">
-              날씨 API 설정 후 표시됩니다.
-            </p>
-          )}
+          <p className="text-xs leading-5 text-slate-500">
+            날씨 정보를 불러오지 못했습니다.
+          </p>
+        )}
         </div>
       </section>
     );
@@ -68,17 +68,14 @@ export default async function WeatherPreview({ compact = false }: WeatherPreview
               {result.data.current.ridingTip}
             </p>
             <p className="mt-2 text-xs text-slate-400">
-              OpenWeatherMap · {formatWeatherUpdated(result.data.updatedAt)} 기준
+              {result.data.provider === "openweathermap"
+                ? "OpenWeatherMap"
+                : "Open-Meteo"}{" "}
+              · {formatWeatherUpdated(result.data.updatedAt)} 기준
             </p>
           </>
         ) : (
-          <>
-            <p className="text-sm text-red-600">{result.error}</p>
-            <p className="mt-2 text-xs text-slate-500">
-              .env.local에 OPENWEATHERMAP_API_KEY를 저장한 뒤 개발 서버를 재시작해
-              주세요.
-            </p>
-          </>
+          <p className="text-sm text-slate-600">{result.error}</p>
         )}
       </div>
     </section>

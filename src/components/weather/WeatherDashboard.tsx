@@ -100,8 +100,8 @@ export default function WeatherDashboard({
 
   if (error && !weather) {
     return (
-      <div className="mt-8 rounded-3xl border border-dashed border-signature/30 bg-signature-light/60 px-6 py-12 text-center">
-        <h2 className="text-lg font-bold text-slate-800">
+      <div className="mt-6 rounded-3xl border border-dashed border-signature/30 bg-signature-light/60 px-4 py-10 text-center sm:mt-8 sm:px-6 sm:py-12">
+        <h2 className="text-base font-bold text-slate-800 sm:text-lg">
           날씨 정보를 불러올 수 없습니다
         </h2>
         <p className="mt-3 text-sm leading-6 text-slate-600">{error}</p>
@@ -112,19 +112,6 @@ export default function WeatherDashboard({
         >
           다시 시도
         </button>
-        {error.includes("API 키") && (
-          <pre className="mx-auto mt-4 max-w-md rounded-2xl bg-white px-4 py-3 text-left text-xs text-slate-700 shadow-sm">
-            OPENWEATHERMAP_API_KEY=발급받은_API_키
-          </pre>
-        )}
-        <a
-          href="https://openweathermap.org/api"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-4 inline-block text-sm font-semibold text-signature-dark hover:underline"
-        >
-          OpenWeatherMap API 키 발급 →
-        </a>
       </div>
     );
   }
@@ -132,31 +119,31 @@ export default function WeatherDashboard({
   const goNoGo = weather?.current.goNoGo;
 
   return (
-    <div className="mt-8 space-y-6">
-      <div className="rounded-3xl border border-signature/20 bg-white p-5 shadow-sm">
-        <div className="flex flex-wrap items-center gap-3">
-          <p className="text-sm font-semibold text-slate-700">지역 선택</p>
-          <div className="flex flex-wrap gap-2">
-            {ridingCities.map((city) => (
-              <button
-                key={city.id}
-                type="button"
-                onClick={() => setSelectedCity(city)}
-                className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                  selectedCity.id === city.id
-                    ? "bg-signature-dark text-white"
-                    : "bg-signature-light text-slate-600 ring-1 ring-signature/20 hover:bg-signature-muted"
-                }`}
-              >
-                {city.name}
-              </button>
-            ))}
-          </div>
+    <div className="mt-6 space-y-5 sm:mt-8 sm:space-y-6">
+      <div className="rounded-3xl border border-signature/20 bg-white p-4 shadow-sm sm:p-5">
+        <p className="text-sm font-semibold text-slate-700">지역 선택</p>
+        <div className="-mx-1 mt-3 flex gap-2 overflow-x-auto pb-1">
+          {ridingCities.map((city) => (
+            <button
+              key={city.id}
+              type="button"
+              onClick={() => setSelectedCity(city)}
+              className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                selectedCity.id === city.id
+                  ? "bg-signature-dark text-white"
+                  : "bg-signature-light text-slate-600 ring-1 ring-signature/20 hover:bg-signature-muted"
+              }`}
+            >
+              {city.name}
+            </button>
+          ))}
+        </div>
+        <div className="mt-3 flex flex-wrap gap-2">
           <button
             type="button"
             onClick={handleUseMyLocation}
             disabled={usingLocation || loading}
-            className="rounded-full bg-slate-800 px-4 py-1.5 text-xs font-semibold text-white transition hover:bg-slate-700 disabled:opacity-60"
+            className="min-h-9 flex-1 rounded-full bg-slate-800 px-4 py-2 text-xs font-semibold text-white transition hover:bg-slate-700 disabled:opacity-60 sm:flex-none sm:py-1.5"
           >
             {usingLocation ? "위치 확인 중..." : "내 위치"}
           </button>
@@ -164,7 +151,7 @@ export default function WeatherDashboard({
             type="button"
             onClick={handleRefresh}
             disabled={loading}
-            className="rounded-full bg-signature-dark px-4 py-1.5 text-xs font-semibold text-white transition hover:bg-signature-darker disabled:opacity-60"
+            className="min-h-9 flex-1 rounded-full bg-signature-dark px-4 py-2 text-xs font-semibold text-white transition hover:bg-signature-darker disabled:opacity-60 sm:flex-none sm:py-1.5"
           >
             {loading ? "새로고침 중..." : "새로고침"}
           </button>
@@ -182,21 +169,21 @@ export default function WeatherDashboard({
       ) : weather && goNoGo ? (
         <>
           <section
-            className={`rounded-3xl p-6 shadow-sm sm:p-8 ${goNoGoColor(goNoGo.verdict)}`}
+            className={`rounded-3xl p-5 shadow-sm sm:p-8 ${goNoGoColor(goNoGo.verdict)}`}
           >
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <p className="text-sm font-semibold opacity-90">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-semibold opacity-90 sm:text-sm">
                   {weather.current.location} · 라이딩 GO/NO-GO
                 </p>
-                <h2 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">
+                <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-4xl">
                   {goNoGo.headline}
                 </h2>
                 <p className="mt-3 max-w-2xl text-sm leading-6 opacity-95">
                   {goNoGo.summary}
                 </p>
               </div>
-              <span className="rounded-2xl bg-white/20 px-5 py-3 text-2xl font-black backdrop-blur-sm">
+              <span className="self-start rounded-2xl bg-white/20 px-4 py-2 text-xl font-black backdrop-blur-sm sm:px-5 sm:py-3 sm:text-2xl">
                 {goNoGoLabel(goNoGo.verdict)}
               </span>
             </div>
@@ -210,13 +197,16 @@ export default function WeatherDashboard({
                     {weather.current.location} 현재 날씨
                   </p>
                   <p className="mt-1 text-xs text-slate-400">
-                    OpenWeatherMap · {formatWeatherUpdated(weather.updatedAt)} 기준
+                    {weather.provider === "openweathermap"
+                      ? "OpenWeatherMap"
+                      : "Open-Meteo"}{" "}
+                    · {formatWeatherUpdated(weather.updatedAt)} 기준
                   </p>
                 </div>
               </div>
 
               <div className="mt-4">
-                <p className="text-6xl font-bold text-slate-800">
+                <p className="text-5xl font-bold text-slate-800 sm:text-6xl">
                   {weather.current.temperature}°
                 </p>
                 <p className="text-sm text-slate-500">
@@ -274,11 +264,11 @@ export default function WeatherDashboard({
                   {weather.hourly.map((hour) => (
                     <div
                       key={hour.time}
-                      className="flex items-center justify-between rounded-2xl bg-signature-light/70 px-4 py-3"
+                      className="grid grid-cols-[1fr_auto_auto] items-center gap-2 rounded-2xl bg-signature-light/70 px-3 py-3 sm:gap-3 sm:px-4"
                     >
-                      <div>
+                      <div className="min-w-0">
                         <p className="font-semibold text-slate-800">{hour.time}</p>
-                        <p className="text-xs capitalize text-slate-500">
+                        <p className="truncate text-xs capitalize text-slate-500">
                           {hour.condition}
                         </p>
                       </div>

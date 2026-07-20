@@ -62,11 +62,24 @@ export type DailyForecast = {
 };
 
 export type WeatherResponse = {
+  provider?: "openweathermap" | "open-meteo";
   current: CurrentWeather;
   forecast: DailyForecast[];
   hourly: HourlyOutlook[];
   updatedAt?: string;
 };
+
+export type FetchWeatherOptions = {
+  city?: string;
+  lat?: string;
+  lon?: string;
+  /** true면 캐시 없이 외부 API에서 바로 조회 */
+  fresh?: boolean;
+};
+
+export type FetchWeatherResult =
+  | { ok: true; data: WeatherResponse }
+  | { ok: false; error: string; status: number };
 
 export const ridingCities: RidingCity[] = [
   { id: "seoul", name: "서울", query: "Seoul,KR" },

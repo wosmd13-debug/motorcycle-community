@@ -26,6 +26,11 @@ services:
       NODE_ENV: production
       PORT: "3000"
       HOSTNAME: "0.0.0.0"
+      OPENWEATHERMAP_API_KEY: ${OPENWEATHERMAP_API_KEY:-}
+      OPINET_API_KEY: ${OPINET_API_KEY:-}
+      AUTH_SECRET: ${AUTH_SECRET:-}
+      ADMIN_LOGIN_IDS: ${ADMIN_LOGIN_IDS:-}
+      NAVER_MAP_CLIENT_SECRET: ${NAVER_MAP_CLIENT_SECRET:-}
       APP_COMMIT: ${APP_COMMIT:-dev}
       NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://byanra.com}
     volumes:

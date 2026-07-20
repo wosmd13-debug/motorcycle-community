@@ -33,6 +33,10 @@
 # backups
 /backups/
 
+# local deploy bundle (WinSCP upload)
+/deploy-pack/
+deploy-pack.zip
+
 # debug
 npm-debug.log*
 yarn-debug.log*

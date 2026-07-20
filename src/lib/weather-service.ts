@@ -7,9 +7,11 @@ import {
   getAirQualityAssessment,
   getHoursUntilSunset,
   goNoGoToRidingScore,
-  type WeatherResponse,
+  type FetchWeatherOptions,
+  type FetchWeatherResult,
   weatherEmoji,
 } from "@/lib/weather";
+import { fetchOpenMeteoWeather } from "@/lib/open-meteo-service";
 
 const CURRENT_URL = "https://api.openweathermap.org/data/2.5/weather";
 const FORECAST_URL = "https://api.openweathermap.org/data/2.5/forecast";
@@ -48,17 +50,7 @@ type OpenWeatherAir = {
   }>;
 };
 
-export type FetchWeatherOptions = {
-  city?: string;
-  lat?: string;
-  lon?: string;
-  /** true면 캐시 없이 OpenWeatherMap에서 바로 조회 (API·도시 변경용) */
-  fresh?: boolean;
-};
-
-export type FetchWeatherResult =
-  | { ok: true; data: WeatherResponse }
-  | { ok: false; error: string; status: number };
+export type { FetchWeatherOptions, FetchWeatherResult } from "@/lib/weather";
 
 async function fetchAirQuality(
   lat: number,
@@ -92,17 +84,25 @@ async function fetchAirQuality(
 export async function fetchWeather(
   options: FetchWeatherOptions = {}
 ): Promise<FetchWeatherResult> {
-  const apiKey = process.env.OPENWEATHERMAP_API_KEY;
+  const apiKey = process.env.OPENWEATHERMAP_API_KEY?.trim();
 
-  if (!apiKey) {
-    return {
-      ok: false,
-      error:
-        "OpenWeatherMap API 키가 없습니다. .env.local에 OPENWEATHERMAP_API_KEY를 추가해 주세요.",
-      status: 500,
-    };
+  if (apiKey) {
+    const result = await fetchOpenWeatherMap(options, apiKey);
+    if (result.ok) return result;
+
+    const fallback = await fetchOpenMeteoWeather(options);
+    if (fallback.ok) return fallback;
+
+    return result;
   }
 
+  return fetchOpenMeteoWeather(options);
+}
+
+async function fetchOpenWeatherMap(
+  options: FetchWeatherOptions,
+  apiKey: string
+): Promise<FetchWeatherResult> {
   const city = options.city ?? "Seoul,KR";
   const locationQuery =
     options.lat && options.lon
@@ -180,6 +180,7 @@ export async function fetchWeather(
     return {
       ok: true,
       data: {
+        provider: "openweathermap",
         current: {
           location: current.name,
           temperature: Math.round(current.main.temp),
