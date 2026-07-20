@@ -17,6 +17,7 @@ services:
         NEXT_PUBLIC_CONTACT_PHONE: ${NEXT_PUBLIC_CONTACT_PHONE:-}
         NEXT_PUBLIC_NAVER_MAP_CLIENT_ID: ${NEXT_PUBLIC_NAVER_MAP_CLIENT_ID:-}
         NEXT_PUBLIC_USE_NAVER_MAP: ${NEXT_PUBLIC_USE_NAVER_MAP:-}
+        APP_COMMIT: ${APP_COMMIT:-dev}
     ports:
       - "3000:3000"
     env_file:
@@ -25,6 +26,7 @@ services:
       NODE_ENV: production
       PORT: "3000"
       HOSTNAME: "0.0.0.0"
+      APP_COMMIT: ${APP_COMMIT:-dev}
     volumes:
       - ./data:/app/data
       - ./public/uploads:/app/public/uploads

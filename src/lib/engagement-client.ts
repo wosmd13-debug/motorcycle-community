@@ -20,6 +20,7 @@ export async function fetchEngagementAction(
   const response = await fetch(url, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify(body),
   });
 
@@ -36,6 +37,7 @@ export async function fetchEngagementPost(
   const response = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify(body),
   });
 

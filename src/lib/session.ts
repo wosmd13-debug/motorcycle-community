@@ -87,11 +87,37 @@ export function verifySessionToken(token: string): SessionPayload | null {
 }
 
 export function getSessionCookieOptions() {
-  return {
+  const options: {
+    httpOnly: boolean;
+    sameSite: "lax";
+    secure: boolean;
+    path: string;
+    maxAge: number;
+    domain?: string;
+  } = {
     httpOnly: true,
-    sameSite: "lax" as const,
+    sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: SESSION_MAX_AGE_SEC,
   };
+
+  if (process.env.NODE_ENV === "production") {
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+    if (siteUrl) {
+      try {
+        const hostname = new URL(siteUrl).hostname;
+        if (hostname && !hostname.includes("localhost")) {
+          const parts = hostname.replace(/^www\./, "").split(".");
+          if (parts.length >= 2) {
+            options.domain = `.${parts.slice(-2).join(".")}`;
+          }
+        }
+      } catch {
+        // ignore invalid site url
+      }
+    }
+  }
+
+  return options;
 }
