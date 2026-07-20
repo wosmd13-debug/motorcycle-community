@@ -27,6 +27,7 @@ services:
       PORT: "3000"
       HOSTNAME: "0.0.0.0"
       APP_COMMIT: ${APP_COMMIT:-dev}
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://byanra.com}
     volumes:
       - ./data:/app/data
       - ./public/uploads:/app/public/uploads

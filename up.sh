@@ -25,11 +25,8 @@ if grep -q '^NEXT_PUBLIC_SITE_URL=http://localhost' .env.production 2>/dev/null 
   fi
 fi
 
-# Docker build-arg는 .env.production 을 직접 읽지 않으므로 export 필요
-set -a
-# shellcheck disable=SC1091
-source .env.production
-set +a
+# 배포 시 항상 실제 도메인 사용 (Docker build/runtime 공통)
+export NEXT_PUBLIC_SITE_URL="https://byanra.com"
 
 if [[ "${NEXT_PUBLIC_SITE_URL:-}" != https://* ]]; then
   echo "오류: NEXT_PUBLIC_SITE_URL 설정 실패"
@@ -37,6 +34,13 @@ if [[ "${NEXT_PUBLIC_SITE_URL:-}" != https://* ]]; then
   exit 1
 fi
 echo "    SITE_URL=$NEXT_PUBLIC_SITE_URL"
+
+# AUTH_SECRET 등 나머지 운영 설정 로드
+set -a
+# shellcheck disable=SC1091
+source .env.production
+set +a
+export NEXT_PUBLIC_SITE_URL="https://byanra.com"
 
 echo "==> 1/5 data 폴더 권한"
 mkdir -p data public/uploads
