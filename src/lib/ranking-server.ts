@@ -145,10 +145,10 @@ function processPostEngagement(
 function processComments(
   map: Map<string, RankAccumulator>,
   usersById: Map<string, User>,
-  comments: CommentLike[],
+  comments: CommentLike[] | undefined,
   nicknameToUserId: Map<string, string>
 ) {
-  for (const comment of comments) {
+  for (const comment of comments ?? []) {
     const authorId = resolveUserId(comment.authorId, comment.author, nicknameToUserId);
     if (!authorId) continue;
 

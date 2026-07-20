@@ -30,28 +30,48 @@ async function ensureDataFile() {
   }
 }
 
-export async function readGalleryPosts(): Promise<GalleryPost[]> {
-  await ensureDataFile();
-  const raw = await fs.readFile(DATA_FILE, "utf8");
-  const posts = JSON.parse(raw) as GalleryPost[];
-  const normalized = posts.map(normalizeGalleryPost);
-
-  const needsMigration = posts.some(
+function needsGalleryMigration(posts: GalleryPost[]): boolean {
+  return posts.some(
     (post) =>
       post.views == null ||
       post.comments == null ||
-      post.comments.some(
+      (post.comments ?? []).some(
         (comment) => comment.upvotes == null || comment.downvotes == null
       )
   );
+}
 
-  if (needsMigration) {
+async function loadRawGalleryPostsFromDisk(): Promise<GalleryPost[]> {
+  await ensureDataFile();
+  const raw = await fs.readFile(DATA_FILE, "utf8");
+  return JSON.parse(raw) as GalleryPost[];
+}
+
+async function loadGalleryPostsFromDisk(): Promise<GalleryPost[]> {
+  const posts = await loadRawGalleryPostsFromDisk();
+  return posts.map(normalizeGalleryPost);
+}
+
+export async function readGalleryPosts(): Promise<GalleryPost[]> {
+  const rawPosts = await loadRawGalleryPostsFromDisk();
+  const normalized = rawPosts.map(normalizeGalleryPost);
+
+  if (needsGalleryMigration(rawPosts)) {
     await withJsonStoreLock(STORE_LOCK_KEY, async () => {
       await writeGalleryPosts(normalized);
     });
   }
 
   return normalized;
+}
+
+async function mutateGalleryPosts<T>(
+  mutate: (posts: GalleryPost[]) => Promise<T> | T
+): Promise<T> {
+  return withJsonStoreLock(STORE_LOCK_KEY, async () => {
+    const posts = await loadGalleryPostsFromDisk();
+    return mutate(posts);
+  });
 }
 
 async function writeGalleryPosts(posts: GalleryPost[]) {
@@ -62,8 +82,7 @@ async function writeGalleryPosts(posts: GalleryPost[]) {
 export async function createGalleryPost(
   input: CreateGalleryPostInput
 ): Promise<GalleryPost> {
-  return withJsonStoreLock(STORE_LOCK_KEY, async () => {
-    const posts = await readGalleryPosts();
+  return mutateGalleryPosts(async (posts) => {
     const post: GalleryPost = {
       id: crypto.randomUUID(),
       ...input,
@@ -83,8 +102,7 @@ export async function likeGalleryPost(
   id: string,
   userId: string
 ): Promise<{ post: GalleryPost; liked: boolean } | null> {
-  return withJsonStoreLock(STORE_LOCK_KEY, async () => {
-    const posts = await readGalleryPosts();
+  return mutateGalleryPosts(async (posts) => {
     const index = posts.findIndex((post) => post.id === id);
     if (index === -1) return null;
 
@@ -96,8 +114,7 @@ export async function likeGalleryPost(
 }
 
 export async function viewGalleryPost(id: string): Promise<GalleryPost | null> {
-  return withJsonStoreLock(STORE_LOCK_KEY, async () => {
-    const posts = await readGalleryPosts();
+  return mutateGalleryPosts(async (posts) => {
     const index = posts.findIndex((post) => post.id === id);
     if (index === -1) return null;
 
@@ -116,8 +133,7 @@ export async function addGalleryComment(
     content: string;
   }
 ): Promise<GalleryPost | null> {
-  return withJsonStoreLock(STORE_LOCK_KEY, async () => {
-    const posts = await readGalleryPosts();
+  return mutateGalleryPosts(async (posts) => {
     const index = posts.findIndex((post) => post.id === id);
     if (index === -1) return null;
 
@@ -148,8 +164,7 @@ export async function voteGalleryComment(
   userId: string,
   choice: CommentVoteChoice
 ): Promise<{ post: GalleryPost; myVote: CommentVoteChoice | null } | null> {
-  return withJsonStoreLock(STORE_LOCK_KEY, async () => {
-    const posts = await readGalleryPosts();
+  return mutateGalleryPosts(async (posts) => {
     const postIndex = posts.findIndex((post) => post.id === postId);
     if (postIndex === -1) return null;
 
@@ -176,8 +191,7 @@ export async function getGalleryPost(id: string): Promise<GalleryPost | null> {
 }
 
 export async function deleteGalleryPost(id: string): Promise<boolean> {
-  return withJsonStoreLock(STORE_LOCK_KEY, async () => {
-    const posts = await readGalleryPosts();
+  return mutateGalleryPosts(async (posts) => {
     const target = posts.find((post) => post.id === id);
     if (!target) return false;
 
@@ -201,8 +215,7 @@ export async function updateGalleryPost(
   id: string,
   input: UpdateGalleryPostInput
 ): Promise<GalleryPost | null> {
-  return withJsonStoreLock(STORE_LOCK_KEY, async () => {
-    const posts = await readGalleryPosts();
+  return mutateGalleryPosts(async (posts) => {
     const index = posts.findIndex((post) => post.id === id);
     if (index === -1) return null;
 

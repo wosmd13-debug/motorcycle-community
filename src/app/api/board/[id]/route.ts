@@ -15,7 +15,7 @@ import {
   type BoardCategory,
   type BoardPost,
 } from "@/lib/board";
-import { getMemberRankingByUserId } from "@/lib/ranking-server";
+import type { MemberGradeId } from "@/lib/ranking";
 import { trackMissionLike } from "@/lib/mission-track";
 import { toPublicEngagementItem } from "@/lib/engagement";
 import {
@@ -225,8 +225,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       );
     }
 
-    const ranking = await getMemberRankingByUserId(user.id);
-    const authorGradeId = user.isOperator ? "operator" : ranking?.grade.id;
+    const authorGradeId: MemberGradeId = user.isOperator ? "operator" : "beginner";
 
     const post = await addBoardComment(id, {
       author: user.nickname,
@@ -242,7 +241,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
     }
 
     return NextResponse.json({ post: toPublicEngagementItem(post) }, { status: 201 });
-  } catch {
+  } catch (error) {
+    console.error("board comment POST failed:", error);
     return NextResponse.json(
       { error: "댓글을 등록하지 못했습니다." },
       { status: 500 }

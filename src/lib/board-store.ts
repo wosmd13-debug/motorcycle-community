@@ -29,30 +29,50 @@ async function ensureDataFile() {
   }
 }
 
-export async function readBoardPosts(): Promise<BoardPost[]> {
-  await ensureDataFile();
-  const raw = await fs.readFile(DATA_FILE, "utf8");
-  const posts = JSON.parse(raw) as BoardPost[];
-  const normalized = posts.map(normalizeBoardPost);
-
-  const needsMigration = posts.some(
+function needsBoardMigration(posts: BoardPost[]): boolean {
+  return posts.some(
     (post) =>
       post.imageUrls == null ||
       post.views == null ||
       post.likes == null ||
       post.comments == null ||
-      post.comments.some(
+      (post.comments ?? []).some(
         (comment) => comment.upvotes == null || comment.downvotes == null
       )
   );
+}
 
-  if (needsMigration) {
+async function loadRawBoardPostsFromDisk(): Promise<BoardPost[]> {
+  await ensureDataFile();
+  const raw = await fs.readFile(DATA_FILE, "utf8");
+  return JSON.parse(raw) as BoardPost[];
+}
+
+async function loadBoardPostsFromDisk(): Promise<BoardPost[]> {
+  const posts = await loadRawBoardPostsFromDisk();
+  return posts.map(normalizeBoardPost);
+}
+
+export async function readBoardPosts(): Promise<BoardPost[]> {
+  const rawPosts = await loadRawBoardPostsFromDisk();
+  const normalized = rawPosts.map(normalizeBoardPost);
+
+  if (needsBoardMigration(rawPosts)) {
     await withJsonStoreLock(STORE_LOCK_KEY, async () => {
       await writeBoardPosts(normalized);
     });
   }
 
   return normalized;
+}
+
+async function mutateBoardPosts<T>(
+  mutate: (posts: BoardPost[]) => Promise<T> | T
+): Promise<T> {
+  return withJsonStoreLock(STORE_LOCK_KEY, async () => {
+    const posts = await loadBoardPostsFromDisk();
+    return mutate(posts);
+  });
 }
 
 async function writeBoardPosts(posts: BoardPost[]) {
@@ -63,8 +83,7 @@ async function writeBoardPosts(posts: BoardPost[]) {
 export async function createBoardPost(
   input: CreateBoardPostInput
 ): Promise<BoardPost> {
-  return withJsonStoreLock(STORE_LOCK_KEY, async () => {
-    const posts = await readBoardPosts();
+  return mutateBoardPosts(async (posts) => {
     const post: BoardPost = {
       id: crypto.randomUUID(),
       ...input,
@@ -90,8 +109,7 @@ export async function likeBoardPost(
   id: string,
   userId: string
 ): Promise<{ post: BoardPost; liked: boolean } | null> {
-  return withJsonStoreLock(STORE_LOCK_KEY, async () => {
-    const posts = await readBoardPosts();
+  return mutateBoardPosts(async (posts) => {
     const index = posts.findIndex((post) => post.id === id);
     if (index === -1) return null;
 
@@ -103,8 +121,7 @@ export async function likeBoardPost(
 }
 
 export async function viewBoardPost(id: string): Promise<BoardPost | null> {
-  return withJsonStoreLock(STORE_LOCK_KEY, async () => {
-    const posts = await readBoardPosts();
+  return mutateBoardPosts(async (posts) => {
     const index = posts.findIndex((post) => post.id === id);
     if (index === -1) return null;
 
@@ -118,8 +135,7 @@ export async function addBoardComment(
   id: string,
   input: { author: string; authorId?: string; authorGradeId?: import("@/lib/ranking").MemberGradeId; content: string }
 ): Promise<BoardPost | null> {
-  return withJsonStoreLock(STORE_LOCK_KEY, async () => {
-    const posts = await readBoardPosts();
+  return mutateBoardPosts(async (posts) => {
     const index = posts.findIndex((post) => post.id === id);
     if (index === -1) return null;
 
@@ -150,8 +166,7 @@ export async function voteBoardComment(
   userId: string,
   choice: CommentVoteChoice
 ): Promise<{ post: BoardPost; myVote: CommentVoteChoice | null } | null> {
-  return withJsonStoreLock(STORE_LOCK_KEY, async () => {
-    const posts = await readBoardPosts();
+  return mutateBoardPosts(async (posts) => {
     const postIndex = posts.findIndex((post) => post.id === postId);
     if (postIndex === -1) return null;
 
@@ -173,8 +188,7 @@ export async function voteBoardComment(
 }
 
 export async function deleteBoardPost(id: string): Promise<boolean> {
-  return withJsonStoreLock(STORE_LOCK_KEY, async () => {
-    const posts = await readBoardPosts();
+  return mutateBoardPosts(async (posts) => {
     const target = posts.find((post) => post.id === id);
     if (!target) return false;
 
@@ -198,8 +212,7 @@ export async function updateBoardPost(
   id: string,
   input: UpdateBoardPostInput
 ): Promise<BoardPost | null> {
-  return withJsonStoreLock(STORE_LOCK_KEY, async () => {
-    const posts = await readBoardPosts();
+  return mutateBoardPosts(async (posts) => {
     const index = posts.findIndex((post) => post.id === id);
     if (index === -1) return null;
 
