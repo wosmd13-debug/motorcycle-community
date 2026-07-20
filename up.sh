@@ -59,13 +59,13 @@ docker compose up -d --build
 echo "==> 4/5 컨테이너 상태"
 docker compose ps
 
-if docker compose exec -T web sh -c 'test -w /app/data && touch /app/data/.write-test && rm /app/data/.write-test'; then
-  echo "    data 쓰기 테스트: OK"
+if docker compose exec -T web su nextjs -s /bin/sh -c 'if [ -f /app/data/gallery.json ]; then test -w /app/data/gallery.json; else test -w /app/data; fi'; then
+  echo "    gallery.json 쓰기 테스트: OK"
 else
-  echo "    data 쓰기 테스트: 실패 — 권한 재설정 후 컨테이너 재시작"
+  echo "    gallery.json 쓰기 테스트: 실패 — 권한 재설정 후 컨테이너 재시작"
   chown -R 1001:1001 data public/uploads
-  chmod -R u+rwX,g+rwX data public/uploads
-  docker compose up -d
+  find data -type f -exec chmod 664 {} \; 2>/dev/null || true
+  docker compose up -d --force-recreate
 fi
 
 echo "==> 5/5 배포 확인"

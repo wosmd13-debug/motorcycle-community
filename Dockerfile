@@ -47,11 +47,13 @@ RUN addgroup --system --gid 1001 nodejs \
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
-RUN mkdir -p /app/data /app/public/uploads \
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh \
+  && mkdir -p /app/data /app/public/uploads \
   && chown -R nextjs:nodejs /app/data /app/public/uploads
 
-USER nextjs
+USER root
 EXPOSE 3000
 
-CMD ["node", "server.js"]
+ENTRYPOINT ["docker-entrypoint.sh"]
