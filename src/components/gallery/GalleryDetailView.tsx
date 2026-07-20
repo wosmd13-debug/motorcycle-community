@@ -10,7 +10,7 @@ import GalleryEditForm from "@/components/gallery/GalleryEditForm";
 import AuthorWithGrade from "@/components/ranking/AuthorWithGrade";
 import { useMemberGradeLookup } from "@/hooks/useMemberGradeLookup";
 import { useCosmeticLookup } from "@/hooks/useCosmeticLookup";
-import { fetchEngagementAction } from "@/lib/engagement-client";
+import { fetchEngagementAction, fetchEngagementPost } from "@/lib/engagement-client";
 import {
   canManageGalleryPost,
   formatCommentDate,
@@ -57,38 +57,40 @@ export default function GalleryDetailView({ initialPost }: GalleryDetailViewProp
 
   useEffect(() => {
     const viewKey = `gallery-view-${initialPost.id}`;
+    let cancelled = false;
 
     async function recordView() {
+      if (sessionStorage.getItem(viewKey)) return;
+
+      sessionStorage.setItem(viewKey, "1");
+
       try {
-        let latest = initialPost;
+        const viewRes = await fetch(`/api/gallery/${initialPost.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "view" }),
+        });
+        const viewData = await viewRes.json();
 
-        if (!sessionStorage.getItem(viewKey)) {
-          sessionStorage.setItem(viewKey, "1");
-          const viewRes = await fetch(`/api/gallery/${initialPost.id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ action: "view" }),
-          });
-          const viewData = await viewRes.json();
-          if (viewRes.ok) {
-            latest = viewData.post as GalleryPost;
-          }
-        }
+        if (cancelled || !viewRes.ok) return;
 
-        const detailRes = await fetch(`/api/gallery/${initialPost.id}`);
-        const detailData = await detailRes.json();
-        if (detailRes.ok) {
-          latest = detailData.post as GalleryPost;
-        }
-
-        setPost(latest);
+        const viewed = viewData.post as GalleryPost;
+        setPost((current) =>
+          current.id === viewed.id ? { ...current, views: viewed.views } : current
+        );
       } catch {
-        setError("게시물 정보를 불러오지 못했습니다.");
+        if (!cancelled) {
+          setError("조회수를 반영하지 못했습니다.");
+        }
       }
     }
 
     void recordView();
-  }, [initialPost]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [initialPost.id]);
 
   const handleLike = async () => {
     setLiking(true);
@@ -155,13 +157,12 @@ export default function GalleryDetailView({ initialPost }: GalleryDetailViewProp
     setCommenting(true);
 
     try {
-      const response = await fetch(`/api/gallery/${post.id}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: content.trim() }),
+      const response = await fetchEngagementPost(`/api/gallery/${post.id}`, {
+        content: content.trim(),
       });
       const data = await response.json();
 
+      if (response.status === 401) return;
       if (!response.ok) {
         throw new Error(data.error ?? "댓글 등록에 실패했습니다.");
       }
