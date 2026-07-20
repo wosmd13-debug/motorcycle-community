@@ -26,8 +26,9 @@ fi
 mkdir -p data public/uploads
 
 if command -v git >/dev/null 2>&1 && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-  echo "==> git pull"
-  git pull --ff-only
+  echo "==> git remote update && git reset --hard origin/main"
+  git remote update
+  git reset --hard origin/main
 fi
 
 echo "==> docker compose build & restart"
