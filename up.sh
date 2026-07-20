@@ -44,7 +44,8 @@ export NEXT_PUBLIC_SITE_URL="https://byanra.com"
 
 echo "==> 1/5 data 폴더 권한"
 mkdir -p data public/uploads
-chown -R 1001:1001 data public/uploads 2>/dev/null || true
+chown -R 1001:1001 data public/uploads
+chmod -R u+rwX,g+rwX data public/uploads
 
 echo "==> 2/5 GitHub 최신 코드"
 git remote update
@@ -57,6 +58,15 @@ docker compose up -d --build
 
 echo "==> 4/5 컨테이너 상태"
 docker compose ps
+
+if docker compose exec -T web sh -c 'test -w /app/data && touch /app/data/.write-test && rm /app/data/.write-test'; then
+  echo "    data 쓰기 테스트: OK"
+else
+  echo "    data 쓰기 테스트: 실패 — 권한 재설정 후 컨테이너 재시작"
+  chown -R 1001:1001 data public/uploads
+  chmod -R u+rwX,g+rwX data public/uploads
+  docker compose up -d
+fi
 
 echo "==> 5/5 배포 확인"
 echo "    모바일/PC에서 열기: https://byanra.com/api/version"

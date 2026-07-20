@@ -10,6 +10,10 @@ import {
 } from "@/lib/gallery";
 import { applyCommentVoteChoice, toggleLikeByUser } from "@/lib/engagement";
 import { withJsonStoreLock } from "@/lib/json-store-lock";
+import {
+  isPermissionError,
+  writeJsonFileAtomic,
+} from "@/lib/json-store-write";
 import { deleteUploadedPublicUrls } from "@/lib/upload-files";
 
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -75,8 +79,7 @@ async function mutateGalleryPosts<T>(
 }
 
 async function writeGalleryPosts(posts: GalleryPost[]) {
-  await fs.mkdir(DATA_DIR, { recursive: true });
-  await fs.writeFile(DATA_FILE, JSON.stringify(posts, null, 2), "utf8");
+  await writeJsonFileAtomic(DATA_FILE, posts);
 }
 
 export async function createGalleryPost(

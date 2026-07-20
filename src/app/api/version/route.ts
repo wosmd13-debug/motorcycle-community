@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { checkDataStoreHealth } from "@/lib/json-store-write";
 
 export const dynamic = "force-dynamic";
 
@@ -7,13 +8,19 @@ export async function GET() {
   const commit = process.env.APP_COMMIT ?? "unknown";
   const site = process.env.NEXT_PUBLIC_SITE_URL ?? "";
   const siteOk = site.startsWith("https://") && !site.includes("localhost");
+  const data = await checkDataStoreHealth();
+  const ok = siteOk && data.writable;
 
   return NextResponse.json({
     commit,
     site,
-    ok: siteOk,
-    hint: siteOk
+    dataWritable: data.writable,
+    ok,
+    hint: ok
       ? "배포 설정 정상"
-      : "서버 .env.production 의 NEXT_PUBLIC_SITE_URL 을 https://byanra.com 으로 고친 뒤 bash up.sh 실행",
+      : data.writable
+        ? "SITE_URL 설정을 확인한 뒤 bash up.sh 실행"
+        : "data 폴더 쓰기 불가 — 서버에서 bash up.sh 재실행",
+    dataError: data.error,
   });
 }

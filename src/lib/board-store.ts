@@ -10,6 +10,10 @@ import {
 } from "@/lib/board";
 import { applyCommentVoteChoice, toggleLikeByUser } from "@/lib/engagement";
 import { withJsonStoreLock } from "@/lib/json-store-lock";
+import {
+  isPermissionError,
+  writeJsonFileAtomic,
+} from "@/lib/json-store-write";
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const DATA_FILE = path.join(DATA_DIR, "board.json");
@@ -76,8 +80,7 @@ async function mutateBoardPosts<T>(
 }
 
 async function writeBoardPosts(posts: BoardPost[]) {
-  await fs.mkdir(DATA_DIR, { recursive: true });
-  await fs.writeFile(DATA_FILE, JSON.stringify(posts, null, 2), "utf8");
+  await writeJsonFileAtomic(DATA_FILE, posts);
 }
 
 export async function createBoardPost(

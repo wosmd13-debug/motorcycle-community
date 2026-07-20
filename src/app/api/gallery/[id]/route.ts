@@ -15,6 +15,7 @@ import {
   type GalleryCategory,
 } from "@/lib/gallery";
 import type { MemberGradeId } from "@/lib/ranking";
+import { isPermissionError } from "@/lib/json-store-write";
 import { trackMissionLike } from "@/lib/mission-track";
 import { toPublicEngagementItem } from "@/lib/engagement";
 import {
@@ -247,6 +248,15 @@ export async function POST(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ post: toPublicEngagementItem(post) }, { status: 201 });
   } catch (error) {
     console.error("gallery comment POST failed:", error);
+    if (isPermissionError(error)) {
+      return NextResponse.json(
+        {
+          error:
+            "댓글 저장 권한 오류입니다. 잠시 후 다시 시도하거나 운영자에게 문의해 주세요.",
+        },
+        { status: 500 }
+      );
+    }
     return NextResponse.json(
       { error: "댓글을 등록하지 못했습니다." },
       { status: 500 }
