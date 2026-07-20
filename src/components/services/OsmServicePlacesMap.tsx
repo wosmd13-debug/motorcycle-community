@@ -3,6 +3,8 @@
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { MapFlyToTarget } from "@/components/services/map-types";
+import type { ServiceMapViewMode } from "@/components/services/NaverServicePlacesMap";
 import { bootstrapLeafletMap } from "@/lib/leaflet-map";
 import {
   buildLiveFuelInfoElement,
@@ -13,11 +15,7 @@ import {
   type LiveFuelStation,
 } from "@/lib/opinet-service";
 import type { RiderPlace } from "@/lib/places-data";
-import {
-  buildServiceMarkerHtml,
-  getServicePlaceCenter,
-} from "@/lib/service-places";
-import type { ServiceMapViewMode } from "@/components/services/NaverServicePlacesMap";
+import { buildServiceMarkerHtml } from "@/lib/service-places";
 
 const DEFAULT_CENTER = { lat: 37.5665, lng: 126.978 };
 
@@ -25,7 +23,7 @@ type OsmServicePlacesMapProps = {
   places: RiderPlace[];
   liveStations?: LiveFuelStation[];
   viewMode?: ServiceMapViewMode;
-  mapCenter?: { lat: number; lng: number };
+  flyToTarget?: MapFlyToTarget | null;
   userLocation?: { lat: number; lng: number } | null;
   mapFrameClassName?: string;
   selectedId: string | null;
@@ -37,7 +35,7 @@ export default function OsmServicePlacesMap({
   places,
   liveStations = [],
   viewMode = "curated",
-  mapCenter,
+  flyToTarget = null,
   userLocation = null,
   mapFrameClassName,
   selectedId,
@@ -49,20 +47,12 @@ export default function OsmServicePlacesMap({
   const markersRef = useRef<L.Marker[]>([]);
   const userLocationMarkerRef = useRef<L.Marker | null>(null);
   const userInteractedRef = useRef(false);
-  const lastFittedStationsKeyRef = useRef("");
+  const initialFitDoneRef = useRef(false);
+  const lastFlyToKeyRef = useRef<number | null>(null);
   const [mapReady, setMapReady] = useState(false);
 
   const isLive = viewMode === "live";
   const hasData = isLive ? liveStations.length > 0 : places.length > 0;
-
-  const resolveCenter = useCallback(() => {
-    if (mapCenter) return mapCenter;
-    if (isLive && liveStations.length > 0) {
-      return { lat: liveStations[0].lat, lng: liveStations[0].lng };
-    }
-    if (places.length > 0) return getServicePlaceCenter(places);
-    return DEFAULT_CENTER;
-  }, [isLive, liveStations, mapCenter, places]);
 
   const clearMarkers = useCallback(() => {
     markersRef.current.forEach((marker) => marker.remove());
@@ -85,11 +75,11 @@ export default function OsmServicePlacesMap({
       }
 
       userInteractedRef.current = false;
-      lastFittedStationsKeyRef.current = "";
+      initialFitDoneRef.current = false;
+      lastFlyToKeyRef.current = null;
 
-      const center = resolveCenter();
       const map = await bootstrapLeafletMap(L, mapRef.current, {
-        center: [center.lat, center.lng],
+        center: [DEFAULT_CENTER.lat, DEFAULT_CENTER.lng],
         zoom: isLive ? 14 : places.length === 1 ? 12 : 7,
         zoomControl: true,
       });
@@ -129,7 +119,22 @@ export default function OsmServicePlacesMap({
       }
       setMapReady(false);
     };
-  }, [clearMarkers, onCenterChange, places.length, resolveCenter]);
+  }, [clearMarkers, isLive, onCenterChange, places.length]);
+
+  useEffect(() => {
+    const map = mapInstance.current;
+    if (!mapReady || !map || !flyToTarget) return;
+    if (lastFlyToKeyRef.current === flyToTarget.key) return;
+
+    lastFlyToKeyRef.current = flyToTarget.key;
+    map.panTo([flyToTarget.lat, flyToTarget.lng], {
+      animate: true,
+      duration: 0.35,
+    });
+    if (flyToTarget.zoom != null) {
+      map.setZoom(flyToTarget.zoom, { animate: true });
+    }
+  }, [flyToTarget, mapReady]);
 
   useEffect(() => {
     const map = mapInstance.current;
@@ -159,28 +164,21 @@ export default function OsmServicePlacesMap({
         return marker;
       });
 
-      if (liveStations.length > 0) {
-        const stationsKey = liveStations.map((station) => station.id).join(",");
-        if (
-          stationsKey !== lastFittedStationsKeyRef.current &&
-          !userInteractedRef.current
-        ) {
-          lastFittedStationsKeyRef.current = stationsKey;
-          const bounds = L.latLngBounds(
-            liveStations.map(
-              (station) => [station.lat, station.lng] as [number, number]
-            )
-          );
-          if (mapCenter) {
-            bounds.extend([mapCenter.lat, mapCenter.lng]);
-          }
-          if (userLocation) {
-            bounds.extend([userLocation.lat, userLocation.lng]);
-          }
-          map.fitBounds(bounds, { padding: [48, 48], animate: true });
+      if (
+        liveStations.length > 0 &&
+        !initialFitDoneRef.current &&
+        !userInteractedRef.current
+      ) {
+        initialFitDoneRef.current = true;
+        const bounds = L.latLngBounds(
+          liveStations.map(
+            (station) => [station.lat, station.lng] as [number, number]
+          )
+        );
+        if (userLocation) {
+          bounds.extend([userLocation.lat, userLocation.lng]);
         }
-      } else if (mapCenter) {
-        map.panTo([mapCenter.lat, mapCenter.lng], { animate: true, duration: 0.35 });
+        map.fitBounds(bounds, { padding: [48, 48], animate: true });
       }
 
       if (userLocationMarkerRef.current) {
@@ -222,12 +220,23 @@ export default function OsmServicePlacesMap({
 
         return marker;
       });
+
+      if (
+        places.length > 0 &&
+        !initialFitDoneRef.current &&
+        !userInteractedRef.current
+      ) {
+        initialFitDoneRef.current = true;
+        const bounds = L.latLngBounds(
+          places.map((place) => [place.lat, place.lng] as [number, number])
+        );
+        map.fitBounds(bounds, { padding: [48, 48], animate: true });
+      }
     }
   }, [
     clearMarkers,
     isLive,
     liveStations,
-    mapCenter,
     mapReady,
     onSelect,
     places,
@@ -285,6 +294,10 @@ export default function OsmServicePlacesMap({
     );
     marker.openPopup();
   }, [selectedId, mapReady, places, liveStations, isLive]);
+
+  useEffect(() => {
+    initialFitDoneRef.current = false;
+  }, [isLive]);
 
   useEffect(() => {
     const map = mapInstance.current;

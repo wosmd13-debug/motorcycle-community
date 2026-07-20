@@ -7,6 +7,7 @@ import NaverMapSetupGuide from "@/components/map/NaverMapSetupGuide";
 import type { ServiceMapViewMode } from "@/components/services/NaverServicePlacesMap";
 import { USE_NAVER_MAP } from "@/lib/map-config";
 import { checkNaverMapsReady, resetNaverMapsSdkLoad } from "@/lib/naver-maps";
+import type { MapFlyToTarget } from "@/components/services/map-types";
 import type { LiveFuelStation } from "@/lib/opinet-service";
 import type { RiderPlace } from "@/lib/places-data";
 
@@ -38,7 +39,7 @@ type ServicePlacesMapProps = {
   places: RiderPlace[];
   liveStations?: LiveFuelStation[];
   viewMode?: ServiceMapViewMode;
-  mapCenter?: { lat: number; lng: number };
+  flyToTarget?: MapFlyToTarget | null;
   userLocation?: { lat: number; lng: number } | null;
   mapFrameClassName?: string;
   selectedId: string | null;

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNaverMapsReady } from "@/components/map/NaverMapsProvider";
+import { NAVER_MAP_CLIENT_ID } from "@/lib/map-config";
 import {
   addNaverMapListener,
   buildServiceMapOptions,
@@ -29,17 +30,20 @@ import {
   getServicePlaceCenter,
 } from "@/lib/service-places";
 import { useLatest } from "@/lib/use-latest";
+import type { MapFlyToTarget } from "@/components/services/map-types";
 
 export type ServiceMapViewMode = "curated" | "live";
 
 const USER_LOCATION_MARKER_HTML =
   '<div style="width:16px;height:16px;border-radius:50%;background:#2563eb;border:3px solid white;box-shadow:0 0 0 2px rgba(37,99,235,0.35);"></div>';
 
+const DEFAULT_CENTER = { lat: 37.5665, lng: 126.978 };
+
 type NaverServicePlacesMapProps = {
   places: RiderPlace[];
   liveStations?: LiveFuelStation[];
   viewMode?: ServiceMapViewMode;
-  mapCenter?: { lat: number; lng: number };
+  flyToTarget?: MapFlyToTarget | null;
   userLocation?: { lat: number; lng: number } | null;
   mapFrameClassName?: string;
   selectedId: string | null;
@@ -47,10 +51,6 @@ type NaverServicePlacesMapProps = {
   onCenterChange?: (center: { lat: number; lng: number }) => void;
   onAuthFailure?: () => void;
 };
-
-import { NAVER_MAP_CLIENT_ID } from "@/lib/map-config";
-
-const DEFAULT_CENTER = { lat: 37.5665, lng: 126.978 };
 
 function clearMarkers(markers: naver.maps.Marker[]) {
   markers.forEach((marker) => detachNaverOverlay(marker));
@@ -61,7 +61,7 @@ export default function NaverServicePlacesMap({
   places,
   liveStations = [],
   viewMode = "curated",
-  mapCenter,
+  flyToTarget = null,
   userLocation = null,
   mapFrameClassName,
   selectedId,
@@ -74,11 +74,10 @@ export default function NaverServicePlacesMap({
   const markersRef = useRef<naver.maps.Marker[]>([]);
   const userLocationMarkerRef = useRef<naver.maps.Marker | null>(null);
   const infoWindowRef = useRef<naver.maps.InfoWindow | null>(null);
-  const idleListenerRef = useRef<unknown | null>(null);
   const suppressCenterSyncRef = useRef(false);
   const userInteractedRef = useRef(false);
-  const initialZoomAppliedRef = useRef(false);
-  const lastFittedStationsKeyRef = useRef("");
+  const initialFitDoneRef = useRef(false);
+  const lastFlyToKeyRef = useRef<number | null>(null);
   const [mapReady, setMapReady] = useState(false);
   const [initError, setInitError] = useState<string | null>(null);
   const [bootAttempt, setBootAttempt] = useState(0);
@@ -91,15 +90,6 @@ export default function NaverServicePlacesMap({
 
   const isLive = viewMode === "live";
   const hasData = isLive ? liveStations.length > 0 : places.length > 0;
-
-  const resolveInitialCenter = useCallback(() => {
-    if (mapCenter) return mapCenter;
-    if (isLive && liveStations.length > 0) {
-      return { lat: liveStations[0].lat, lng: liveStations[0].lng };
-    }
-    if (places.length > 0) return getServicePlaceCenter(places);
-    return DEFAULT_CENTER;
-  }, [isLive, liveStations, mapCenter, places]);
 
   const openCuratedInfo = useCallback(
     (place: RiderPlace, marker: naver.maps.Marker, map: naver.maps.Map) => {
@@ -146,10 +136,9 @@ export default function NaverServicePlacesMap({
       setMapReady(false);
       clearMarkers(markersRef.current);
       resetMapContainer(mapRef.current);
-      idleListenerRef.current = null;
-      lastFittedStationsKeyRef.current = "";
-      initialZoomAppliedRef.current = false;
+      initialFitDoneRef.current = false;
       userInteractedRef.current = false;
+      lastFlyToKeyRef.current = null;
 
       const container = await waitForElementRef(() => mapRef.current, 8000);
       if (!active || !container) {
@@ -157,15 +146,13 @@ export default function NaverServicePlacesMap({
         return;
       }
 
-      const center = resolveInitialCenter();
-
       const result = await prepareNaverMap({
         clientId: NAVER_MAP_CLIENT_ID,
         container,
         getMapOptions: () => {
           const maps = getNaverMaps();
           if (!maps) throw new Error("naver maps unavailable");
-          return buildServiceMapOptions(maps, center, mapCenter ? 14 : 13);
+          return buildServiceMapOptions(maps, DEFAULT_CENTER, 13);
         },
       });
 
@@ -196,7 +183,7 @@ export default function NaverServicePlacesMap({
         });
 
         if (onCenterChangeRef.current) {
-          idleListenerRef.current = addNaverMapListener(result.map, "idle", () => {
+          addNaverMapListener(result.map, "idle", () => {
             if (suppressCenterSyncRef.current) return;
             const nextCenter = result.map.getCenter();
             onCenterChangeRef.current?.({
@@ -233,25 +220,28 @@ export default function NaverServicePlacesMap({
       }
       mapInstance.current = null;
       infoWindowRef.current = null;
-      idleListenerRef.current = null;
       teardownNaverMapContainer(mapRef.current);
       setMapReady(false);
     };
-  }, [
-    onAuthFailureRef,
-    onCenterChangeRef,
-    resolveInitialCenter,
-    sdkReady,
-    bootAttempt,
-  ]);
+  }, [onAuthFailureRef, onCenterChangeRef, sdkReady, bootAttempt]);
 
   useEffect(() => {
     const map = mapInstance.current;
-    if (!mapReady || !map || initialZoomAppliedRef.current) return;
+    const maps = getNaverMaps();
+    if (!mapReady || !map || !maps || !flyToTarget) return;
+    if (lastFlyToKeyRef.current === flyToTarget.key) return;
 
-    map.setZoom(isLive ? 14 : places.length === 1 ? 12 : 7);
-    initialZoomAppliedRef.current = true;
-  }, [isLive, mapReady, places.length]);
+    lastFlyToKeyRef.current = flyToTarget.key;
+    suppressCenterSyncRef.current = true;
+    map.panTo(new maps.LatLng(flyToTarget.lat, flyToTarget.lng));
+    if (flyToTarget.zoom != null) {
+      map.setZoom(flyToTarget.zoom);
+    }
+    window.setTimeout(() => {
+      suppressCenterSyncRef.current = false;
+      triggerNaverMapResize(map);
+    }, 400);
+  }, [flyToTarget, mapReady]);
 
   useEffect(() => {
     const map = mapInstance.current;
@@ -291,35 +281,30 @@ export default function NaverServicePlacesMap({
         return marker;
       });
 
-      if (liveStations.length > 0) {
-        const stationsKey = liveStations.map((station) => station.id).join(",");
-        if (
-          stationsKey !== lastFittedStationsKeyRef.current &&
-          !userInteractedRef.current
-        ) {
-          lastFittedStationsKeyRef.current = stationsKey;
-          const bounds = new maps.LatLngBounds();
-          liveStations.forEach((station) => {
-            bounds.extend(new maps.LatLng(station.lat, station.lng));
-          });
-          if (mapCenter) {
-            bounds.extend(new maps.LatLng(mapCenter.lat, mapCenter.lng));
-          }
-          if (userLocation) {
-            bounds.extend(new maps.LatLng(userLocation.lat, userLocation.lng));
-          }
-          suppressCenterSyncRef.current = true;
-          map.fitBounds(bounds, {
-            top: 56,
-            right: 40,
-            bottom: 40,
-            left: 40,
-          });
-          window.setTimeout(() => {
-            suppressCenterSyncRef.current = false;
-            triggerNaverMapResize(map);
-          }, 300);
+      if (
+        liveStations.length > 0 &&
+        !initialFitDoneRef.current &&
+        !userInteractedRef.current
+      ) {
+        initialFitDoneRef.current = true;
+        const bounds = new maps.LatLngBounds();
+        liveStations.forEach((station) => {
+          bounds.extend(new maps.LatLng(station.lat, station.lng));
+        });
+        if (userLocation) {
+          bounds.extend(new maps.LatLng(userLocation.lat, userLocation.lng));
         }
+        suppressCenterSyncRef.current = true;
+        map.fitBounds(bounds, {
+          top: 56,
+          right: 40,
+          bottom: 40,
+          left: 40,
+        });
+        window.setTimeout(() => {
+          suppressCenterSyncRef.current = false;
+          triggerNaverMapResize(map);
+        }, 300);
       }
     } else {
       markersRef.current = places.map((place) => {
@@ -346,13 +331,35 @@ export default function NaverServicePlacesMap({
 
         return marker;
       });
+
+      if (
+        places.length > 0 &&
+        !initialFitDoneRef.current &&
+        !userInteractedRef.current
+      ) {
+        initialFitDoneRef.current = true;
+        const bounds = new maps.LatLngBounds();
+        places.forEach((place) => {
+          bounds.extend(new maps.LatLng(place.lat, place.lng));
+        });
+        suppressCenterSyncRef.current = true;
+        map.fitBounds(bounds, {
+          top: 56,
+          right: 40,
+          bottom: 40,
+          left: 40,
+        });
+        window.setTimeout(() => {
+          suppressCenterSyncRef.current = false;
+          triggerNaverMapResize(map);
+        }, 300);
+      }
     }
 
     triggerNaverMapResize(map);
   }, [
     isLive,
     liveStations,
-    mapCenter,
     mapReady,
     onSelectRef,
     openCuratedInfo,
@@ -386,20 +393,6 @@ export default function NaverServicePlacesMap({
   }, [isLive, mapReady, userLocation]);
 
   useEffect(() => {
-    const map = mapInstance.current;
-    const maps = getNaverMaps();
-    if (!mapReady || !map || !maps || !mapCenter || !isLive) return;
-    if (liveStations.length > 0) return;
-
-    suppressCenterSyncRef.current = true;
-    map.panTo(new maps.LatLng(mapCenter.lat, mapCenter.lng));
-    window.setTimeout(() => {
-      suppressCenterSyncRef.current = false;
-      triggerNaverMapResize(map);
-    }, 300);
-  }, [isLive, liveStations.length, mapCenter, mapReady]);
-
-  useEffect(() => {
     if (!mapReady || selectedId == null || !mapInstance.current) return;
 
     const maps = getNaverMaps();
@@ -414,9 +407,6 @@ export default function NaverServicePlacesMap({
       const position = new maps.LatLng(station.lat, station.lng);
       suppressCenterSyncRef.current = true;
       mapInstance.current.panTo(position);
-      if (!userInteractedRef.current) {
-        mapInstance.current.setZoom(15);
-      }
       window.setTimeout(() => {
         suppressCenterSyncRef.current = false;
       }, 500);
@@ -436,9 +426,6 @@ export default function NaverServicePlacesMap({
     const position = new maps.LatLng(place.lat, place.lng);
     suppressCenterSyncRef.current = true;
     mapInstance.current.panTo(position);
-    if (!userInteractedRef.current) {
-      mapInstance.current.setZoom(13);
-    }
     window.setTimeout(() => {
       suppressCenterSyncRef.current = false;
     }, 500);
@@ -458,6 +445,10 @@ export default function NaverServicePlacesMap({
   ]);
 
   useEffect(() => {
+    initialFitDoneRef.current = false;
+  }, [isLive]);
+
+  useEffect(() => {
     const map = mapInstance.current;
     if (!mapReady || !map) return;
 
@@ -466,7 +457,6 @@ export default function NaverServicePlacesMap({
     };
 
     handleResize();
-
     window.addEventListener("resize", handleResize);
     window.visualViewport?.addEventListener("resize", handleResize);
     window.visualViewport?.addEventListener("scroll", handleResize);

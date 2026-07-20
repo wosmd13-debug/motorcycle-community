@@ -6,6 +6,7 @@ import LiveFuelStationCard from "@/components/services/LiveFuelStationCard";
 import SelectedServiceStationBar from "@/components/services/SelectedServiceStationBar";
 import ServicePlaceCard from "@/components/services/ServicePlaceCard";
 import ServicePlacesMap from "@/components/services/ServicePlacesMap";
+import type { MapFlyToTarget } from "@/components/services/map-types";
 import type { ServiceMapViewMode } from "@/components/services/NaverServicePlacesMap";
 import type { RiderPlace } from "@/lib/places-data";
 import {
@@ -67,7 +68,8 @@ export default function ServiceExplorer({
   const [productCode, setProductCode] = useState<FuelProductCode>("B027");
   const [sortMode, setSortMode] = useState<1 | 2>(1);
   const [radius, setRadius] = useState(3000);
-  const [mapCenter, setMapCenter] = useState(DEFAULT_CENTER);
+  const [searchCenter, setSearchCenter] = useState(DEFAULT_CENTER);
+  const [flyToTarget, setFlyToTarget] = useState<MapFlyToTarget | null>(null);
   const [userLocation, setUserLocation] = useState<{
     lat: number;
     lng: number;
@@ -76,11 +78,21 @@ export default function ServiceExplorer({
   const [liveError, setLiveError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const centerDebounceRef = useRef<number | null>(null);
-  const mapCenterRef = useRef(mapCenter);
+  const searchCenterRef = useRef(searchCenter);
 
-  useEffect(() => {
-    mapCenterRef.current = mapCenter;
-  }, [mapCenter]);
+  const requestFlyTo = useCallback(
+    (center: { lat: number; lng: number }, zoom?: number) => {
+      setSearchCenter(center);
+      searchCenterRef.current = center;
+      setFlyToTarget({
+        lat: center.lat,
+        lng: center.lng,
+        zoom,
+        key: Date.now(),
+      });
+    },
+    []
+  );
 
   const filteredPlaces = useMemo(
     () =>
@@ -160,7 +172,7 @@ export default function ServiceExplorer({
           lng: position.coords.longitude,
         };
         setUserLocation(center);
-        setMapCenter(center);
+        requestFlyTo(center, 15);
         void loadLiveStations(center, true);
       },
       () => {
@@ -168,7 +180,7 @@ export default function ServiceExplorer({
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
-  }, [loadLiveStations]);
+  }, [loadLiveStations, requestFlyTo]);
 
   useEffect(() => {
     if (initialOpinetConfigured) return;
@@ -192,7 +204,7 @@ export default function ServiceExplorer({
     const start = (center: { lat: number; lng: number }, isUser = false) => {
       if (cancelled) return;
       if (isUser) setUserLocation(center);
-      setMapCenter(center);
+      requestFlyTo(center, isUser ? 15 : undefined);
       void loadLiveStations(center);
     };
 
@@ -224,7 +236,7 @@ export default function ServiceExplorer({
 
   useEffect(() => {
     if (viewMode !== "live" || !opinetConfigured) return;
-    void loadLiveStations(mapCenterRef.current, true);
+    void loadLiveStations(searchCenterRef.current, true);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- reload when filters change
   }, [productCode, sortMode, radius]);
 
@@ -232,7 +244,7 @@ export default function ServiceExplorer({
     if (viewMode !== "live" || !opinetConfigured) return;
 
     const intervalId = window.setInterval(() => {
-      void loadLiveStations(mapCenterRef.current, true);
+      void loadLiveStations(searchCenterRef.current, true);
     }, AUTO_REFRESH_MS);
 
     return () => window.clearInterval(intervalId);
@@ -267,7 +279,8 @@ export default function ServiceExplorer({
 
   const handleCenterChange = useCallback(
     (center: { lat: number; lng: number }) => {
-      setMapCenter(center);
+      setSearchCenter(center);
+      searchCenterRef.current = center;
       if (viewMode !== "live" || !opinetConfigured) return;
 
       if (centerDebounceRef.current) {
@@ -443,7 +456,7 @@ export default function ServiceExplorer({
               </button>
               <button
                 type="button"
-                onClick={() => void loadLiveStations(mapCenter, true)}
+                onClick={() => void loadLiveStations(searchCenterRef.current, true)}
                 disabled={loadingLive}
                 className="min-h-[44px] rounded-full border border-signature/30 bg-white px-3 py-2 text-xs font-semibold text-signature-dark hover:bg-signature-light disabled:opacity-60 sm:min-h-0 sm:py-1.5"
               >
@@ -489,7 +502,7 @@ export default function ServiceExplorer({
         places={filteredPlaces}
         liveStations={filteredLiveStations}
         viewMode={viewMode}
-        mapCenter={mapCenter}
+        flyToTarget={flyToTarget}
         userLocation={userLocation}
         mapFrameClassName={viewMode === "live" ? "portal-map-frame-live" : undefined}
         selectedId={selectedId}
