@@ -65,11 +65,13 @@ export function getNaverMaps(): typeof naver.maps | null {
 }
 
 const authFailureListeners = new Set<() => void>();
+let suppressAuthFailureNotify = false;
 
 function notifyAuthFailure() {
   if (typeof window !== "undefined") {
     window.__naverMapAuthFailed = true;
   }
+  if (suppressAuthFailureNotify) return;
   authFailureListeners.forEach((listener) => listener());
 }
 
@@ -200,12 +202,32 @@ function injectSdkScript(
 
 async function loadSdkWithParamFallback(clientId: string): Promise<boolean> {
   const preferred = resolveNaverMapsSdkParam();
-  const ok = await injectSdkScript(clientId, preferred);
-  if (ok) return true;
-  if (isNaverMapAuthFailed() && preferred === "ncpKeyId") {
-    resetNaverMapsSdkLoad();
-    return injectSdkScript(clientId, "ncpClientId");
+
+  suppressAuthFailureNotify = true;
+  if (typeof window !== "undefined") {
+    window.__naverMapAuthFailed = false;
   }
+
+  const firstOk = await injectSdkScript(clientId, preferred);
+  if (firstOk) {
+    suppressAuthFailureNotify = false;
+    return true;
+  }
+
+  if (preferred === "ncpKeyId") {
+    resetNaverMapsSdkLoad();
+    suppressAuthFailureNotify = true;
+    const secondOk = await injectSdkScript(clientId, "ncpClientId");
+    suppressAuthFailureNotify = false;
+    if (secondOk) return true;
+  } else {
+    suppressAuthFailureNotify = false;
+  }
+
+  if (isNaverMapAuthFailed()) {
+    notifyAuthFailure();
+  }
+
   return false;
 }
 

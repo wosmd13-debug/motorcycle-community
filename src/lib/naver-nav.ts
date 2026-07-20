@@ -319,16 +319,32 @@ export function getMobileNavLaunchUrl(
 }
 
 function launchMobileApp(links: NaverNavLinks, mode: NaverNavMode): void {
+  const userAgent = window.navigator.userAgent;
   const primary = getMobileNavLaunchUrl(links, mode);
 
-  window.location.assign(primary);
+  if (isIosDevice(userAgent) && mode === "navigation") {
+    window.location.href = primary;
+    window.setTimeout(() => {
+      if (document.hidden) return;
+      window.location.href = links.webDirectionsUrl;
+    }, 1500);
+    return;
+  }
 
-  if (mode !== "navigation") return;
+  if (isAndroidDevice(userAgent) && mode === "navigation") {
+    window.location.href = primary;
+    window.setTimeout(() => {
+      if (document.hidden) return;
+      window.location.href = links.fallbackAndroidIntentUrl;
+    }, 900);
+    window.setTimeout(() => {
+      if (document.hidden) return;
+      window.location.href = links.webDirectionsUrl;
+    }, 2200);
+    return;
+  }
 
-  window.setTimeout(() => {
-    if (document.hidden) return;
-    window.location.assign(links.webDirectionsUrl);
-  }, 1800);
+  window.location.href = primary;
 }
 
 export function openNaverNavigation(

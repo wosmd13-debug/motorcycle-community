@@ -25,6 +25,7 @@ type ServiceExplorerProps = {
   initialBariRoutes: BariRoute[];
   initialQuery?: string;
   initialOpenId?: string;
+  initialOpinetConfigured?: boolean;
 };
 
 const DEFAULT_CENTER = { lat: 37.5665, lng: 126.978 };
@@ -49,9 +50,14 @@ export default function ServiceExplorer({
   initialBariRoutes,
   initialQuery = "",
   initialOpenId = "",
+  initialOpinetConfigured = false,
 }: ServiceExplorerProps) {
-  const [viewMode, setViewMode] = useState<ServiceMapViewMode>("curated");
-  const [opinetConfigured, setOpinetConfigured] = useState(false);
+  const [viewMode, setViewMode] = useState<ServiceMapViewMode>(
+    initialOpinetConfigured ? "live" : "curated"
+  );
+  const [opinetConfigured, setOpinetConfigured] = useState(
+    initialOpinetConfigured
+  );
   const [region, setRegion] = useState<ServicePlaceRegion>("전체");
   const [query, setQuery] = useState(initialQuery);
   const [selectedId, setSelectedId] = useState<string | null>(
@@ -165,6 +171,8 @@ export default function ServiceExplorer({
   }, [loadLiveStations]);
 
   useEffect(() => {
+    if (initialOpinetConfigured) return;
+
     void fetch("/api/fuel/config")
       .then((response) => response.json())
       .then((data: { configured?: boolean }) => {
@@ -174,7 +182,7 @@ export default function ServiceExplorer({
         }
       })
       .catch(() => undefined);
-  }, []);
+  }, [initialOpinetConfigured]);
 
   useEffect(() => {
     if (viewMode !== "live" || !opinetConfigured) return;

@@ -465,6 +465,8 @@ export default function NaverServicePlacesMap({
       triggerNaverMapResize(map);
     };
 
+    handleResize();
+
     window.addEventListener("resize", handleResize);
     window.visualViewport?.addEventListener("resize", handleResize);
     window.visualViewport?.addEventListener("scroll", handleResize);

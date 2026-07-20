@@ -1,6 +1,7 @@
 import PageHeader from "@/components/PageHeader";
 import ServiceExplorer from "@/components/services/ServiceExplorer";
 import { readBariRoutes } from "@/lib/bari-route-store";
+import { isOpinetConfigured } from "@/lib/opinet-service";
 import { getServicePlaces } from "@/lib/places-data";
 
 type ServicesPageProps = {
@@ -27,6 +28,7 @@ export default async function ServicesPage({ searchParams }: ServicesPageProps) 
           initialBariRoutes={initialBariRoutes}
           initialQuery={q ?? ""}
           initialOpenId={id ?? ""}
+          initialOpinetConfigured={isOpinetConfigured()}
         />
       </div>
     </div>

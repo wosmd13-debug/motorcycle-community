@@ -67,7 +67,7 @@ export function NaverMapsProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
 
-    void ensureNaverMapsSdk(NAVER_MAP_CLIENT_ID, attempt > 0).then((ok) => {
+    void ensureNaverMapsSdk(NAVER_MAP_CLIENT_ID, attempt > 0).then(async (ok) => {
       if (cancelled) return;
 
       if (ok && checkNaverMapsReady()) {
@@ -75,6 +75,18 @@ export function NaverMapsProvider({ children }: { children: ReactNode }) {
         setLoading(false);
         setError(null);
         return;
+      }
+
+      if (attempt === 0 && isNaverMapAuthFailed()) {
+        resetNaverMapsSdkLoad();
+        const retried = await ensureNaverMapsSdk(NAVER_MAP_CLIENT_ID, true);
+        if (cancelled) return;
+        if (retried && checkNaverMapsReady()) {
+          setReady(true);
+          setLoading(false);
+          setError(null);
+          return;
+        }
       }
 
       setReady(false);

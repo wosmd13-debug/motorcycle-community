@@ -6,7 +6,7 @@ import MapErrorBoundary from "@/components/map/MapErrorBoundary";
 import NaverMapSetupGuide from "@/components/map/NaverMapSetupGuide";
 import type { ServiceMapViewMode } from "@/components/services/NaverServicePlacesMap";
 import { USE_NAVER_MAP } from "@/lib/map-config";
-import { resetNaverMapsSdkLoad } from "@/lib/naver-maps";
+import { checkNaverMapsReady, resetNaverMapsSdkLoad } from "@/lib/naver-maps";
 import type { LiveFuelStation } from "@/lib/opinet-service";
 import type { RiderPlace } from "@/lib/places-data";
 
@@ -54,7 +54,10 @@ export default function ServicePlacesMap({
   const [retryKey, setRetryKey] = useState(0);
 
   const handleAuthFailure = useCallback(() => {
-    setAuthFailed(true);
+    window.setTimeout(() => {
+      if (checkNaverMapsReady()) return;
+      setAuthFailed(true);
+    }, 1200);
   }, []);
 
   const handleRetryNaverMap = useCallback(() => {
