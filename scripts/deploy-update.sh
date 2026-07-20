@@ -32,7 +32,7 @@ if command -v git >/dev/null 2>&1 && git rev-parse --is-inside-work-tree >/dev/n
 fi
 
 echo "==> docker compose build & restart"
-docker compose up -d --build
+docker compose --env-file .env.production up -d --build
 
 echo "==> 컨테이너 상태"
 docker compose ps
