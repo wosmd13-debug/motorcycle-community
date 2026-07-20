@@ -1,9 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   buildNaverNavLinks,
+  getMobileNavLaunchUrl,
   openNaverNavigation,
+  isMobileDevice,
   type NaverNavMode,
 } from "@/lib/naver-nav";
 import type { RouteWaypoint } from "@/lib/routes-data";
@@ -16,6 +18,16 @@ type NaverNavButtonProps = {
   className?: string;
 };
 
+function useClientMobile() {
+  const [mobile, setMobile] = useState(false);
+
+  useEffect(() => {
+    setMobile(isMobileDevice(window.navigator.userAgent));
+  }, []);
+
+  return mobile;
+}
+
 export default function NaverNavButton({
   waypoints,
   routeName,
@@ -23,6 +35,7 @@ export default function NaverNavButton({
   compact = false,
   className,
 }: NaverNavButtonProps) {
+  const mobile = useClientMobile();
   const links = useMemo(
     () => buildNaverNavLinks(waypoints, { mode }),
     [waypoints, mode]
@@ -31,6 +44,7 @@ export default function NaverNavButton({
   if (!links) return null;
 
   const label = compact ? "내비 시작" : "네이버 내비 시작";
+  const href = getMobileNavLaunchUrl(links, mode);
 
   const baseClass = compact
     ? "inline-flex min-h-[44px] items-center rounded-full border border-[#03c75a]/30 bg-[#03c75a]/10 px-3 py-2 text-xs font-semibold text-[#03a94b] hover:bg-[#03c75a]/15"
@@ -38,19 +52,34 @@ export default function NaverNavButton({
 
   return (
     <div className={className}>
-      <button
-        type="button"
-        onClick={() => openNaverNavigation(waypoints, mode)}
-        className={baseClass}
-        title={
-          routeName
-            ? `${routeName} 코스 내비게이션을 바로 시작합니다.`
-            : "네이버 지도 내비게이션을 바로 시작합니다."
-        }
-      >
-        <NaverMark inverted={!compact} />
-        {label}
-      </button>
+      {mobile ? (
+        <a
+          href={href}
+          className={baseClass}
+          title={
+            routeName
+              ? `${routeName} 코스 내비게이션을 바로 시작합니다.`
+              : "네이버 지도 내비게이션을 바로 시작합니다."
+          }
+        >
+          <NaverMark inverted={!compact} />
+          {label}
+        </a>
+      ) : (
+        <button
+          type="button"
+          onClick={() => openNaverNavigation(waypoints, mode)}
+          className={baseClass}
+          title={
+            routeName
+              ? `${routeName} 코스 내비게이션을 바로 시작합니다.`
+              : "네이버 지도 내비게이션을 바로 시작합니다."
+          }
+        >
+          <NaverMark inverted={!compact} />
+          {label}
+        </button>
+      )}
       {links.truncated && !compact && (
         <p className="mt-1 text-[11px] text-stone-500">
           경유지가 많아 네이버 내비에는 {links.usedWaypointCount}곳만 전달됩니다.
@@ -69,11 +98,15 @@ export function NaverNavActionGroup({
   routeName?: string;
   compact?: boolean;
 }) {
+  const mobile = useClientMobile();
   const links = useMemo(
     () => buildNaverNavLinks(waypoints, { mode: "navigation" }),
     [waypoints]
   );
   if (!links) return null;
+
+  const navHref = getMobileNavLaunchUrl(links, "navigation");
+  const routeHref = getMobileNavLaunchUrl(links, "route");
 
   const primaryClass = compact
     ? "inline-flex min-h-[44px] items-center rounded-full border border-[#03c75a]/35 bg-[#03c75a] px-3 py-2 text-xs font-bold text-white hover:bg-[#02b350]"
@@ -86,21 +119,40 @@ export function NaverNavActionGroup({
   return (
     <div className="space-y-1">
       <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={() => openNaverNavigation(waypoints, "navigation")}
-          className={primaryClass}
-        >
-          <NaverMark inverted />
-          {compact ? "내비 시작" : "네이버 내비 바로 시작"}
-        </button>
-        <button
-          type="button"
-          onClick={() => openNaverNavigation(waypoints, "route")}
-          className={`${secondaryClass} border-signature/25 bg-white text-signature-dark hover:bg-signature-light`}
-        >
-          {compact ? "경로 보기" : "경로 미리보기"}
-        </button>
+        {mobile ? (
+          <>
+            <a href={navHref} className={primaryClass}>
+              <NaverMark inverted />
+              {compact ? "내비 시작" : "네이버 내비 바로 시작"}
+            </a>
+            <a
+              href={routeHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`${secondaryClass} border-signature/25 bg-white text-signature-dark hover:bg-signature-light`}
+            >
+              {compact ? "경로 보기" : "경로 미리보기"}
+            </a>
+          </>
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={() => openNaverNavigation(waypoints, "navigation")}
+              className={primaryClass}
+            >
+              <NaverMark inverted />
+              {compact ? "내비 시작" : "네이버 내비 바로 시작"}
+            </button>
+            <button
+              type="button"
+              onClick={() => openNaverNavigation(waypoints, "route")}
+              className={`${secondaryClass} border-signature/25 bg-white text-signature-dark hover:bg-signature-light`}
+            >
+              {compact ? "경로 보기" : "경로 미리보기"}
+            </button>
+          </>
+        )}
       </div>
       {!compact && (
         <p className="text-[11px] text-stone-500">

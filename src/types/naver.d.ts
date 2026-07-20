@@ -25,6 +25,10 @@ declare global {
         zoom: number;
         zoomControl?: boolean;
         zoomControlOptions?: { position: number };
+        pinchZoom?: boolean;
+        scrollWheel?: boolean;
+        draggable?: boolean;
+        disableKineticPan?: boolean;
       }
 
       interface FitBoundsMargin {

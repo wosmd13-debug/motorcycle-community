@@ -37,6 +37,10 @@ function resolveAppName(appName?: string): string {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
   if (siteUrl) return siteUrl;
 
+  if (typeof window !== "undefined") {
+    return window.location.origin;
+  }
+
   return "http://localhost:3000";
 }
 
@@ -289,84 +293,41 @@ export function isIosDevice(userAgent: string): boolean {
 }
 
 function openUrl(url: string): void {
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.style.display = "none";
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
+  window.location.assign(url);
 }
 
-function openStoreFallback(userAgent: string): void {
-  if (isIosDevice(userAgent)) {
-    window.location.href = NAVER_MAP_IOS_STORE;
-    return;
+export function getMobileNavLaunchUrl(
+  links: NaverNavLinks,
+  mode: NaverNavMode = "navigation"
+): string {
+  if (typeof window === "undefined") {
+    return links.webDirectionsUrl;
   }
 
-  if (isAndroidDevice(userAgent)) {
-    window.location.href = NAVER_MAP_ANDROID_STORE;
+  if (mode === "route") {
+    return links.webDirectionsUrl;
   }
+
+  const userAgent = window.navigator.userAgent;
+  if (isAndroidDevice(userAgent)) {
+    return links.primaryAndroidIntentUrl;
+  }
+  if (isIosDevice(userAgent)) {
+    return links.primaryIosUrl;
+  }
+  return links.webDirectionsUrl;
 }
 
 function launchMobileApp(links: NaverNavLinks, mode: NaverNavMode): void {
-  const userAgent = window.navigator.userAgent;
-  const android = isAndroidDevice(userAgent);
-  const primary =
-    mode === "route"
-      ? android
-        ? links.fallbackAndroidIntentUrl
-        : links.fallbackIosUrl
-      : android
-        ? links.primaryAndroidIntentUrl
-        : links.primaryIosUrl;
-  const fallback =
-    mode === "route"
-      ? android
-        ? links.primaryAndroidIntentUrl
-        : links.primaryIosUrl
-      : android
-        ? links.fallbackAndroidIntentUrl
-        : links.fallbackIosUrl;
+  const primary = getMobileNavLaunchUrl(links, mode);
 
-  let appOpened = false;
-  const markOpened = () => {
-    appOpened = true;
-  };
+  window.location.assign(primary);
 
-  window.addEventListener("blur", markOpened, { once: true });
-  document.addEventListener(
-    "visibilitychange",
-    () => {
-      if (document.hidden) markOpened();
-    },
-    { once: true }
-  );
-
-  if (mode === "navigation") {
-    openUrl(primary);
-
-    window.setTimeout(() => {
-      if (appOpened) return;
-      openUrl(fallback);
-    }, 900);
-
-    window.setTimeout(() => {
-      if (appOpened) return;
-      window.location.href = links.webDirectionsUrl;
-    }, 2200);
-
-    window.setTimeout(() => {
-      if (appOpened) return;
-      openStoreFallback(userAgent);
-    }, 3600);
-    return;
-  }
-
-  openUrl(primary);
+  if (mode !== "navigation") return;
 
   window.setTimeout(() => {
-    if (appOpened) return;
-    window.location.href = links.webDirectionsUrl;
+    if (document.hidden) return;
+    window.location.assign(links.webDirectionsUrl);
   }, 1800);
 }
 
@@ -378,7 +339,7 @@ export function openNaverNavigation(
 
   const links = buildNaverNavLinks(waypoints, {
     mode,
-    appName: window.location.origin || resolveAppName(),
+    appName: resolveAppName(),
   });
 
   if (!links) return null;

@@ -5,13 +5,15 @@ import "leaflet/dist/leaflet.css";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { bootstrapLeafletMap } from "@/lib/leaflet-map";
 import {
-  buildLiveFuelInfoContent,
+  buildLiveFuelInfoElement,
+  buildServiceInfoElement,
+} from "@/lib/map-info-nav";
+import {
   buildLiveFuelMarkerHtml,
   type LiveFuelStation,
 } from "@/lib/opinet-service";
 import type { RiderPlace } from "@/lib/places-data";
 import {
-  buildServiceInfoContent,
   buildServiceMarkerHtml,
   getServicePlaceCenter,
 } from "@/lib/service-places";
@@ -46,6 +48,8 @@ export default function OsmServicePlacesMap({
   const mapInstance = useRef<L.Map | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
   const userLocationMarkerRef = useRef<L.Marker | null>(null);
+  const userInteractedRef = useRef(false);
+  const lastFittedStationsKeyRef = useRef("");
   const [mapReady, setMapReady] = useState(false);
 
   const isLive = viewMode === "live";
@@ -65,14 +69,6 @@ export default function OsmServicePlacesMap({
     markersRef.current = [];
   }, []);
 
-  const openCuratedPopup = useCallback((place: RiderPlace, marker: L.Marker) => {
-    marker.bindPopup(buildServiceInfoContent(place)).openPopup();
-  }, []);
-
-  const openLivePopup = useCallback((station: LiveFuelStation, marker: L.Marker) => {
-    marker.bindPopup(buildLiveFuelInfoContent(station)).openPopup();
-  }, []);
-
   useEffect(() => {
     if (!mapRef.current) return;
     if (!isLive && places.length === 0) return;
@@ -88,6 +84,9 @@ export default function OsmServicePlacesMap({
         clearMarkers();
       }
 
+      userInteractedRef.current = false;
+      lastFittedStationsKeyRef.current = "";
+
       const center = resolveCenter();
       const map = await bootstrapLeafletMap(L, mapRef.current, {
         center: [center.lat, center.lng],
@@ -101,6 +100,13 @@ export default function OsmServicePlacesMap({
       }
 
       mapInstance.current = map;
+
+      map.on("movestart", () => {
+        userInteractedRef.current = true;
+      });
+      map.on("zoomstart", () => {
+        userInteractedRef.current = true;
+      });
 
       if (onCenterChange) {
         map.on("moveend", () => {
@@ -123,7 +129,7 @@ export default function OsmServicePlacesMap({
       }
       setMapReady(false);
     };
-  }, [clearMarkers, isLive, onCenterChange, places.length, resolveCenter]);
+  }, [clearMarkers, onCenterChange, places.length, resolveCenter]);
 
   useEffect(() => {
     const map = mapInstance.current;
@@ -142,10 +148,11 @@ export default function OsmServicePlacesMap({
           }),
         }).addTo(map);
 
-        marker.bindPopup(buildLiveFuelInfoContent(station));
+        const popupNode = buildLiveFuelInfoElement(station);
+        marker.bindPopup(popupNode, { maxWidth: 280, minWidth: 200 });
         marker.on("click", () => {
           onSelect(station.id);
-          map.panTo([station.lat, station.lng]);
+          map.panTo([station.lat, station.lng], { animate: true, duration: 0.35 });
           marker.openPopup();
         });
 
@@ -153,18 +160,27 @@ export default function OsmServicePlacesMap({
       });
 
       if (liveStations.length > 0) {
-        const bounds = L.latLngBounds(
-          liveStations.map((station) => [station.lat, station.lng] as [number, number])
-        );
-        if (mapCenter) {
-          bounds.extend([mapCenter.lat, mapCenter.lng]);
+        const stationsKey = liveStations.map((station) => station.id).join(",");
+        if (
+          stationsKey !== lastFittedStationsKeyRef.current &&
+          !userInteractedRef.current
+        ) {
+          lastFittedStationsKeyRef.current = stationsKey;
+          const bounds = L.latLngBounds(
+            liveStations.map(
+              (station) => [station.lat, station.lng] as [number, number]
+            )
+          );
+          if (mapCenter) {
+            bounds.extend([mapCenter.lat, mapCenter.lng]);
+          }
+          if (userLocation) {
+            bounds.extend([userLocation.lat, userLocation.lng]);
+          }
+          map.fitBounds(bounds, { padding: [48, 48], animate: true });
         }
-        if (userLocation) {
-          bounds.extend([userLocation.lat, userLocation.lng]);
-        }
-        map.fitBounds(bounds, { padding: [48, 48] });
       } else if (mapCenter) {
-        map.panTo([mapCenter.lat, mapCenter.lng]);
+        map.panTo([mapCenter.lat, mapCenter.lng], { animate: true, duration: 0.35 });
       }
 
       if (userLocationMarkerRef.current) {
@@ -172,7 +188,7 @@ export default function OsmServicePlacesMap({
         userLocationMarkerRef.current = null;
       }
 
-      if (isLive && userLocation) {
+      if (userLocation) {
         userLocationMarkerRef.current = L.marker([userLocation.lat, userLocation.lng], {
           icon: L.divIcon({
             className: "",
@@ -194,10 +210,13 @@ export default function OsmServicePlacesMap({
           }),
         }).addTo(map);
 
-        marker.bindPopup(buildServiceInfoContent(place));
+        marker.bindPopup(buildServiceInfoElement(place), {
+          maxWidth: 280,
+          minWidth: 200,
+        });
         marker.on("click", () => {
           onSelect(place.id);
-          map.panTo([place.lat, place.lng]);
+          map.panTo([place.lat, place.lng], { animate: true, duration: 0.35 });
           marker.openPopup();
         });
 
@@ -225,8 +244,13 @@ export default function OsmServicePlacesMap({
       const marker = markersRef.current[index];
       if (!station || !marker) return;
 
-      mapInstance.current.panTo([station.lat, station.lng]);
-      mapInstance.current.setZoom(15);
+      mapInstance.current.panTo([station.lat, station.lng], {
+        animate: true,
+        duration: 0.35,
+      });
+      if (!userInteractedRef.current) {
+        mapInstance.current.setZoom(15, { animate: true });
+      }
       marker.setIcon(
         L.divIcon({
           className: "",
@@ -235,7 +259,7 @@ export default function OsmServicePlacesMap({
           iconAnchor: [36, 40],
         })
       );
-      openLivePopup(station, marker);
+      marker.openPopup();
       return;
     }
 
@@ -244,8 +268,13 @@ export default function OsmServicePlacesMap({
     const marker = markersRef.current[index];
     if (!place || !marker) return;
 
-    mapInstance.current.panTo([place.lat, place.lng]);
-    mapInstance.current.setZoom(13);
+    mapInstance.current.panTo([place.lat, place.lng], {
+      animate: true,
+      duration: 0.35,
+    });
+    if (!userInteractedRef.current) {
+      mapInstance.current.setZoom(13, { animate: true });
+    }
     marker.setIcon(
       L.divIcon({
         className: "",
@@ -254,16 +283,25 @@ export default function OsmServicePlacesMap({
         iconAnchor: [17, 17],
       })
     );
-    openCuratedPopup(place, marker);
-  }, [
-    selectedId,
-    mapReady,
-    places,
-    liveStations,
-    isLive,
-    openCuratedPopup,
-    openLivePopup,
-  ]);
+    marker.openPopup();
+  }, [selectedId, mapReady, places, liveStations, isLive]);
+
+  useEffect(() => {
+    const map = mapInstance.current;
+    if (!mapReady || !map) return;
+
+    const handleResize = () => {
+      map.invalidateSize();
+    };
+
+    window.addEventListener("resize", handleResize);
+    window.visualViewport?.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      window.visualViewport?.removeEventListener("resize", handleResize);
+    };
+  }, [mapReady]);
 
   if (!isLive && places.length === 0) {
     return (

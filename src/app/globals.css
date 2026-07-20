@@ -1059,6 +1059,11 @@ body {
 .naver-map-root {
   width: 100%;
   z-index: 0;
+  touch-action: none;
+}
+
+.portal-map-frame .leaflet-container {
+  touch-action: none;
 }
 
 .naver-map-root > div {

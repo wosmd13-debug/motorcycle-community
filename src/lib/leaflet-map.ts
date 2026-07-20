@@ -40,7 +40,13 @@ export async function bootstrapLeafletMap(
 ): Promise<LeafletMap> {
   await waitForMapContainerSize(container, 8000);
 
-  const map = L.map(container, options);
+  const map = L.map(container, {
+    ...options,
+    touchZoom: true,
+    bounceAtZoomLimits: false,
+    wheelDebounceTime: 40,
+    zoomAnimation: true,
+  });
   addReliableTileLayer(L, map);
 
   requestAnimationFrame(() => {

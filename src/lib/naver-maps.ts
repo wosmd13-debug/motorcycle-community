@@ -285,6 +285,25 @@ export function getDefaultZoomControlPosition(): number {
   return window.naver?.maps?.Position?.TOP_RIGHT ?? 3;
 }
 
+export function buildServiceMapOptions(
+  maps: typeof naver.maps,
+  center: { lat: number; lng: number },
+  zoom: number
+): naver.maps.MapOptions {
+  return {
+    center: new maps.LatLng(center.lat, center.lng),
+    zoom,
+    zoomControl: true,
+    zoomControlOptions: {
+      position: getDefaultZoomControlPosition(),
+    },
+    pinchZoom: true,
+    scrollWheel: true,
+    draggable: true,
+    disableKineticPan: false,
+  };
+}
+
 export function getNaverMapInitErrorMessage(reason: NaverMapFailReason): string {
   switch (reason) {
     case "auth":
