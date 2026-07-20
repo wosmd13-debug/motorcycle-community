@@ -815,6 +815,11 @@ body {
   height: min(420px, calc(100dvh - 12rem));
 }
 
+.portal-map-frame-live {
+  min-height: 320px;
+  height: min(480px, calc(100dvh - 10rem));
+}
+
 .portal-sidebar-map {
   min-height: 200px;
   height: 200px;
@@ -826,6 +831,10 @@ body {
 @media (min-width: 640px) {
   .portal-map-frame {
     height: 420px;
+  }
+
+  .portal-map-frame-live {
+    height: 480px;
   }
 }
 

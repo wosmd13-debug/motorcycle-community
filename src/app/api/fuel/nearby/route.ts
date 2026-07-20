@@ -37,6 +37,7 @@ export async function GET(request: NextRequest) {
     {
       stations: result.stations,
       cached: result.cached,
+      fetchedAt: result.fetchedAt,
       configured: isOpinetConfigured(),
     },
     {

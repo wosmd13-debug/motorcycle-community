@@ -38,6 +38,8 @@ type ServicePlacesMapProps = {
   liveStations?: LiveFuelStation[];
   viewMode?: ServiceMapViewMode;
   mapCenter?: { lat: number; lng: number };
+  userLocation?: { lat: number; lng: number } | null;
+  mapFrameClassName?: string;
   selectedId: string | null;
   onSelect: (id: string) => void;
   onCenterChange?: (center: { lat: number; lng: number }) => void;

@@ -69,8 +69,11 @@ type OpinetAroundResponse = {
 
 const OPINET_BASE = "https://www.opinet.co.kr/api/aroundAll.do";
 
-const cache = new Map<string, { expiresAt: number; stations: LiveFuelStation[] }>();
-const CACHE_TTL_MS = 10 * 60 * 1000;
+const cache = new Map<
+  string,
+  { expiresAt: number; stations: LiveFuelStation[]; fetchedAt: string }
+>();
+const CACHE_TTL_MS = 3 * 60 * 1000;
 
 function normalizeOilRows(payload: OpinetAroundResponse): OpinetOilRow[] {
   const raw = payload.RESULT?.OIL ?? payload.OIL;
@@ -124,7 +127,7 @@ export type FetchNearbyFuelOptions = {
 };
 
 export type FetchNearbyFuelResult =
-  | { ok: true; stations: LiveFuelStation[]; cached: boolean }
+  | { ok: true; stations: LiveFuelStation[]; cached: boolean; fetchedAt: string }
   | { ok: false; error: string; status: number };
 
 export async function fetchNearbyFuelStations(
@@ -134,7 +137,7 @@ export async function fetchNearbyFuelStations(
   if (!apiKey) {
     return {
       ok: false,
-      error: "OPINET API 키가 설정되지 않았습니다. .env.local에 OPINET_API_KEY를 추가해 주세요.",
+      error: "OPINET API 키가 설정되지 않았습니다. .env.production에 OPINET_API_KEY를 추가해 주세요.",
       status: 503,
     };
   }
@@ -155,7 +158,12 @@ export async function fetchNearbyFuelStations(
   const cached = cache.get(cacheKey);
 
   if (!options.fresh && cached && cached.expiresAt > now) {
-    return { ok: true, stations: cached.stations, cached: true };
+    return {
+      ok: true,
+      stations: cached.stations,
+      cached: true,
+      fetchedAt: cached.fetchedAt,
+    };
   }
 
   const url = new URL(OPINET_BASE);
@@ -169,7 +177,8 @@ export async function fetchNearbyFuelStations(
 
   try {
     const response = await fetch(url.toString(), {
-      next: { revalidate: 600 },
+      cache: options.fresh ? "no-store" : undefined,
+      next: options.fresh ? undefined : { revalidate: 180 },
     });
 
     if (!response.ok) {
@@ -185,12 +194,15 @@ export async function fetchNearbyFuelStations(
       .map((row) => parseStation(row, productCode))
       .filter((station): station is LiveFuelStation => station != null);
 
+    const fetchedAt = new Date().toISOString();
+
     cache.set(cacheKey, {
       expiresAt: now + CACHE_TTL_MS,
       stations,
+      fetchedAt,
     });
 
-    return { ok: true, stations, cached: false };
+    return { ok: true, stations, cached: false, fetchedAt };
   } catch {
     return {
       ok: false,

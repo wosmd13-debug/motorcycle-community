@@ -19,7 +19,7 @@ export default async function ServicesPage({ searchParams }: ServicesPageProps) 
       <div className="portal-container space-y-4">
         <PageHeader
           title="주유소 지도"
-          description="라이딩 코스 주변 주유소를 지도에서 찾고, 네이버 내비로 바로 안내받을 수 있습니다. OPINET API 키를 설정하면 주변 실시간 유가도 확인할 수 있습니다. 세차장 홍보는 자유홍보 게시판의 세차장 카테고리를 이용해 주세요."
+          description="네이버 지도에서 주변 주유소를 찾고 실시간 유가(OPINET)를 확인할 수 있습니다. 거리·가격순 정렬, 내 위치 이동, 5분마다 자동 갱신을 지원합니다. 세차장 홍보는 자유홍보 게시판의 세차장 카테고리를 이용해 주세요."
         />
 
         <ServiceExplorer

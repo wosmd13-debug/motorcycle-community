@@ -24,6 +24,8 @@ type OsmServicePlacesMapProps = {
   liveStations?: LiveFuelStation[];
   viewMode?: ServiceMapViewMode;
   mapCenter?: { lat: number; lng: number };
+  userLocation?: { lat: number; lng: number } | null;
+  mapFrameClassName?: string;
   selectedId: string | null;
   onSelect: (id: string) => void;
   onCenterChange?: (center: { lat: number; lng: number }) => void;
@@ -34,6 +36,8 @@ export default function OsmServicePlacesMap({
   liveStations = [],
   viewMode = "curated",
   mapCenter,
+  userLocation = null,
+  mapFrameClassName,
   selectedId,
   onSelect,
   onCenterChange,
@@ -41,6 +45,7 @@ export default function OsmServicePlacesMap({
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<L.Map | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
+  const userLocationMarkerRef = useRef<L.Marker | null>(null);
   const [mapReady, setMapReady] = useState(false);
 
   const isLive = viewMode === "live";
@@ -154,9 +159,29 @@ export default function OsmServicePlacesMap({
         if (mapCenter) {
           bounds.extend([mapCenter.lat, mapCenter.lng]);
         }
+        if (userLocation) {
+          bounds.extend([userLocation.lat, userLocation.lng]);
+        }
         map.fitBounds(bounds, { padding: [48, 48] });
       } else if (mapCenter) {
         map.panTo([mapCenter.lat, mapCenter.lng]);
+      }
+
+      if (userLocationMarkerRef.current) {
+        userLocationMarkerRef.current.remove();
+        userLocationMarkerRef.current = null;
+      }
+
+      if (isLive && userLocation) {
+        userLocationMarkerRef.current = L.marker([userLocation.lat, userLocation.lng], {
+          icon: L.divIcon({
+            className: "",
+            html: '<div style="width:16px;height:16px;border-radius:50%;background:#2563eb;border:3px solid white;box-shadow:0 0 0 2px rgba(37,99,235,0.35);"></div>',
+            iconSize: [16, 16],
+            iconAnchor: [8, 8],
+          }),
+          zIndexOffset: 1000,
+        }).addTo(map);
       }
     } else {
       markersRef.current = places.map((place) => {
@@ -188,6 +213,7 @@ export default function OsmServicePlacesMap({
     onSelect,
     places,
     selectedId,
+    userLocation,
   ]);
 
   useEffect(() => {
@@ -248,7 +274,9 @@ export default function OsmServicePlacesMap({
   }
 
   return (
-    <div className="portal-map-frame relative overflow-hidden rounded-3xl border border-signature/20 bg-slate-100 shadow-sm">
+    <div
+      className={`portal-map-frame relative overflow-hidden rounded-3xl border border-signature/20 bg-slate-100 shadow-sm ${mapFrameClassName ?? ""}`}
+    >
       <span className="absolute right-3 top-3 z-[1000] rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-semibold text-slate-600 shadow-sm ring-1 ring-slate-200">
         {isLive ? "실시간 유가 · OpenStreetMap" : "OpenStreetMap"}
       </span>

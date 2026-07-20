@@ -28,7 +28,7 @@ export default function LiveFuelStationCard({
       <button
         type="button"
         onClick={() => onSelect?.(station.id)}
-        className="w-full text-left"
+        className="w-full min-h-[44px] text-left"
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">

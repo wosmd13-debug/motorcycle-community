@@ -30,11 +30,16 @@ import { useLatest } from "@/lib/use-latest";
 
 export type ServiceMapViewMode = "curated" | "live";
 
+const USER_LOCATION_MARKER_HTML =
+  '<div style="width:16px;height:16px;border-radius:50%;background:#2563eb;border:3px solid white;box-shadow:0 0 0 2px rgba(37,99,235,0.35);"></div>';
+
 type NaverServicePlacesMapProps = {
   places: RiderPlace[];
   liveStations?: LiveFuelStation[];
   viewMode?: ServiceMapViewMode;
   mapCenter?: { lat: number; lng: number };
+  userLocation?: { lat: number; lng: number } | null;
+  mapFrameClassName?: string;
   selectedId: string | null;
   onSelect: (id: string) => void;
   onCenterChange?: (center: { lat: number; lng: number }) => void;
@@ -54,6 +59,8 @@ export default function NaverServicePlacesMap({
   liveStations = [],
   viewMode = "curated",
   mapCenter,
+  userLocation = null,
+  mapFrameClassName,
   selectedId,
   onSelect,
   onCenterChange,
@@ -62,6 +69,7 @@ export default function NaverServicePlacesMap({
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<naver.maps.Map | null>(null);
   const markersRef = useRef<naver.maps.Marker[]>([]);
+  const userLocationMarkerRef = useRef<naver.maps.Marker | null>(null);
   const infoWindowRef = useRef<naver.maps.InfoWindow | null>(null);
   const idleListenerRef = useRef<unknown | null>(null);
   const suppressCenterSyncRef = useRef(false);
@@ -152,7 +160,7 @@ export default function NaverServicePlacesMap({
           if (!maps) throw new Error("naver maps unavailable");
           return {
             center: new maps.LatLng(center.lat, center.lng),
-            zoom: isLive ? 14 : places.length === 1 ? 12 : 7,
+            zoom: mapCenter ? 14 : 13,
             zoomControl: true,
             zoomControlOptions: {
               position: getDefaultZoomControlPosition(),
@@ -212,6 +220,10 @@ export default function NaverServicePlacesMap({
     return () => {
       active = false;
       clearMarkers(markersRef.current);
+      if (userLocationMarkerRef.current) {
+        detachNaverOverlay(userLocationMarkerRef.current);
+        userLocationMarkerRef.current = null;
+      }
       mapInstance.current = null;
       infoWindowRef.current = null;
       idleListenerRef.current = null;
@@ -219,12 +231,19 @@ export default function NaverServicePlacesMap({
       setMapReady(false);
     };
   }, [
-    isLive,
     onAuthFailureRef,
     onCenterChangeRef,
+    resolveInitialCenter,
     sdkReady,
     bootAttempt,
   ]);
+
+  useEffect(() => {
+    const map = mapInstance.current;
+    if (!mapReady || !map) return;
+
+    map.setZoom(isLive ? 14 : places.length === 1 ? 12 : 7);
+  }, [isLive, mapReady, places.length]);
 
   useEffect(() => {
     const map = mapInstance.current;
@@ -274,6 +293,9 @@ export default function NaverServicePlacesMap({
           });
           if (mapCenter) {
             bounds.extend(new maps.LatLng(mapCenter.lat, mapCenter.lng));
+          }
+          if (userLocation) {
+            bounds.extend(new maps.LatLng(userLocation.lat, userLocation.lng));
           }
           suppressCenterSyncRef.current = true;
           map.fitBounds(bounds, {
@@ -326,7 +348,31 @@ export default function NaverServicePlacesMap({
     openLiveInfo,
     places,
     selectedId,
+    userLocation,
   ]);
+
+  useEffect(() => {
+    const map = mapInstance.current;
+    const maps = getNaverMaps();
+    if (!mapReady || !map || !maps) return;
+
+    if (userLocationMarkerRef.current) {
+      detachNaverOverlay(userLocationMarkerRef.current);
+      userLocationMarkerRef.current = null;
+    }
+
+    if (!isLive || !userLocation) return;
+
+    userLocationMarkerRef.current = new maps.Marker({
+      map,
+      position: new maps.LatLng(userLocation.lat, userLocation.lng),
+      title: "내 위치",
+      icon: {
+        content: USER_LOCATION_MARKER_HTML,
+        anchor: new maps.Point(8, 8),
+      },
+    });
+  }, [isLive, mapReady, userLocation]);
 
   useEffect(() => {
     const map = mapInstance.current;
@@ -434,7 +480,9 @@ export default function NaverServicePlacesMap({
   }
 
   return (
-    <div className="portal-map-frame relative overflow-hidden rounded-3xl border border-signature/20 bg-slate-100 shadow-sm">
+    <div
+      className={`portal-map-frame relative overflow-hidden rounded-3xl border border-signature/20 bg-slate-100 shadow-sm ${mapFrameClassName ?? ""}`}
+    >
       <span className="absolute right-3 top-3 z-20 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-semibold text-green-700 shadow-sm ring-1 ring-green-100">
         {isLive ? "실시간 유가 · 네이버 지도" : "네이버 지도"}
       </span>
