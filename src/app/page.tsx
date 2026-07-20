@@ -13,9 +13,9 @@ export default function Home() {
       <div className="portal-container portal-layout">
         <div className="min-w-0 space-y-3 sm:space-y-4">
           <HomeFeatured />
+          <HomePostFeed />
           <HomeVideosFeatured />
           <HomePromoPreview />
-          <HomePostFeed />
           <HomeQuickMenu />
         </div>
 

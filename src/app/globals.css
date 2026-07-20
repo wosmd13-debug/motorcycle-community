@@ -815,6 +815,14 @@ body {
   height: min(420px, calc(100dvh - 12rem));
 }
 
+.portal-sidebar-map {
+  min-height: 200px;
+  height: 200px;
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
+}
+
 @media (min-width: 640px) {
   .portal-map-frame {
     height: 420px;

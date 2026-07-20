@@ -24,7 +24,7 @@ export default async function HomePromoPreview() {
     <section className="portal-panel overflow-hidden">
       <div className="portal-panel-head">
         <div className="flex items-center gap-2">
-          <h2 className="portal-panel-title">자유홍보</h2>
+          <h2 className="portal-panel-title">업체 홍보</h2>
           <span className="portal-badge">AD</span>
         </div>
         <Link href="/promo" className="portal-panel-more">

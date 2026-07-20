@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import SidebarAuth from "@/components/auth/SidebarAuth";
+import HomeMapPreview from "@/components/portal/HomeMapPreview";
 import HomeMissionPreview from "@/components/missions/HomeMissionPreview";
 import MemberRankSidebar from "@/components/ranking/MemberRankSidebar";
 import WeatherPreview, {
@@ -85,10 +86,6 @@ export default function HomeSidebar() {
     <aside className="space-y-4">
       <SidebarAuth />
 
-      <HomeMissionPreview />
-
-      <MemberRankSidebar />
-
       <section className="portal-panel overflow-hidden">
         <div className="portal-panel-head">
           <h2 className="portal-panel-title">인기글 순위</h2>
@@ -110,6 +107,12 @@ export default function HomeSidebar() {
       <Suspense fallback={<WeatherPreviewSkeleton />}>
         <WeatherPreview compact />
       </Suspense>
+
+      <HomeMapPreview />
+
+      <MemberRankSidebar />
+
+      <HomeMissionPreview />
     </aside>
   );
 }
