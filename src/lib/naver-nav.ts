@@ -403,6 +403,16 @@ export function buildDestinationWebDirectionsUrl(
 }
 
 export function buildDestinationNavLinkHtml(waypoint: RouteWaypoint): string {
-  const url = buildDestinationWebDirectionsUrl(waypoint);
-  return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;justify-content:center;margin-top:10px;width:100%;padding:8px 12px;border-radius:9999px;background:#03c75a;color:#fff;font-size:12px;font-weight:700;text-decoration:none;">네이버 내비로 이동</a>`;
+  const navLinks = buildNaverNavLinks([waypoint], { mode: "navigation" });
+  if (!navLinks) return "";
+
+  const routeUrl = navLinks.webDirectionsUrl;
+  const appNavUrl = navLinks.primaryIosUrl;
+
+  return `
+    <div style="display:flex;flex-direction:column;gap:6px;margin-top:10px;">
+      <a href="${appNavUrl}" style="display:inline-flex;align-items:center;justify-content:center;width:100%;min-height:40px;padding:8px 12px;border-radius:9999px;background:#03c75a;color:#fff;font-size:12px;font-weight:700;text-decoration:none;">네이버 내비 시작</a>
+      <a href="${routeUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;justify-content:center;width:100%;min-height:40px;padding:8px 12px;border-radius:9999px;background:#fff;color:#334155;border:1px solid #e2e8f0;font-size:12px;font-weight:700;text-decoration:none;">경로 미리보기</a>
+    </div>
+  `;
 }

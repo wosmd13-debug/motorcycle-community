@@ -33,8 +33,8 @@ export default function NaverNavButton({
   const label = compact ? "내비 시작" : "네이버 내비 시작";
 
   const baseClass = compact
-    ? "inline-flex items-center rounded-full border border-[#03c75a]/30 bg-[#03c75a]/10 px-3 py-1.5 text-xs font-semibold text-[#03a94b] hover:bg-[#03c75a]/15"
-    : "inline-flex items-center gap-2 rounded-full border border-[#03c75a]/35 bg-[#03c75a] px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-[#02b350]";
+    ? "inline-flex min-h-[44px] items-center rounded-full border border-[#03c75a]/30 bg-[#03c75a]/10 px-3 py-2 text-xs font-semibold text-[#03a94b] hover:bg-[#03c75a]/15"
+    : "inline-flex min-h-[44px] items-center gap-2 rounded-full border border-[#03c75a]/35 bg-[#03c75a] px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-[#02b350]";
 
   return (
     <div className={className}>
@@ -76,12 +76,12 @@ export function NaverNavActionGroup({
   if (!links) return null;
 
   const primaryClass = compact
-    ? "inline-flex items-center rounded-full border border-[#03c75a]/35 bg-[#03c75a] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#02b350]"
-    : "inline-flex items-center gap-2 rounded-full border border-[#03c75a]/35 bg-[#03c75a] px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-[#02b350]";
+    ? "inline-flex min-h-[44px] items-center rounded-full border border-[#03c75a]/35 bg-[#03c75a] px-3 py-2 text-xs font-bold text-white hover:bg-[#02b350]"
+    : "inline-flex min-h-[44px] items-center gap-2 rounded-full border border-[#03c75a]/35 bg-[#03c75a] px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-[#02b350]";
 
   const secondaryClass = compact
-    ? "inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-semibold"
-    : "inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold";
+    ? "inline-flex min-h-[44px] items-center rounded-full border px-3 py-2 text-xs font-semibold"
+    : "inline-flex min-h-[44px] items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold";
 
   return (
     <div className="space-y-1">

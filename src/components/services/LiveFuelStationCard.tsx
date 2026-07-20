@@ -1,4 +1,4 @@
-import NaverNavButton from "@/components/routes/NaverNavButton";
+import { NaverNavActionGroup } from "@/components/routes/NaverNavButton";
 import {
   formatFuelDistance,
   formatFuelPrice,
@@ -52,8 +52,8 @@ export default function LiveFuelStationCard({
         </div>
       </button>
 
-      <div className="mt-4 flex flex-wrap gap-2">
-        <NaverNavButton
+      <div className="mt-4">
+        <NaverNavActionGroup
           waypoints={[{ lat: station.lat, lng: station.lng, name: station.name }]}
           compact
         />

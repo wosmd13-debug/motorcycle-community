@@ -8,11 +8,19 @@ const SCRIPT_ID = "naver-maps-sdk";
 const SDK_BASE_URL = "https://oapi.map.naver.com/openapi/v3/maps.js";
 
 /** v3 SDK는 ncpKeyId 사용 (ncpClientId는 레거시) */
-export function buildNaverMapsSdkUrl(clientId: string): string {
-  const param =
-    process.env.NEXT_PUBLIC_NAVER_MAP_SDK_PARAM === "ncpClientId"
-      ? "ncpClientId"
-      : "ncpKeyId";
+export type NaverMapsSdkParam = "ncpKeyId" | "ncpClientId";
+
+export function resolveNaverMapsSdkParam(): NaverMapsSdkParam {
+  return process.env.NEXT_PUBLIC_NAVER_MAP_SDK_PARAM === "ncpClientId"
+    ? "ncpClientId"
+    : "ncpKeyId";
+}
+
+export function buildNaverMapsSdkUrl(
+  clientId: string,
+  sdkParam?: NaverMapsSdkParam
+): string {
+  const param = sdkParam ?? resolveNaverMapsSdkParam();
   return `${SDK_BASE_URL}?${param}=${encodeURIComponent(clientId)}`;
 }
 
@@ -157,12 +165,15 @@ export function resetNaverMapsSdkLoad() {
   window.naver = undefined as never;
 }
 
-function injectSdkScript(clientId: string): Promise<boolean> {
+function injectSdkScript(
+  clientId: string,
+  sdkParam?: NaverMapsSdkParam
+): Promise<boolean> {
   return new Promise((resolve) => {
     ensureNaverMapAuthHandler();
 
+    const expectedUrl = buildNaverMapsSdkUrl(clientId, sdkParam);
     const existing = document.getElementById(SCRIPT_ID) as HTMLScriptElement | null;
-    const expectedUrl = buildNaverMapsSdkUrl(clientId);
     if (existing?.src === expectedUrl) {
       void waitForNaverSdk(20000).then((result) => resolve(result === "ready"));
       return;
@@ -173,7 +184,7 @@ function injectSdkScript(clientId: string): Promise<boolean> {
     const script = document.createElement("script");
     script.id = SCRIPT_ID;
     script.type = "text/javascript";
-    script.src = buildNaverMapsSdkUrl(clientId);
+    script.src = expectedUrl;
     script.async = false;
     script.defer = false;
 
@@ -185,6 +196,17 @@ function injectSdkScript(clientId: string): Promise<boolean> {
 
     document.head.appendChild(script);
   });
+}
+
+async function loadSdkWithParamFallback(clientId: string): Promise<boolean> {
+  const preferred = resolveNaverMapsSdkParam();
+  const ok = await injectSdkScript(clientId, preferred);
+  if (ok) return true;
+  if (isNaverMapAuthFailed() && preferred === "ncpKeyId") {
+    resetNaverMapsSdkLoad();
+    return injectSdkScript(clientId, "ncpClientId");
+  }
+  return false;
 }
 
 export async function ensureNaverMapsSdk(
@@ -202,7 +224,7 @@ export async function ensureNaverMapsSdk(
   ensureNaverMapAuthHandler();
 
   if (!sdkPromise || force) {
-    sdkPromise = injectSdkScript(clientId);
+    sdkPromise = loadSdkWithParamFallback(clientId);
   }
 
   return sdkPromise;

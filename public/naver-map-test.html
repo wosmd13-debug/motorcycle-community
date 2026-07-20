@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>네이버 지도 인증 테스트</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: system-ui, sans-serif;
+        background: #f8fafc;
+        color: #0f172a;
+      }
+      .wrap {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 20px 16px 32px;
+      }
+      h1 {
+        font-size: 1.25rem;
+        margin: 0 0 8px;
+      }
+      p {
+        line-height: 1.6;
+        margin: 0 0 12px;
+        color: #475569;
+        font-size: 14px;
+      }
+      .panel {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 16px;
+        margin-top: 16px;
+      }
+      .status {
+        font-weight: 700;
+        font-size: 15px;
+      }
+      .status.ok {
+        color: #15803d;
+      }
+      .status.fail {
+        color: #b91c1c;
+      }
+      .status.pending {
+        color: #64748b;
+      }
+      #map {
+        width: 100%;
+        height: 320px;
+        margin-top: 12px;
+        border-radius: 12px;
+        background: #e2e8f0;
+      }
+      code {
+        background: #f1f5f9;
+        padding: 2px 6px;
+        border-radius: 6px;
+        font-size: 12px;
+      }
+      ul {
+        margin: 8px 0 0;
+        padding-left: 18px;
+        color: #475569;
+        font-size: 13px;
+        line-height: 1.7;
+      }
+      button {
+        margin-top: 10px;
+        border: none;
+        border-radius: 9999px;
+        background: #03c75a;
+        color: #fff;
+        font-weight: 700;
+        padding: 10px 16px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>네이버 지도 인증 테스트</h1>
+      <p>
+        이 페이지는 브라우저에서 네이버 Dynamic Map SDK가 정상 인증되는지 확인합니다.
+        <code>/services</code> 지도가 안 나올 때 먼저 여기서 성공 여부를 확인하세요.
+      </p>
+
+      <div class="panel">
+        <div id="status" class="status pending">설정 불러오는 중...</div>
+        <div id="meta" style="margin-top: 8px; font-size: 13px; color: #64748b"></div>
+        <div id="map"></div>
+        <button type="button" id="retry">다시 테스트</button>
+      </div>
+
+      <div class="panel">
+        <strong>등록해야 할 Web 서비스 URL (NCP 콘솔)</strong>
+        <ul id="url-list"></ul>
+      </div>
+    </div>
+
+    <script>
+      const statusEl = document.getElementById("status");
+      const metaEl = document.getElementById("meta");
+      const mapEl = document.getElementById("map");
+      const urlListEl = document.getElementById("url-list");
+      const retryBtn = document.getElementById("retry");
+
+      let authFailed = false;
+      let mapInstance = null;
+
+      function setStatus(text, kind) {
+        statusEl.textContent = text;
+        statusEl.className = "status " + kind;
+      }
+
+      function buildUrlCandidates() {
+        const origin = window.location.origin;
+        const host = window.location.hostname;
+        const urls = new Set([
+          origin,
+          "http://localhost",
+          "http://127.0.0.1",
+          "http://localhost:3000",
+          "https://byanra.com",
+          "https://www.byanra.com",
+        ]);
+        if (host && host !== "localhost" && host !== "127.0.0.1") {
+          urls.add("http://" + host);
+          if (window.location.port) {
+            urls.add("http://" + host + ":" + window.location.port);
+          }
+        }
+        return [...urls];
+      }
+
+      function renderUrlList() {
+        urlListEl.innerHTML = buildUrlCandidates()
+          .map((url) => "<li><code>" + url + "</code></li>")
+          .join("");
+      }
+
+      window.navermap_authFailure = function () {
+        authFailed = true;
+        setStatus("인증 실패 — NCP Web URL/Dynamic Map 설정을 확인하세요.", "fail");
+      };
+
+      function removeSdk() {
+        authFailed = false;
+        mapInstance = null;
+        mapEl.innerHTML = "";
+        const script = document.getElementById("naver-test-sdk");
+        if (script) script.remove();
+        if (window.naver) delete window.naver;
+      }
+
+      function loadSdk(sdkUrl) {
+        return new Promise((resolve) => {
+          const script = document.createElement("script");
+          script.id = "naver-test-sdk";
+          script.src = sdkUrl;
+          script.onload = () => resolve(true);
+          script.onerror = () => resolve(false);
+          document.head.appendChild(script);
+        });
+      }
+
+      async function runTest() {
+        removeSdk();
+        renderUrlList();
+        setStatus("설정 불러오는 중...", "pending");
+        metaEl.textContent = "접속 주소: " + window.location.origin;
+
+        let config;
+        try {
+          const res = await fetch("/api/naver/map-config");
+          config = await res.json();
+        } catch {
+          setStatus("설정 API 호출 실패", "fail");
+          return;
+        }
+
+        if (!config.configured || !config.clientId) {
+          setStatus("Client ID가 설정되지 않았습니다 (.env.local 확인)", "fail");
+          return;
+        }
+
+        metaEl.textContent =
+          "Client ID: " +
+          config.clientIdPreview +
+          " · SDK: " +
+          config.sdkParam +
+          " · 접속: " +
+          window.location.origin;
+
+        const loaded = await loadSdk(config.sdkUrl);
+        if (!loaded) {
+          setStatus("SDK 스크립트 로드 실패", "fail");
+          return;
+        }
+
+        const waitStart = Date.now();
+        const timer = setInterval(() => {
+          if (authFailed) {
+            clearInterval(timer);
+            return;
+          }
+          if (window.naver && window.naver.maps) {
+            clearInterval(timer);
+            try {
+              mapInstance = new window.naver.maps.Map(mapEl, {
+                center: new window.naver.maps.LatLng(37.5665, 126.978),
+                zoom: 13,
+              });
+              setStatus("인증 성공 — 네이버 지도가 정상 표시됩니다.", "ok");
+            } catch (err) {
+              setStatus("지도 생성 실패: " + err.message, "fail");
+            }
+            return;
+          }
+          if (Date.now() - waitStart > 15000) {
+            clearInterval(timer);
+            setStatus("SDK 준비 시간 초과", "fail");
+          }
+        }, 120);
+      }
+
+      retryBtn.addEventListener("click", runTest);
+      runTest();
+    </script>
+  </body>
+</html>

@@ -46,7 +46,8 @@ type NaverServicePlacesMapProps = {
   onAuthFailure?: () => void;
 };
 
-const CLIENT_ID = process.env.NEXT_PUBLIC_NAVER_MAP_CLIENT_ID ?? "";
+import { NAVER_MAP_CLIENT_ID } from "@/lib/map-config";
+
 const DEFAULT_CENTER = { lat: 37.5665, lng: 126.978 };
 
 function clearMarkers(markers: naver.maps.Marker[]) {
@@ -120,7 +121,7 @@ export default function NaverServicePlacesMap({
   }, [onAuthFailureRef]);
 
   useEffect(() => {
-    if (!CLIENT_ID) {
+    if (!NAVER_MAP_CLIENT_ID) {
       setInitError("API 키가 설정되지 않았습니다.");
       return;
     }
@@ -153,7 +154,7 @@ export default function NaverServicePlacesMap({
       const center = resolveInitialCenter();
 
       const result = await prepareNaverMap({
-        clientId: CLIENT_ID,
+        clientId: NAVER_MAP_CLIENT_ID,
         container,
         getMapOptions: () => {
           const maps = getNaverMaps();
@@ -461,7 +462,7 @@ export default function NaverServicePlacesMap({
     };
   }, [mapReady]);
 
-  if (!CLIENT_ID) {
+  if (!NAVER_MAP_CLIENT_ID) {
     return (
       <div className="portal-map-frame flex flex-col items-center justify-center rounded-3xl border border-dashed border-signature/30 bg-gradient-to-br from-sky-50 to-signature-light p-8 text-center">
         <h2 className="text-xl font-bold text-slate-800">
