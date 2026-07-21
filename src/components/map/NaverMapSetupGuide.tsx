@@ -80,12 +80,20 @@ export default function NaverMapSetupGuide() {
             )}
             {status.directionsError ? ` — ${status.directionsError}` : ""}
           </p>
+          {status.directions === "failed" && (
+            <p className="text-red-800">
+              NCP에 Directions 15가 보여도 사용량이 0이면{" "}
+              <strong>Client Secret 불일치</strong> 가능성이 큽니다. 인증 정보
+              탭에서 Secret을 다시 복사해 .env.production에 넣고 Docker
+              재빌드하세요.
+            </p>
+          )}
           <p>
-            SDK 파라미터:{" "}
+            SDK:{" "}
             <code className="rounded bg-white px-1">
               {status.preferredSdkParam || "ncpKeyId"}
             </code>
-            (자동으로 ncpClientId도 시도)
+            (ncpClientId 자동 시도)
           </p>
           {status.hints?.map((hint) => (
             <p key={hint}>• {hint}</p>
@@ -126,8 +134,8 @@ export default function NaverMapSetupGuide() {
           <strong>Directions 15</strong> 체크
         </li>
         <li>
-          <strong>Web 서비스 URL</strong>에 아래 주소 등록 (호스트만 등록, 안 되면
-          전체 URL도 시도)
+          <strong>Application 수정</strong> → <strong>Web 서비스 URL</strong>{" "}
+          (API 목록과 다른 메뉴)에 아래 주소 등록
         </li>
       </ol>
 
