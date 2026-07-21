@@ -11,6 +11,7 @@ import CommentVoteButtons from "@/components/gallery/CommentVoteButtons";
 import AuthorWithGrade from "@/components/ranking/AuthorWithGrade";
 import ReportButton from "@/components/report/ReportButton";
 import {
+  canManageMarketplaceItem,
   formatCommentDate,
   formatMarketplaceDate,
   formatMarketplacePrice,
@@ -38,8 +39,6 @@ type MarketplaceDetailModalProps = {
   onDelete?: () => void;
   onStatusChange?: (status: MarketplaceStatus) => void;
   onBump?: () => void;
-  canManage?: boolean;
-  isOwner?: boolean;
   deleting?: boolean;
   statusChanging?: boolean;
   bumping?: boolean;
@@ -60,8 +59,6 @@ export default function MarketplaceDetailModal({
   onDelete,
   onStatusChange,
   onBump,
-  canManage = false,
-  isOwner = false,
   deleting = false,
   statusChanging = false,
   bumping = false,
@@ -71,6 +68,9 @@ export default function MarketplaceDetailModal({
   const [content, setContent] = useState("");
   const [commentError, setCommentError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+
+  const canManage = canManageMarketplaceItem(user, item);
+  const isOwner = Boolean(user && item.sellerId === user.id);
 
   const handleCopyLink = async () => {
     const url = `${window.location.origin}/marketplace?id=${item.id}`;

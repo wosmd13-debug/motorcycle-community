@@ -156,10 +156,12 @@ export const marketplaceStatusClass: Record<MarketplaceStatus, string> = {
 
 export const MARKETPLACE_BUMP_COOLDOWN_MS = 24 * 60 * 60 * 1000;
 
+/** 중고거래 매물 수정·삭제·상태변경: 작성자(판매자) 또는 운영자/관리자만 */
 export function canManageMarketplaceItem(
   user:
     | {
         id: string;
+        nickname?: string;
         isAdmin?: boolean;
         isOperator?: boolean;
       }
@@ -168,11 +170,9 @@ export function canManageMarketplaceItem(
   item: MarketplaceItem
 ): boolean {
   if (!user) return false;
-  return (
-    user.id === item.sellerId ||
-    Boolean(user.isAdmin) ||
-    Boolean(user.isOperator)
-  );
+  if (user.isAdmin || user.isOperator) return true;
+  if (item.sellerId) return item.sellerId === user.id;
+  return Boolean(user.nickname) && item.seller === user.nickname;
 }
 
 export function getMarketplaceSortTime(item: MarketplaceItem): number {

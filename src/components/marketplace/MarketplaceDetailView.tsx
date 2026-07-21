@@ -124,6 +124,10 @@ export default function MarketplaceDetailView({
   };
 
   const handleDelete = async () => {
+    if (!canManage) {
+      setError("이 매물을 삭제할 권한이 없습니다.");
+      return;
+    }
     if (!window.confirm(`"${item.title}" 매물을 삭제할까요?`)) return;
 
     setDeleting(true);
@@ -149,6 +153,10 @@ export default function MarketplaceDetailView({
   };
 
   const handleStatusChange = async (nextStatus: MarketplaceStatus) => {
+    if (!canManage) {
+      setError("이 매물을 관리할 권한이 없습니다.");
+      return;
+    }
     if (item.status === nextStatus) return;
 
     const message =
@@ -184,6 +192,10 @@ export default function MarketplaceDetailView({
   };
 
   const handleBump = async () => {
+    if (!canManage) {
+      setError("이 매물을 관리할 권한이 없습니다.");
+      return;
+    }
     setBumping(true);
     setError(null);
 
@@ -471,7 +483,7 @@ export default function MarketplaceDetailView({
         </div>
       </article>
 
-      {showEdit && (
+      {showEdit && canManage && (
         <MarketplaceEditForm
           item={item}
           onClose={() => setShowEdit(false)}

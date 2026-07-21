@@ -5,6 +5,7 @@ import PortalModal from "@/components/portal/PortalModal";
 import { useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import {
+  canManageMarketplaceItem,
   marketplaceCategories,
   marketplaceConditions,
   marketplaceDeliveries,
@@ -30,7 +31,8 @@ export default function MarketplaceEditForm({
   onUpdated,
 }: MarketplaceEditFormProps) {
   const { user } = useAuth();
-  const isOwner = user?.id === item.sellerId;
+  const canManage = canManageMarketplaceItem(user, item);
+  const isOwner = Boolean(user && item.sellerId === user.id);
   const [category, setCategory] = useState<MarketplaceCategory>(item.category);
   const [title, setTitle] = useState(item.title);
   const [description, setDescription] = useState(item.description);
@@ -56,6 +58,10 @@ export default function MarketplaceEditForm({
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (!canManage) {
+      setError("이 매물을 수정할 권한이 없습니다.");
+      return;
+    }
     setSubmitting(true);
     setError(null);
 
