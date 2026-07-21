@@ -1,3 +1,4 @@
+import { resolveRuntimeNaverMapClientId } from "@/lib/naver-map-runtime";
 import type { DirectionsQuery, DirectionsResult } from "@/lib/naver-directions";
 import { normalizeDirectionsError } from "@/lib/naver-directions";
 
@@ -30,10 +31,7 @@ type NaverDirectionsResponse = {
 };
 
 function getDirectionsCredentials() {
-  const clientId =
-    process.env.NAVER_MAP_CLIENT_ID ??
-    process.env.NEXT_PUBLIC_NAVER_MAP_CLIENT_ID ??
-    "";
+  const clientId = resolveRuntimeNaverMapClientId();
   const clientSecret = process.env.NAVER_MAP_CLIENT_SECRET ?? "";
   return { clientId, clientSecret };
 }

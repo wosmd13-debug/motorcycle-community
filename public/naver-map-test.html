@@ -157,7 +157,7 @@
         if (window.naver) delete window.naver;
       }
 
-      function loadSdk(sdkUrl) {
+      async function loadSdk(sdkUrl) {
         return new Promise((resolve) => {
           const script = document.createElement("script");
           script.id = "naver-test-sdk";
@@ -166,6 +166,44 @@
           script.onerror = () => resolve(false);
           document.head.appendChild(script);
         });
+      }
+
+      async function tryAllSdkUrls(config) {
+        const urls =
+          Array.isArray(config.sdkUrls) && config.sdkUrls.length > 0
+            ? config.sdkUrls
+            : [config.sdkUrl];
+
+        for (const sdkUrl of urls) {
+          removeSdk();
+          authFailed = false;
+          const loaded = await loadSdk(sdkUrl);
+          if (!loaded) continue;
+
+          const ok = await new Promise((resolve) => {
+            const waitStart = Date.now();
+            const timer = setInterval(() => {
+              if (authFailed) {
+                clearInterval(timer);
+                resolve(false);
+                return;
+              }
+              if (window.naver && window.naver.maps) {
+                clearInterval(timer);
+                resolve(true);
+                return;
+              }
+              if (Date.now() - waitStart > 12000) {
+                clearInterval(timer);
+                resolve(false);
+              }
+            }, 120);
+          });
+
+          if (ok) return sdkUrl;
+        }
+
+        return null;
       }
 
       async function runTest() {
@@ -184,48 +222,34 @@
         }
 
         if (!config.configured || !config.clientId) {
-          setStatus("Client ID가 설정되지 않았습니다 (.env.local 확인)", "fail");
+          setStatus("Client ID가 설정되지 않았습니다 (.env.production 확인)", "fail");
           return;
         }
 
         metaEl.textContent =
           "Client ID: " +
           config.clientIdPreview +
-          " · SDK: " +
-          config.sdkParam +
+          " · SDK 후보: " +
+          (config.sdkParams || [config.sdkParam]).join(", ") +
           " · 접속: " +
           window.location.origin;
 
-        const loaded = await loadSdk(config.sdkUrl);
-        if (!loaded) {
-          setStatus("SDK 스크립트 로드 실패", "fail");
+        const workingUrl = await tryAllSdkUrls(config);
+        if (!workingUrl) {
+          setStatus("인증 실패 — NCP Web URL/Dynamic Map 설정을 확인하세요.", "fail");
           return;
         }
 
-        const waitStart = Date.now();
-        const timer = setInterval(() => {
-          if (authFailed) {
-            clearInterval(timer);
-            return;
-          }
-          if (window.naver && window.naver.maps) {
-            clearInterval(timer);
-            try {
-              mapInstance = new window.naver.maps.Map(mapEl, {
-                center: new window.naver.maps.LatLng(37.5665, 126.978),
-                zoom: 13,
-              });
-              setStatus("인증 성공 — 네이버 지도가 정상 표시됩니다.", "ok");
-            } catch (err) {
-              setStatus("지도 생성 실패: " + err.message, "fail");
-            }
-            return;
-          }
-          if (Date.now() - waitStart > 15000) {
-            clearInterval(timer);
-            setStatus("SDK 준비 시간 초과", "fail");
-          }
-        }, 120);
+        try {
+          mapInstance = new window.naver.maps.Map(mapEl, {
+            center: new window.naver.maps.LatLng(37.5665, 126.978),
+            zoom: 13,
+          });
+          setStatus("인증 성공 — 네이버 지도가 정상 표시됩니다.", "ok");
+          metaEl.textContent += " · 사용 SDK: " + workingUrl;
+        } catch (err) {
+          setStatus("지도 생성 실패: " + err.message, "fail");
+        }
       }
 
       retryBtn.addEventListener("click", runTest);

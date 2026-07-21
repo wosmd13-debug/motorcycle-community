@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   buildServiceMapOptions,
+  checkNaverMapsReady,
   getNaverMapInitErrorMessage,
   getNaverMaps,
   isNaverMapAuthFailed,
@@ -13,8 +14,7 @@ import {
   triggerNaverMapResize,
   waitForElementRef,
 } from "@/lib/naver-maps";
-import { useNaverMapsReady } from "@/components/map/NaverMapsProvider";
-import { NAVER_MAP_CLIENT_ID } from "@/lib/map-config";
+import { useNaverMapClientId, useNaverMapsReady } from "@/components/map/NaverMapsProvider";
 import { useLatest } from "@/lib/use-latest";
 
 const KOREA_CENTER = { lat: 36.5, lng: 127.9 };
@@ -36,6 +36,7 @@ export default function PlainNaverMap({
   const [bootAttempt, setBootAttempt] = useState(0);
 
   const onAuthFailureRef = useLatest(onAuthFailure);
+  const clientId = useNaverMapClientId();
   const { ready: sdkReady, loading: sdkLoading, reload: reloadSdk } =
     useNaverMapsReady();
 
@@ -47,7 +48,7 @@ export default function PlainNaverMap({
   }, [onAuthFailureRef]);
 
   useEffect(() => {
-    if (!NAVER_MAP_CLIENT_ID) {
+    if (!clientId) {
       setInitError("API 키가 설정되지 않았습니다.");
       return;
     }
@@ -75,7 +76,7 @@ export default function PlainNaverMap({
       }
 
       const result = await prepareNaverMap({
-        clientId: NAVER_MAP_CLIENT_ID,
+        clientId,
         container,
         getMapOptions: () => {
           const maps = getNaverMaps();
@@ -109,21 +110,21 @@ export default function PlainNaverMap({
       teardownNaverMapContainer(mapRef.current);
       setMapReady(false);
     };
-  }, [onAuthFailureRef, sdkReady, bootAttempt]);
+  }, [clientId, onAuthFailureRef, sdkReady, bootAttempt]);
 
   useEffect(() => {
     if (!mapReady) return;
 
     const timer = window.setTimeout(() => {
-      if (isNaverMapAuthFailed()) {
+      if (isNaverMapAuthFailed() && !checkNaverMapsReady()) {
         onAuthFailureRef.current?.();
       }
-    }, 1500);
+    }, 2500);
 
     return () => window.clearTimeout(timer);
   }, [mapReady, onAuthFailureRef]);
 
-  if (!NAVER_MAP_CLIENT_ID) {
+  if (!clientId) {
     return (
       <div
         className={`flex flex-col items-center justify-center rounded-3xl border border-dashed border-signature/30 bg-gradient-to-br from-sky-50 to-signature-light p-8 text-center ${className}`}

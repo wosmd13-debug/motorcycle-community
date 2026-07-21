@@ -1,8 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useNaverMapsReady } from "@/components/map/NaverMapsProvider";
-import { NAVER_MAP_CLIENT_ID } from "@/lib/map-config";
+import { useNaverMapClientId, useNaverMapsReady } from "@/components/map/NaverMapsProvider";
 import {
   addNaverMapListener,
   buildServiceMapOptions,
@@ -85,6 +84,7 @@ export default function NaverServicePlacesMap({
   const onAuthFailureRef = useLatest(onAuthFailure);
   const onSelectRef = useLatest(onSelect);
   const onCenterChangeRef = useLatest(onCenterChange);
+  const clientId = useNaverMapClientId();
   const { ready: sdkReady, loading: sdkLoading, reload: reloadSdk } =
     useNaverMapsReady();
 
@@ -115,7 +115,7 @@ export default function NaverServicePlacesMap({
   }, [onAuthFailureRef]);
 
   useEffect(() => {
-    if (!NAVER_MAP_CLIENT_ID) {
+    if (!clientId) {
       setInitError("API 키가 설정되지 않았습니다.");
       return;
     }
@@ -147,7 +147,7 @@ export default function NaverServicePlacesMap({
       }
 
       const result = await prepareNaverMap({
-        clientId: NAVER_MAP_CLIENT_ID,
+        clientId,
         container,
         getMapOptions: () => {
           const maps = getNaverMaps();
@@ -223,7 +223,7 @@ export default function NaverServicePlacesMap({
       teardownNaverMapContainer(mapRef.current);
       setMapReady(false);
     };
-  }, [onAuthFailureRef, onCenterChangeRef, sdkReady, bootAttempt]);
+  }, [clientId, onAuthFailureRef, onCenterChangeRef, sdkReady, bootAttempt]);
 
   useEffect(() => {
     const map = mapInstance.current;
@@ -468,7 +468,7 @@ export default function NaverServicePlacesMap({
     };
   }, [mapReady]);
 
-  if (!NAVER_MAP_CLIENT_ID) {
+  if (!clientId) {
     return (
       <div className="portal-map-frame flex flex-col items-center justify-center rounded-3xl border border-dashed border-signature/30 bg-gradient-to-br from-sky-50 to-signature-light p-8 text-center">
         <h2 className="text-xl font-bold text-slate-800">

@@ -106,10 +106,6 @@ export function subscribeNaverMapAuthFailure(listener: () => void) {
   ensureNaverMapAuthHandler();
   authFailureListeners.add(listener);
 
-  if (isNaverMapAuthFailed()) {
-    listener();
-  }
-
   return () => {
     authFailureListeners.delete(listener);
   };
@@ -210,27 +206,27 @@ function injectSdkScript(
 }
 
 async function loadSdkWithParamFallback(clientId: string): Promise<boolean> {
-  const preferred = resolveNaverMapsSdkParam();
+  const order: NaverMapsSdkParam[] =
+    resolveNaverMapsSdkParam() === "ncpClientId"
+      ? ["ncpClientId", "ncpKeyId"]
+      : ["ncpKeyId", "ncpClientId"];
 
-  suppressAuthFailureNotify = true;
-  if (typeof window !== "undefined") {
-    window.__naverMapAuthFailed = false;
-  }
+  for (let index = 0; index < order.length; index += 1) {
+    if (index > 0) {
+      resetNaverMapsSdkLoad();
+    }
 
-  const firstOk = await injectSdkScript(clientId, preferred);
-  if (firstOk) {
-    suppressAuthFailureNotify = false;
-    return true;
-  }
-
-  if (preferred === "ncpKeyId") {
-    resetNaverMapsSdkLoad();
     suppressAuthFailureNotify = true;
-    const secondOk = await injectSdkScript(clientId, "ncpClientId");
+    if (typeof window !== "undefined") {
+      window.__naverMapAuthFailed = false;
+    }
+
+    const ok = await injectSdkScript(clientId, order[index]);
     suppressAuthFailureNotify = false;
-    if (secondOk) return true;
-  } else {
-    suppressAuthFailureNotify = false;
+
+    if (ok && checkNaverMapsReady()) {
+      return true;
+    }
   }
 
   if (isNaverMapAuthFailed()) {
@@ -246,9 +242,10 @@ export async function ensureNaverMapsSdk(
 ): Promise<boolean> {
   if (!clientId) return false;
   if (!force && checkNaverMapsReady()) return true;
-  if (isNaverMapAuthFailed() && !force) return false;
 
   if (force) {
+    resetNaverMapsSdkLoad();
+  } else if (isNaverMapAuthFailed()) {
     resetNaverMapsSdkLoad();
   }
 

@@ -12,6 +12,7 @@ import {
 import {
   addNaverMapListener,
   buildServiceMapOptions,
+  checkNaverMapsReady,
   detachNaverOverlay,
   getNaverMapInitErrorMessage,
   getNaverMaps,
@@ -24,9 +25,8 @@ import {
   triggerNaverMapResize,
   waitForElementRef,
 } from "@/lib/naver-maps";
-import { useNaverMapsReady } from "@/components/map/NaverMapsProvider";
+import { useNaverMapClientId, useNaverMapsReady } from "@/components/map/NaverMapsProvider";
 import NaverMapSetupGuide from "@/components/map/NaverMapSetupGuide";
-import { NAVER_MAP_CLIENT_ID } from "@/lib/map-config";
 import { buildPlaceMapPopupHtml } from "@/lib/naver-booking";
 import { getPlacesForRoute, placeCategoryLabels, placeCategoryMarker } from "@/lib/places-data";
 import { useLatest } from "@/lib/use-latest";
@@ -123,6 +123,7 @@ export default function NaverRouteMap({
   const [bootAttempt, setBootAttempt] = useState(0);
 
   const onAuthFailureRef = useLatest(onAuthFailure);
+  const clientId = useNaverMapClientId();
   const { ready: sdkReady, loading: sdkLoading, reload: reloadSdk } =
     useNaverMapsReady();
 
@@ -309,7 +310,7 @@ export default function NaverRouteMap({
       }
 
       const result = await prepareNaverMap({
-        clientId: NAVER_MAP_CLIENT_ID,
+        clientId,
         container,
         getMapOptions: () => {
           const maps = getNaverMaps();
@@ -364,16 +365,16 @@ export default function NaverRouteMap({
       teardownNaverMapContainer(mapRef.current);
       setMapReady(false);
     };
-  }, [clearOverlays, route.lat, route.lng, sdkReady, bootAttempt]);
+  }, [clearOverlays, clientId, route.lat, route.lng, sdkReady, bootAttempt]);
 
   useEffect(() => {
     if (!mapReady) return;
 
     const timer = window.setTimeout(() => {
-      if (isNaverMapAuthFailed()) {
+      if (isNaverMapAuthFailed() && !checkNaverMapsReady()) {
         onAuthFailureRef.current?.();
       }
-    }, 1500);
+    }, 2500);
 
     return () => window.clearTimeout(timer);
   }, [mapReady, onAuthFailureRef]);
