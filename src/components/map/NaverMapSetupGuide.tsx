@@ -78,8 +78,15 @@ export default function NaverMapSetupGuide() {
           {" → Application Services → Maps → Application"}
         </li>
         <li>
-          <strong>API 선택</strong> → <strong>Dynamic Map(Web)</strong> 체크 후
-          저장
+          <strong>API 선택</strong> → 아래 항목을 모두 체크 후 저장
+          <ul className="mt-1 list-disc pl-5">
+            <li>
+              <strong>Dynamic Map(Web)</strong> — 지도 타일 표시
+            </li>
+            <li>
+              <strong>Directions 15</strong> — 바리코스 경로(이륜차 회피) 표시
+            </li>
+          </ul>
         </li>
         <li>
           <strong>Application 등록</strong> → <strong>Web 서비스 URL</strong>에

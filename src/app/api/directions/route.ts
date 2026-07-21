@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
   });
 
   if (!result.ok) {
-    return NextResponse.json({ error: result.error }, { status: 401 });
+    return NextResponse.json({ error: result.error }, { status: 502 });
   }
 
   return NextResponse.json({

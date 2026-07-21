@@ -1,15 +1,16 @@
-import {
-  buildDirectionsQuery,
-  type DirectionsQuery,
-  type DirectionsResult,
-} from "@/lib/naver-directions";
+import type { DirectionsQuery, DirectionsResult } from "@/lib/naver-directions";
+import { normalizeDirectionsError } from "@/lib/naver-directions";
 
-const DIRECTIONS_URLS = [
-  "https://maps.apigw.ntruss.com/map-direction/v1/driving",
+const DIRECTIONS_BASE_URLS = [
+  "https://naveropenapi.apigw.ntruss.com/map-direction-15/v1/driving",
+  "https://maps.apigw.ntruss.com/map-direction-15/v1/driving",
   "https://naveropenapi.apigw.ntruss.com/map-direction/v1/driving",
+  "https://maps.apigw.ntruss.com/map-direction/v1/driving",
 ] as const;
 
-const MOTORCYCLE_ROUTE_OPTION = "traavoidcaronly";
+const ROUTE_OPTIONS = ["traavoidcaronly", "traoptimal"] as const;
+
+type RouteOption = (typeof ROUTE_OPTIONS)[number];
 
 type RouteSegment = {
   summary: { distance: number; duration: number };
@@ -28,87 +29,149 @@ type NaverDirectionsResponse = {
   errorMessage?: string;
 };
 
-function parseRouteData(data: NaverDirectionsResponse): RouteSegment | null {
-  return data.route?.[MOTORCYCLE_ROUTE_OPTION]?.[0] ?? null;
-}
-
-export async function fetchMotorcycleDirections(
-  query: DirectionsQuery
-): Promise<{ ok: true; data: DirectionsResult } | { ok: false; error: string }> {
+function getDirectionsCredentials() {
   const clientId =
     process.env.NAVER_MAP_CLIENT_ID ??
-    process.env.NEXT_PUBLIC_NAVER_MAP_CLIENT_ID;
-  const clientSecret = process.env.NAVER_MAP_CLIENT_SECRET;
+    process.env.NEXT_PUBLIC_NAVER_MAP_CLIENT_ID ??
+    "";
+  const clientSecret = process.env.NAVER_MAP_CLIENT_SECRET ?? "";
+  return { clientId, clientSecret };
+}
 
-  if (!clientId || !clientSecret) {
-    return {
-      ok: false,
-      error:
-        "경로 API 인증 정보가 없습니다. NAVER_MAP_CLIENT_SECRET을 확인해 주세요.",
-    };
-  }
+export function isDirectionsConfigured(): boolean {
+  const { clientId, clientSecret } = getDirectionsCredentials();
+  return Boolean(clientId && clientSecret);
+}
 
+function parseRouteData(
+  data: NaverDirectionsResponse,
+  option: RouteOption
+): RouteSegment | null {
+  return data.route?.[option]?.[0] ?? null;
+}
+
+function extractApiError(data: NaverDirectionsResponse): string {
+  return (
+    data.error?.message ??
+    data.errorMessage ??
+    data.message ??
+    "경로를 찾을 수 없습니다."
+  );
+}
+
+async function requestDirections(
+  baseUrl: string,
+  query: DirectionsQuery,
+  option: RouteOption,
+  clientId: string,
+  clientSecret: string
+): Promise<
+  | { ok: true; data: DirectionsResult; option: RouteOption }
+  | { ok: false; error: string; retryable: boolean }
+> {
   const params = new URLSearchParams({
     start: query.start,
     goal: query.goal,
-    option: MOTORCYCLE_ROUTE_OPTION,
+    option,
   });
 
   if (query.waypoints) {
     params.set("waypoints", query.waypoints);
   }
 
-  const queryString = params.toString();
+  const response = await fetch(`${baseUrl}?${params.toString()}`, {
+    headers: {
+      "x-ncp-apigw-api-key-id": clientId,
+      "x-ncp-apigw-api-key": clientSecret,
+    },
+    cache: "no-store",
+  });
+
+  const text = await response.text();
+  let data: NaverDirectionsResponse;
+
+  try {
+    data = JSON.parse(text) as NaverDirectionsResponse;
+  } catch {
+    return {
+      ok: false,
+      error: "경로 API 응답 형식이 올바르지 않습니다.",
+      retryable: true,
+    };
+  }
+
+  if (response.status === 401 || response.status === 403 || data.error) {
+    return {
+      ok: false,
+      error: normalizeDirectionsError(extractApiError(data)),
+      retryable: !/permission denied/i.test(extractApiError(data)),
+    };
+  }
+
+  if (data.code !== 0) {
+    return {
+      ok: false,
+      error: normalizeDirectionsError(extractApiError(data)),
+      retryable: true,
+    };
+  }
+
+  const routeData = parseRouteData(data, option);
+  if (!routeData?.path?.length) {
+    return {
+      ok: false,
+      error: "경로 좌표를 받아오지 못했습니다.",
+      retryable: true,
+    };
+  }
+
+  return {
+    ok: true,
+    data: {
+      path: routeData.path,
+      summary: routeData.summary,
+    },
+    option,
+  };
+}
+
+export async function fetchMotorcycleDirections(
+  query: DirectionsQuery
+): Promise<{ ok: true; data: DirectionsResult } | { ok: false; error: string }> {
+  const { clientId, clientSecret } = getDirectionsCredentials();
+
+  if (!clientId || !clientSecret) {
+    return {
+      ok: false,
+      error:
+        "경로 API 인증 정보가 없습니다. 서버 .env.production에 NAVER_MAP_CLIENT_SECRET을 설정해 주세요.",
+    };
+  }
+
   let lastError = "경로를 찾을 수 없습니다.";
 
-  for (const baseUrl of DIRECTIONS_URLS) {
-    const response = await fetch(`${baseUrl}?${queryString}`, {
-      headers: {
-        "x-ncp-apigw-api-key-id": clientId,
-        "x-ncp-apigw-api-key": clientSecret,
-      },
-      cache: "no-store",
-    });
+  for (const baseUrl of DIRECTIONS_BASE_URLS) {
+    for (const option of ROUTE_OPTIONS) {
+      const result = await requestDirections(
+        baseUrl,
+        query,
+        option,
+        clientId,
+        clientSecret
+      );
 
-    const text = await response.text();
-    let data: NaverDirectionsResponse;
+      if (result.ok) {
+        return { ok: true, data: result.data };
+      }
 
-    try {
-      data = JSON.parse(text) as NaverDirectionsResponse;
-    } catch {
-      lastError = "경로 API 응답 형식이 올바르지 않습니다.";
-      continue;
+      lastError = result.error;
+      if (!result.retryable) {
+        return { ok: false, error: lastError };
+      }
     }
-
-    if (response.status === 401 || data.error) {
-      lastError =
-        data.error?.message ??
-        data.errorMessage ??
-        "네이버 경로 API 인증 실패";
-      continue;
-    }
-
-    if (data.code !== 0) {
-      lastError = data.message ?? lastError;
-      continue;
-    }
-
-    const routeData = parseRouteData(data);
-    if (!routeData?.path?.length) {
-      lastError = "경로 좌표를 받아오지 못했습니다.";
-      continue;
-    }
-
-    return {
-      ok: true,
-      data: {
-        path: routeData.path,
-        summary: routeData.summary,
-      },
-    };
   }
 
   return { ok: false, error: lastError };
 }
 
-export { buildDirectionsQuery };
+export { buildDirectionsQuery } from "@/lib/naver-directions";

@@ -4,15 +4,18 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { BariRoute } from "@/lib/routes-data";
 import {
   buildDirectionsQuery,
+  isDirectionsConfigError,
+  normalizeDirectionsError,
   pathToLatLngs,
   type DirectionsResult,
 } from "@/lib/naver-directions";
 import {
   addNaverMapListener,
+  buildServiceMapOptions,
   detachNaverOverlay,
-  getDefaultZoomControlPosition,
   getNaverMapInitErrorMessage,
   getNaverMaps,
+  isNaverMapAuthFailed,
   prepareNaverMap,
   resetMapContainer,
   safeCloseInfoWindow,
@@ -22,6 +25,7 @@ import {
   waitForElementRef,
 } from "@/lib/naver-maps";
 import { useNaverMapsReady } from "@/components/map/NaverMapsProvider";
+import NaverMapSetupGuide from "@/components/map/NaverMapSetupGuide";
 import { NAVER_MAP_CLIENT_ID } from "@/lib/map-config";
 import { buildPlaceMapPopupHtml } from "@/lib/naver-booking";
 import { getPlacesForRoute, placeCategoryLabels, placeCategoryMarker } from "@/lib/places-data";
@@ -90,7 +94,9 @@ async function fetchMotorcycleRoute(
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(data.error ?? "경로를 불러오지 못했습니다.");
+    throw new Error(
+      normalizeDirectionsError(data.error ?? "경로를 불러오지 못했습니다.")
+    );
   }
 
   return data as DirectionsResult;
@@ -166,8 +172,9 @@ export default function NaverRouteMap({
           const mapsAfterError = getNaverMaps();
           if (!mapsAfterError) return;
 
-          const message =
-            err instanceof Error ? err.message : "경로를 불러오지 못했습니다.";
+          const message = normalizeDirectionsError(
+            err instanceof Error ? err.message : "경로를 불러오지 못했습니다."
+          );
           setError(message);
           setUseWaypointFallback(true);
           pathLatLngs = route.waypoints.map(
@@ -307,14 +314,7 @@ export default function NaverRouteMap({
         getMapOptions: () => {
           const maps = getNaverMaps();
           if (!maps) throw new Error("naver maps unavailable");
-          return {
-            center: new maps.LatLng(route.lat, route.lng),
-            zoom: 9,
-            zoomControl: true,
-            zoomControlOptions: {
-              position: getDefaultZoomControlPosition(),
-            },
-          };
+          return buildServiceMapOptions(maps, { lat: route.lat, lng: route.lng }, 9);
         },
       });
 
@@ -367,18 +367,39 @@ export default function NaverRouteMap({
   }, [clearOverlays, route.lat, route.lng, sdkReady, bootAttempt]);
 
   useEffect(() => {
+    if (!mapReady) return;
+
+    const timer = window.setTimeout(() => {
+      if (isNaverMapAuthFailed()) {
+        onAuthFailureRef.current?.();
+      }
+    }, 1500);
+
+    return () => window.clearTimeout(timer);
+  }, [mapReady, onAuthFailureRef]);
+
+  useEffect(() => {
     if (!mapReady || !mapInstance.current) return;
     void renderRoute(mapInstance.current);
   }, [mapReady, renderRoute]);
 
   return (
     <div className="space-y-2">
+      {error && isDirectionsConfigError(error) && (
+        <NaverMapSetupGuide />
+      )}
       <div className="relative h-[320px] overflow-hidden rounded-3xl border border-signature/20 bg-slate-100 shadow-sm lg:h-[420px]">
         <span className="absolute right-3 top-3 z-20 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-semibold text-green-700 shadow-sm ring-1 ring-green-100">
           네이버 지도
         </span>
         {error && (
-          <div className="absolute inset-x-0 top-0 z-20 bg-red-50 px-4 py-2 text-center text-xs text-red-600">
+          <div
+            className={`absolute inset-x-0 top-0 z-20 px-4 py-2 text-center text-xs ${
+              isDirectionsConfigError(error)
+                ? "bg-amber-50 text-amber-900"
+                : "bg-red-50 text-red-600"
+            }`}
+          >
             {error}
           </div>
         )}
@@ -409,8 +430,7 @@ export default function NaverRouteMap({
         )}
         <div
           ref={mapRef}
-          className="naver-map-root h-[320px] w-full lg:h-[420px]"
-          style={{ height: 420 }}
+          className="naver-map-root h-full min-h-[inherit] w-full"
         />
       </div>
 

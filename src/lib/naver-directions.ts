@@ -43,3 +43,20 @@ export function buildDirectionsQuery(
 export function pathToLatLngs(path: DirectionsPathPoint[]): [number, number][] {
   return path.map(([lng, lat]) => [lat, lng]);
 }
+
+export function normalizeDirectionsError(message: string): string {
+  if (/permission denied/i.test(message)) {
+    return "네이버 경로(Directions 15) API 권한이 없습니다. NCP 콘솔 → Maps → Application에서 Directions 15 API를 선택해 주세요.";
+  }
+  if (/unauthorized|401|인증/i.test(message)) {
+    return "네이버 경로 API 인증에 실패했습니다. Client ID·Secret과 Directions 15 API 활성화를 확인해 주세요.";
+  }
+  if (/quota|429/i.test(message)) {
+    return "네이버 경로 API 호출 한도를 초과했습니다. 잠시 후 다시 시도해 주세요.";
+  }
+  return message;
+}
+
+export function isDirectionsConfigError(message: string): boolean {
+  return /Directions 15|인증|권한|Permission/i.test(message);
+}

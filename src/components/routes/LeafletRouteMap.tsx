@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { BariRoute } from "@/lib/routes-data";
 import {
   buildDirectionsQuery,
+  normalizeDirectionsError,
   pathToLatLngs,
   type DirectionsResult,
 } from "@/lib/naver-directions";
@@ -51,7 +52,9 @@ async function fetchMotorcycleRoute(
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(data.error ?? "경로를 불러오지 못했습니다.");
+    throw new Error(
+      normalizeDirectionsError(data.error ?? "경로를 불러오지 못했습니다.")
+    );
   }
 
   return data as DirectionsResult;
@@ -90,7 +93,9 @@ export default function LeafletRouteMap({ route }: LeafletRouteMapProps) {
         setUseWaypointFallback(true);
         path = route.waypoints.map((wp) => [wp.lat, wp.lng] as [number, number]);
         setError(
-          err instanceof Error ? err.message : "경로를 불러오지 못했습니다."
+          normalizeDirectionsError(
+            err instanceof Error ? err.message : "경로를 불러오지 못했습니다."
+          )
         );
       } finally {
         setRouteLoading(false);
