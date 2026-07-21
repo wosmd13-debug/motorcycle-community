@@ -1,7 +1,62 @@
-# 배포 가이드 — 가비아 + WinSCP (byanra.com)
+# 배포 가이드 — 가비아 가상서버 (byanra.com)
 
-이 문서는 **가비아**에서 도메인·호스팅을 쓰고, **WinSCP**로 파일을 올려 배포하는 방식 기준으로 작성했습니다.  
-예시 도메인: `byanra.com` (본인 도메인으로 바꿔서 진행)
+이 문서는 **가비아 가상서버(VPS)** 기준입니다.  
+일상 배포는 **가비아 콘솔 터미널**에서 `git pull` + `docker compose` 로 진행합니다.  
+(아래 WinSCP 안내는 예전/보조 방법입니다.)
+
+예시 도메인: `byanra.com` · 서버 프로젝트 폴더: `~/motorcycle-community`
+
+---
+
+## ★★ 일상 배포 (지금 쓰는 방법 — 가비아 콘솔)
+
+Cursor에서 코드를 고친 뒤, **매번 이 순서**만 하면 됩니다.
+
+### A. 내 PC (Cursor) — GitHub에 올리기
+
+프로젝트 폴더에서 터미널:
+
+```bash
+git add .
+git status
+git commit -m "변경 내용 한 줄 요약"
+git push
+```
+
+- `git push`가 끝나야 서버에서 새 코드를 받을 수 있습니다.
+- push를 안 하면 가비아에서 `git pull` 해도 `Already up to date`만 나옵니다.
+
+### B. 가비아 콘솔 터미널 — 받아서 다시 빌드
+
+콘솔(VNC) 터미널에 **그대로** 붙여넣기:
+
+```bash
+cd ~/motorcycle-community
+git pull
+docker compose --env-file .env.production up -d --build
+```
+
+성공 신호:
+
+- `Started motorcycle-community-web-1` (또는 컨테이너가 다시 뜸)
+- `docker compose ps` 에서 `web` 이 **running**
+
+### C. 브라우저 확인
+
+1. https://byanra.com 접속
+2. **Ctrl + F5** (강력 새로고침)
+3. (선택) https://byanra.com/api/version 으로 배포 반영 확인
+
+### 절대 하지 말 것
+
+- 서버의 `data/`, `public/uploads/` 삭제·덮어쓰기 → 회원·게시글·사진 사라짐
+- 가비아 **웹 메뉴**에서 기능 코드를 찾으려 하기 → 코드 수정은 Cursor + Git 만 해당
+
+### 한 줄 요약
+
+```text
+PC: git push  →  가비아: git pull + docker compose --build  →  브라우저 Ctrl+F5
+```
 
 ---
 
@@ -9,29 +64,29 @@
 
 | 항목 | 사용 |
 |------|------|
-| 도메인·호스팅 | **가비아** |
-| 파일 업로드 | **WinSCP** (SFTP) |
-| 서버 명령 실행 | WinSCP 내장 터미널 또는 PuTTY |
+| 도메인·호스팅 | **가비아 가상서버 (VPS)** |
+| 일상 배포 | **가비아 콘솔 터미널** + Git + Docker |
+| 보조 업로드 | WinSCP (SFTP) — 필요할 때만 |
 | 배포 방식 | Docker (`docker compose`) |
 
-> **호스팅 종류 확인:** 이 사이트는 **Docker가 실행되는 서버**(가비아 가상서버/VPS, SSH 접속 가능)가 필요합니다.  
-> 가비아 **일반 웹호스팅**(PHP 전용, SSH/Docker 불가)만 있으면 이 방식으로는 배포할 수 없습니다.
+> **호스팅 종류:** Docker·SSH가 되는 **가상서버**가 필요합니다.  
+> 가비아 **일반 웹호스팅**(PHP 전용)만으로는 이 사이트를 돌릴 수 없습니다.
 
 ---
 
-## 한눈에 보는 전체 순서
+## 한눈에 보는 전체 순서 (처음 세팅할 때)
 
 ```
 1. 가비아에서 서버 IP·SSH 계정 확인
 2. 가비아 DNS 설정 (도메인 → 서버 IP)
-3. WinSCP로 서버 접속
-4. 서버에 Docker 설치 (최초 1회)
-5. WinSCP로 프로젝트 폴더 업로드
-6. .env.production 설정
-7. docker compose up -d --build
-8. 가비아 또는 Caddy로 HTTPS 연결
-9. API 키·네이버 지도 URL 등록
-10. 브라우저에서 최종 확인
+3. 서버에 Docker 설치 (최초 1회)
+4. Git으로 프로젝트 clone (또는 업로드)
+5. .env.production 설정
+6. docker compose up -d --build
+7. Caddy 등으로 HTTPS 연결
+8. API 키·네이버 지도 URL 등록
+9. 브라우저에서 최종 확인
+이후 수정은 위의 ★★ 일상 배포만 반복
 ```
 
 ---
@@ -357,9 +412,12 @@ sitemap에 `byanra.com` 주소가 나와야 하고, `localhost`가 나오면 안
 
 ---
 
-## ★ 코드 수정 후 다시 배포 (WinSCP 일상 작업)
+## ★ 코드 수정 후 다시 배포 (WinSCP — 보조 방법)
 
-로컬(Cursor)에서 코드를 고친 뒤 **매번 이 순서**로 진행하세요.
+> **지금은 가비아 콘솔 + Git을 쓰세요.** 맨 위 **★★ 일상 배포**가 기본입니다.  
+> Git이 안 될 때만 아래 WinSCP 방법을 쓰세요.
+
+로컬(Cursor)에서 코드를 고친 뒤 WinSCP로 올릴 때의 순서입니다.
 
 ### 1) 로컬에서 빌드 확인
 
@@ -377,16 +435,17 @@ npm run build
 | 설정 변경 | `.env.production` |
 | 패키지 추가 | `package.json`, `package-lock.json` 전체 |
 
-- **왼쪽(PC)** → **오른쪽(서버 `/var/www/byanra`)** 드래그로 **덮어쓰기**
+- **왼쪽(PC)** → **오른쪽(서버 프로젝트 폴더)** 드래그로 **덮어쓰기**
+- 서버 경로는 환경에 따라 `~/motorcycle-community` 또는 `/var/www/byanra` 등
 - `node_modules`, `.next`는 **올리지 않음**
 
 ### 3) 서버에서 Docker 재실행
 
-WinSCP 터미널:
+가비아 콘솔 또는 WinSCP 터미널:
 
 ```bash
-cd /var/www/byanra
-docker compose up -d --build
+cd ~/motorcycle-community
+docker compose --env-file .env.production up -d --build
 ```
 
 ### 4) 브라우저에서 확인
@@ -398,9 +457,9 @@ docker compose up -d --build
 
 | 변경 내용 | 명령 |
 |----------|------|
-| 소스 코드 (`src/` 등) | `docker compose up -d --build` |
-| `NEXT_PUBLIC_*` (도메인, 지도 Client ID 등) | `docker compose up -d --build` |
-| `OPENWEATHERMAP_API_KEY`만 | `docker compose up -d` |
+| 소스 코드 (`src/` 등) | `docker compose --env-file .env.production up -d --build` |
+| `NEXT_PUBLIC_*` (도메인, 지도 Client ID 등) | `docker compose --env-file .env.production up -d --build` |
+| `OPENWEATHERMAP_API_KEY`만 | `docker compose --env-file .env.production up -d` |
 
 ---
 
@@ -466,14 +525,15 @@ docker compose restart
 
 ---
 
-## 최소 명령 치트시트 (WinSCP 터미널)
+## 최소 명령 치트시트 (가비아 콘솔 터미널)
 
 ```bash
 # 프로젝트 폴더로 이동
-cd /var/www/byanra
+cd ~/motorcycle-community
 
-# 배포 (코드 올린 후)
-docker compose up -d --build
+# 일상 배포 (코드 반영)
+git pull
+docker compose --env-file .env.production up -d --build
 
 # 상태 확인
 docker compose ps
@@ -481,10 +541,10 @@ docker compose ps
 # 오류 로그
 docker compose logs --tail=100 web
 
-# 재시작
+# 재시작 (코드 변경 없이)
 docker compose restart
 
-# 백업
+# 백업 (스크립트가 있을 때)
 ./scripts/backup.sh
 ```
 
@@ -493,19 +553,19 @@ docker compose restart
 ## 요약 — 처음 한 번만
 
 1. 가비아 DNS: A레코드 `@`, `www` → VPS IP  
-2. WinSCP 접속 (SFTP, IP, SSH 아이디/비밀번호)  
-3. 프로젝트 → `/var/www/byanra` 업로드 (`node_modules` 제외)  
-4. `.env.production` 업로드  
-5. 터미널: `docker compose up -d --build`  
-6. Caddy로 HTTPS  
-7. `https://byanra.com` 접속 확인  
+2. 서버에 Docker 설치 + 프로젝트(`~/motorcycle-community`) 준비  
+3. `.env.production` 설정  
+4. `docker compose --env-file .env.production up -d --build`  
+5. Caddy 등으로 HTTPS  
+6. `https://byanra.com` 접속 확인  
 
-## 요약 — 코드 수정할 때마다
+## 요약 — 코드 수정할 때마다 (지금 쓰는 방법)
 
-1. 로컬 `npm run build` 확인  
-2. WinSCP로 변경 파일 덮어쓰기  
-3. 터미널: `docker compose up -d --build`  
-4. 브라우저 `Ctrl+F5`  
+1. **PC(Cursor):** `git add` → `git commit` → `git push`  
+2. **가비아 콘솔:**  
+   `cd ~/motorcycle-community` → `git pull` →  
+   `docker compose --env-file .env.production up -d --build`  
+3. 브라우저 `Ctrl+F5`  
 
 ---
 

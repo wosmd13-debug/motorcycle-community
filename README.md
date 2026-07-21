@@ -50,7 +50,9 @@ npm run dev
 
 ## 배포
 
-운영(도메인·VPS) 배포는 **[DEPLOY.md](./DEPLOY.md)** 를 참고하세요.
+운영(도메인·가비아 가상서버) 배포는 **[DEPLOY.md](./DEPLOY.md)** 를 참고하세요.  
+일상 배포: **PC에서 `git push` → 가비아 콘솔에서 `git pull` + `docker compose --build`**
+
 
 - 권장: 단일 VPS + Docker (`docker compose up -d --build`)
 - `data/` · `public/uploads` 영구 보관 + `npm run backup`
