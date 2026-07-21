@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { NAVER_MAP_CLIENT_ID } from "@/lib/map-config";
+import { getNaverMapAuthErrorMessage } from "@/lib/naver-map-domains";
 import {
   checkNaverMapsReady,
   ensureNaverMapsSdk,
@@ -37,7 +38,7 @@ export function useNaverMapsReady() {
 
 function getErrorMessage(): string {
   return isNaverMapAuthFailed()
-    ? "네이버 지도 인증 실패 — http://localhost:3000 으로 접속하고 NCP Web URL을 확인하세요."
+    ? getNaverMapAuthErrorMessage()
     : "네이버 지도 SDK를 불러오지 못했습니다.";
 }
 

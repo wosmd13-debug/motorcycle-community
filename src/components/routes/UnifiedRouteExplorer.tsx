@@ -7,7 +7,6 @@ import MemberRouteCard from "@/components/member-routes/MemberRouteCard";
 import MemberRouteDetail from "@/components/member-routes/MemberRouteDetail";
 import RouteCard from "@/components/routes/RouteCard";
 import RouteDetail from "@/components/routes/RouteDetail";
-import MapAccessNotice from "@/components/map/MapAccessNotice";
 import {
   filterMemberRoutes,
   type MemberRoute,
@@ -257,8 +256,6 @@ export default function UnifiedRouteExplorer({
           </span>
         )}
       </p>
-
-      <MapAccessNotice />
 
       {unifiedRoutes.length === 0 ? (
         <div className="rounded-3xl border border-dashed border-signature/30 bg-signature-light/50 px-6 py-16 text-center">

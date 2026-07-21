@@ -5,7 +5,6 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import RouteCard from "@/components/routes/RouteCard";
 import RouteDetail from "@/components/routes/RouteDetail";
 import type { RiderCafeEntry } from "@/lib/rider-cafe";
-import MapAccessNotice from "@/components/map/MapAccessNotice";
 import {
   filterRoutes,
   routeDifficulties,
@@ -130,8 +129,6 @@ export default function RouteExplorer({
         총 <strong className="text-signature-dark">{filteredRoutes.length}</strong>
         개의 바리 코스
       </p>
-
-      <MapAccessNotice />
 
       {filteredRoutes.length === 0 ? (
         <div className="rounded-3xl border border-dashed border-signature/30 bg-signature-light/50 px-6 py-16 text-center">

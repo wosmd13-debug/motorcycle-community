@@ -2,33 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { NAVER_MAP_CLIENT_ID, USE_NAVER_MAP } from "@/lib/map-config";
-
-function buildSuggestedUrls(origin: string | null) {
-  const urls = new Set([
-    "http://localhost",
-    "http://127.0.0.1",
-    "http://localhost:3000",
-    "https://byanra.com",
-    "https://www.byanra.com",
-  ]);
-
-  if (origin) {
-    urls.add(origin);
-    try {
-      const parsed = new URL(origin);
-      if (parsed.hostname && parsed.hostname !== "localhost") {
-        urls.add(`http://${parsed.hostname}`);
-        if (parsed.port) {
-          urls.add(`http://${parsed.hostname}:${parsed.port}`);
-        }
-      }
-    } catch {
-      // ignore invalid origin
-    }
-  }
-
-  return [...urls];
-}
+import { buildNaverMapSuggestedUrls } from "@/lib/naver-map-domains";
 
 export default function NaverMapSetupGuide() {
   const [origin, setOrigin] = useState<string | null>(null);
@@ -38,7 +12,7 @@ export default function NaverMapSetupGuide() {
     setOrigin(window.location.origin);
   }, []);
 
-  const suggestedUrls = useMemo(() => buildSuggestedUrls(origin), [origin]);
+  const suggestedUrls = useMemo(() => buildNaverMapSuggestedUrls(origin), [origin]);
 
   const copyUrl = async (url: string) => {
     try {
@@ -69,11 +43,11 @@ export default function NaverMapSetupGuide() {
 
   return (
     <div className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-950">
-      <p className="font-bold">네이버 지도 인증 설정이 필요합니다</p>
+      <p className="font-bold">네이버 지도 인증 설정 (PC·모바일 공통)</p>
       <p className="mt-2 leading-6 text-amber-900">
-        경로 API(Directions)는 동작해도 <strong>브라우저 지도 타일</strong>은 Web
-        서비스 URL과 Dynamic Map 설정이 맞아야 표시됩니다. SDK는{" "}
-        <code className="rounded bg-white px-1">ncpKeyId</code> 파라미터를
+        운영 사이트 <strong>https://byanra.com</strong> 과 모바일 브라우저에서
+        접속하는 주소가 NCP Web URL에 등록되어 있어야 지도 타일이 표시됩니다.
+        SDK는 <code className="rounded bg-white px-1">ncpKeyId</code> 파라미터를
         사용합니다.
       </p>
 
@@ -84,7 +58,7 @@ export default function NaverMapSetupGuide() {
           {origin.includes("192.168.") || origin.includes("10.") ? (
             <>
               {" "}
-              — 휴대폰/LAN IP 접속입니다. 아래 목록에 이 주소도 NCP에 등록해야
+              — LAN/휴대폰 접속입니다. 아래 목록에 이 주소도 NCP에 등록해야
               합니다.
             </>
           ) : null}
@@ -109,8 +83,8 @@ export default function NaverMapSetupGuide() {
         </li>
         <li>
           <strong>Application 등록</strong> → <strong>Web 서비스 URL</strong>에
-          아래 주소를 등록 (공식 가이드: 포트·경로 없이 호스트만, 안 되면 포트
-          포함도 시도)
+          아래 주소를 모두 등록 (공식 가이드: 포트·경로 없이 호스트만, 안 되면
+          포트 포함도 시도)
         </li>
       </ol>
 
@@ -150,13 +124,14 @@ export default function NaverMapSetupGuide() {
           </a>
           에서 인증 성공 여부 확인
         </li>
+        <li>
+          서버 배포 시{" "}
+          <code className="rounded bg-white px-1">
+            docker compose --env-file .env.production up -d --build
+          </code>
+          로 이미지를 다시 빌드해야 Client ID가 반영됩니다.
+        </li>
       </ol>
-
-      <p className="mt-3 text-xs text-amber-800">
-        PC 개발: <code className="rounded bg-white px-1">http://localhost:3000</code>
-        으로 접속하세요. IP 주소·등록되지 않은 https 도메인으로 접속하면 인증이
-        실패할 수 있습니다.
-      </p>
     </div>
   );
 }

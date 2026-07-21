@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
-  getDefaultZoomControlPosition,
+  buildServiceMapOptions,
   getNaverMapInitErrorMessage,
   getNaverMaps,
+  isNaverMapAuthFailed,
   prepareNaverMap,
   resetMapContainer,
   subscribeNaverMapAuthFailure,
@@ -79,14 +80,7 @@ export default function PlainNaverMap({
         getMapOptions: () => {
           const maps = getNaverMaps();
           if (!maps) throw new Error("naver maps unavailable");
-          return {
-            center: new maps.LatLng(KOREA_CENTER.lat, KOREA_CENTER.lng),
-            zoom: DEFAULT_ZOOM,
-            zoomControl: true,
-            zoomControlOptions: {
-              position: getDefaultZoomControlPosition(),
-            },
-          };
+          return buildServiceMapOptions(maps, KOREA_CENTER, DEFAULT_ZOOM);
         },
       });
 
@@ -116,6 +110,18 @@ export default function PlainNaverMap({
       setMapReady(false);
     };
   }, [onAuthFailureRef, sdkReady, bootAttempt]);
+
+  useEffect(() => {
+    if (!mapReady) return;
+
+    const timer = window.setTimeout(() => {
+      if (isNaverMapAuthFailed()) {
+        onAuthFailureRef.current?.();
+      }
+    }, 1500);
+
+    return () => window.clearTimeout(timer);
+  }, [mapReady, onAuthFailureRef]);
 
   if (!NAVER_MAP_CLIENT_ID) {
     return (

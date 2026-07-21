@@ -1,3 +1,4 @@
+import { getNaverMapAuthErrorMessage } from "@/lib/naver-map-domains";
 import {
   resetMapContainer,
   waitForElementRef,
@@ -51,16 +52,16 @@ export function isNaverMapAuthFailed(): boolean {
   );
 }
 
+export function isNaverMapsSdkLoaded(): boolean {
+  return isNaverMapsReady();
+}
+
 export function checkNaverMapsReady(): boolean {
-  if (!isNaverMapsReady()) return false;
-  if (typeof window !== "undefined") {
-    window.__naverMapAuthFailed = false;
-  }
-  return true;
+  return isNaverMapsReady() && !isNaverMapAuthFailed();
 }
 
 export function getNaverMaps(): typeof naver.maps | null {
-  if (!checkNaverMapsReady() || isNaverMapAuthFailed()) return null;
+  if (!checkNaverMapsReady()) return null;
   return window.naver.maps;
 }
 
@@ -128,6 +129,7 @@ export function waitForNaverSdk(timeoutMs = 20000): Promise<NaverSdkWaitResult> 
     }
 
     const started = Date.now();
+    let sdkLoadedAt: number | null = null;
 
     const finish = (result: NaverSdkWaitResult) => {
       window.clearInterval(timer);
@@ -141,10 +143,17 @@ export function waitForNaverSdk(timeoutMs = 20000): Promise<NaverSdkWaitResult> 
         finish("auth");
         return;
       }
-      if (checkNaverMapsReady()) {
-        finish("ready");
+
+      if (isNaverMapsSdkLoaded()) {
+        if (sdkLoadedAt === null) {
+          sdkLoadedAt = Date.now();
+        }
+        if (Date.now() - sdkLoadedAt >= 800) {
+          finish(isNaverMapAuthFailed() ? "auth" : "ready");
+        }
         return;
       }
+
       if (Date.now() - started >= timeoutMs) {
         finish(isNaverMapAuthFailed() ? "auth" : "timeout");
       }
@@ -329,7 +338,7 @@ export function buildServiceMapOptions(
 export function getNaverMapInitErrorMessage(reason: NaverMapFailReason): string {
   switch (reason) {
     case "auth":
-      return "네이버 지도 인증에 실패했습니다. http://localhost:3000 (포트 포함)으로 접속했는지, NCP 콘솔 Web URL을 확인해 주세요.";
+      return getNaverMapAuthErrorMessage();
     case "sdk":
       return "네이버 지도 SDK를 불러오지 못했습니다. 페이지를 새로고침하거나 아래 버튼으로 다시 시도해 주세요.";
     case "container":
