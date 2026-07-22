@@ -48,8 +48,15 @@ chown -R 1001:1001 data public/uploads
 chmod -R u+rwX,g+rwX data public/uploads
 
 echo "==> 2/5 GitHub 최신 코드"
+# shellcheck disable=SC1091
+source scripts/persist-deploy-data.sh
+persist_deploy_data_backup
+
 git remote update
 git reset --hard origin/main
+
+persist_deploy_data_restore
+persist_deploy_data_merge_gallery
 export APP_COMMIT="$(git rev-parse --short HEAD)"
 echo "    commit: $APP_COMMIT"
 
