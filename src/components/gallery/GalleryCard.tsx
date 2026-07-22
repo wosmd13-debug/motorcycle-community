@@ -18,6 +18,88 @@ type GalleryCardProps = {
   looksByNickname?: Record<string, ShopCosmeticLook>;
 };
 
+const likeButtonClass =
+  "inline-flex min-h-0 items-center border-0 bg-transparent p-0 text-[11px] font-medium shadow-none transition disabled:opacity-60 touch-manipulation";
+
+function GalleryLikeStat({
+  likes,
+  liking,
+  onLike,
+  tone,
+}: {
+  likes: number;
+  liking: boolean;
+  onLike: () => void;
+  tone: "overlay" | "meta";
+}) {
+  const toneClass =
+    tone === "overlay"
+      ? "text-white/90 hover:text-white"
+      : "text-stone-600 hover:text-signature-dark dark:text-stone-300";
+
+  return (
+    <span
+      onClick={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+      }}
+    >
+      <EngagementLikeButton
+        likes={likes}
+        liking={liking}
+        onLike={onLike}
+        label="❤️"
+        className={`${likeButtonClass} ${toneClass}`}
+      />
+    </span>
+  );
+}
+
+function GalleryStatsRow({
+  post,
+  onLike,
+  liking,
+  gradesByNickname,
+  looksByNickname,
+  tone,
+  authorClassName,
+}: {
+  post: GalleryPost;
+  onLike: (id: string) => void;
+  liking: boolean;
+  gradesByNickname?: Record<string, MemberGradeId>;
+  looksByNickname?: Record<string, ShopCosmeticLook>;
+  tone: "overlay" | "meta";
+  authorClassName: string;
+}) {
+  const textClass =
+    tone === "overlay" ? "text-[11px] text-white/90" : "text-[11px] text-stone-600 dark:text-stone-300";
+  const dotClass = tone === "overlay" ? "text-white/70" : "text-stone-400";
+
+  return (
+    <div className={`mt-1.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 ${textClass}`}>
+      <AuthorWithGrade
+        author={post.author}
+        authorGradeId={post.authorGradeId}
+        gradesByNickname={gradesByNickname}
+        looksByNickname={looksByNickname}
+        nicknameClassName={authorClassName}
+        className="inline-flex min-w-0 max-w-full flex-wrap items-center gap-1"
+        badgeSize="sm"
+      />
+      <span className={dotClass}>·</span>
+      <GalleryLikeStat
+        likes={post.likes}
+        liking={liking}
+        onLike={() => onLike(post.id)}
+        tone={tone}
+      />
+      <span>👁 {post.views}</span>
+      <span>💬 {post.comments.length}</span>
+    </div>
+  );
+}
+
 export default function GalleryCard({
   post,
   onLike,
@@ -65,19 +147,15 @@ export default function GalleryCard({
               <p className="mt-0.5 truncate text-[11px] text-white/85">
                 {post.location}
               </p>
-              <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-white/90">
-                <AuthorWithGrade
-                  author={post.author}
-                  authorGradeId={post.authorGradeId}
-                  gradesByNickname={gradesByNickname}
-                  looksByNickname={looksByNickname}
-                  nicknameClassName="text-white/90"
-                  className="inline-flex min-w-0 max-w-full flex-wrap items-center gap-1"
-                />
-                <span className="text-white/70">·</span>
-                <span>👁 {post.views}</span>
-                <span>💬 {post.comments.length}</span>
-              </div>
+              <GalleryStatsRow
+                post={post}
+                onLike={onLike}
+                liking={liking}
+                gradesByNickname={gradesByNickname}
+                looksByNickname={looksByNickname}
+                tone="overlay"
+                authorClassName="text-white/90"
+              />
             </div>
           </div>
         </div>
@@ -90,35 +168,14 @@ export default function GalleryCard({
           </p>
         </div>
         <p className="mt-0.5 truncate text-[11px] text-stone-500">{post.location}</p>
-        <div className="mt-1.5 flex w-full min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-stone-600 dark:text-stone-300">
-          <AuthorWithGrade
-            author={post.author}
-            authorGradeId={post.authorGradeId}
-            gradesByNickname={gradesByNickname}
-            looksByNickname={looksByNickname}
-            nicknameClassName="font-medium text-stone-700 dark:text-stone-200"
-            className="inline-flex min-w-0 max-w-full flex-wrap items-center gap-1"
-            badgeSize="sm"
-          />
-          <span className="text-stone-400">·</span>
-          <span>👁 {post.views}</span>
-          <span>💬 {post.comments.length}</span>
-        </div>
-      </div>
-
-      <div
-        className="absolute bottom-2 right-2 z-10 opacity-100 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100"
-        onClick={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-        }}
-      >
-        <EngagementLikeButton
-          likes={post.likes}
+        <GalleryStatsRow
+          post={post}
+          onLike={onLike}
           liking={liking}
-          onLike={() => onLike(post.id)}
-          label="❤️"
-          className="rounded-full bg-black/55 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur-sm transition hover:bg-black/70 disabled:opacity-60"
+          gradesByNickname={gradesByNickname}
+          looksByNickname={looksByNickname}
+          tone="meta"
+          authorClassName="font-medium text-stone-700 dark:text-stone-200"
         />
       </div>
     </article>
