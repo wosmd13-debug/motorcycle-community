@@ -5,6 +5,11 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DEPLOY_DATA_BACKUP=""
 
+gallery_is_seed_file() {
+  local file="$1"
+  [[ -f "$file" ]] && grep -q 'seed-1' "$file" 2>/dev/null
+}
+
 persist_deploy_data_backup() {
   DEPLOY_DATA_BACKUP="$(mktemp -d)"
   mkdir -p "$DEPLOY_DATA_BACKUP/data" "$DEPLOY_DATA_BACKUP/uploads"
@@ -28,8 +33,18 @@ persist_deploy_data_restore() {
   mkdir -p "$ROOT_DIR/data" "$ROOT_DIR/public/uploads"
 
   if [[ -d "$DEPLOY_DATA_BACKUP/data" ]]; then
-    cp -a "$DEPLOY_DATA_BACKUP/data/." "$ROOT_DIR/data/"
+    if gallery_is_seed_file "$DEPLOY_DATA_BACKUP/data/gallery.json"; then
+      echo "    gallery 백업이 샘플 데이터 → gallery.json 복원 제외"
+      while IFS= read -r -d '' entry; do
+        base="$(basename "$entry")"
+        [[ "$base" == "gallery.json" ]] && continue
+        cp -a "$entry" "$ROOT_DIR/data/"
+      done < <(find "$DEPLOY_DATA_BACKUP/data" -mindepth 1 -maxdepth 1 -print0)
+    else
+      cp -a "$DEPLOY_DATA_BACKUP/data/." "$ROOT_DIR/data/"
+    fi
   fi
+
   if [[ -d "$DEPLOY_DATA_BACKUP/uploads" ]]; then
     cp -a "$DEPLOY_DATA_BACKUP/uploads/." "$ROOT_DIR/public/uploads/"
   fi
@@ -48,8 +63,9 @@ fix_gallery_seed_data() {
     return 0
   fi
 
-  if [[ ! -f "$target" ]] || grep -q '"id": "seed-1"' "$target" 2>/dev/null; then
-    cp "$snapshot" "$target"
+  if [[ ! -f "$target" ]] || gallery_is_seed_file "$target"; then
+    cp -f "$snapshot" "$target"
+    chmod 664 "$target" 2>/dev/null || true
     echo "    gallery.json 샘플 데이터 → 운영 스냅샷으로 복원"
   fi
 }

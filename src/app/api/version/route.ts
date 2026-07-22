@@ -10,7 +10,7 @@ async function readGalleryMeta() {
     const raw = await readFile(path.join(process.cwd(), "data", "gallery.json"), "utf8");
     const posts = JSON.parse(raw) as { id?: string }[];
     const count = Array.isArray(posts) ? posts.length : 0;
-    const isSeed = Array.isArray(posts) && posts.some((post) => post.id === "seed-1");
+    const isSeed = Array.isArray(posts) && posts.some((post) => String(post.id ?? "").startsWith("seed-"));
     return { count, isSeed };
   } catch {
     return { count: 0, isSeed: false };
