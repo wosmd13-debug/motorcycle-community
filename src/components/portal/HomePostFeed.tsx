@@ -1,48 +1,58 @@
 import Link from "next/link";
-import { filterBoardPosts, formatBoardDate, type BoardPost } from "@/lib/board";
+import { formatBoardDate } from "@/lib/board";
 import { readBoardPosts } from "@/lib/board-store";
+import { readGalleryPosts } from "@/lib/gallery-store";
+import { buildHomeFeedItems, type HomeFeedItem } from "@/lib/home-feed";
 
-function PostRow({ post }: { post: BoardPost }) {
-  const thumb = post.imageUrls[0];
+function FeedRow({ item }: { item: HomeFeedItem }) {
+  const thumb = item.thumb;
+  const fallbackIcon = item.source === "gallery" ? "📷" : "📝";
 
   return (
-    <Link href={`/board/${post.id}`} className="portal-post-row group">
+    <Link href={item.href} className="portal-post-row group">
       {thumb ? (
         <div className="relative h-11 w-11 shrink-0 overflow-hidden border border-signature/20 bg-signature-light ring-1 ring-signature/10">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={thumb} alt="" className="h-full w-full object-cover" />
         </div>
       ) : (
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center border border-signature/20 bg-signature-light text-lg leading-none text-signature-dark">
-            📝
-          </div>
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center border border-signature/20 bg-signature-light text-lg leading-none text-signature-dark">
+          {fallbackIcon}
+        </div>
       )}
 
       <div className="board-post-title-wrap min-w-0 flex-1">
         <p className="board-post-title board-post-title-clamp text-sm text-stone-800 group-hover:text-signature-dark">
-          {post.title}
+          {item.title}
         </p>
       </div>
 
-      {post.comments.length > 0 && (
-        <span className="portal-comment-count">[{post.comments.length}]</span>
+      {item.commentCount > 0 && (
+        <span className="portal-comment-count">[{item.commentCount}]</span>
       )}
 
       <span className="hidden w-14 shrink-0 truncate text-[11px] font-medium text-signature-dark/80 sm:inline">
-        {post.category}
+        {item.category}
       </span>
       <span className="portal-meta hidden w-16 text-right md:inline">
-        {formatBoardDate(post.createdAt)}
+        {formatBoardDate(item.createdAt)}
       </span>
     </Link>
   );
 }
 
 export default async function HomePostFeed() {
-  const posts = filterBoardPosts({
-    posts: await readBoardPosts(),
+  const [boardPosts, galleryPosts] = await Promise.all([
+    readBoardPosts(),
+    readGalleryPosts(),
+  ]);
+
+  const posts = buildHomeFeedItems({
+    boardPosts,
+    galleryPosts,
     sort: "latest",
-  }).slice(0, 20);
+    limit: 20,
+  });
 
   return (
     <section className="portal-panel overflow-hidden">
@@ -60,7 +70,7 @@ export default async function HomePostFeed() {
       ) : (
         <div>
           {posts.map((post) => (
-            <PostRow key={post.id} post={post} />
+            <FeedRow key={post.key} item={post} />
           ))}
         </div>
       )}
