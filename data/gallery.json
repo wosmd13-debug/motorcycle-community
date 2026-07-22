@@ -1,0 +1,116 @@
+[
+  {
+    "id": "b0ee5781-54d9-484b-9bc6-60e2f44e5d34",
+    "title": "카페하라 예산점. 사장님이 직접 찍어주십니다 ㅎㅎ",
+    "author": "운영자",
+    "authorId": "b8eaa383-c378-495c-bc2c-2b70d32c283e",
+    "authorGradeId": "operator",
+    "location": "[예산] 카페하라",
+    "category": "라이딩",
+    "imageUrl": "/uploads/gallery/1783705879498-f288fd52-fcfc-44df-ba20-a0052744005a.jpg",
+    "caption": "예산시장 갔다가 카페하라 유명하다 해서 잠시 쉴 겸 들렸습니다 ㅎㅎ",
+    "likes": 2,
+    "views": 2,
+    "comments": [],
+    "createdAt": "2026-07-10T17:51:21.862Z"
+  },
+  {
+    "id": "f66d001e-c370-4b5b-8fa2-82deefe849e9",
+    "title": "96바이커즈(공주 바이콩즈)",
+    "author": "청주_s1000r_31",
+    "authorId": "9315ca39-7107-43a5-8b37-1737e185ea81",
+    "location": "공주 바이콩즈",
+    "category": "크루",
+    "imageUrl": "/uploads/gallery/1783661443838-f3aac0fa-737f-436b-a055-fedd59994306.jpg",
+    "caption": "제가 만든 96바이커즈 맴버들끼리 공주에 있는 바이콩즈 갔다왔습니다~",
+    "likes": 2,
+    "views": 3,
+    "comments": [
+      {
+        "id": "43c7623d-1151-4f5e-8d2b-bae31917af80",
+        "author": "서울_팻보이_34",
+        "authorId": "e39fd865-692d-47bf-970c-73632080a2f0",
+        "authorGradeId": "beginner",
+        "content": "나중에 공주도 함 가봐야겠네요",
+        "upvotes": 2,
+        "downvotes": 0,
+        "createdAt": "2026-07-11T03:44:30.139Z",
+        "votesBy": {
+          "b8eaa383-c378-495c-bc2c-2b70d32c283e": "up"
+        }
+      },
+      {
+        "id": "20b156a8-8fef-422c-9d7c-d26b2432bc08",
+        "author": "운영자",
+        "content": "와우..! 정말 멋지네요! 저도 저기 카페 한 번 방문해야겠어요!",
+        "upvotes": 2,
+        "downvotes": 0,
+        "createdAt": "2026-07-10T05:32:01.594Z",
+        "votesBy": {
+          "b8eaa383-c378-495c-bc2c-2b70d32c283e": "up"
+        }
+      }
+    ],
+    "createdAt": "2026-07-10T05:30:44.241Z"
+  },
+  {
+    "id": "ac6d7426-a381-4328-ad07-659279925948",
+    "title": "카페 바이콩즈",
+    "author": "주말 라이더",
+    "location": "충남 공주 바이콩즈 카페",
+    "category": "크루",
+    "imageUrl": "/uploads/gallery/1783256441889-9d834a71-172f-4712-ab01-b7f007b6c1ff.jpg",
+    "caption": "주말 충남 공주에 있는 바이콩즈라는 카페 찍고 왔슴돠~",
+    "likes": 24,
+    "createdAt": "2026-07-05T13:00:41.933Z",
+    "views": 8,
+    "comments": [
+      {
+        "id": "662f90da-9d9c-4b87-98a1-12e5ea58fe00",
+        "author": "청주_s1000r_31",
+        "content": "믓집니다!!!",
+        "upvotes": 3,
+        "downvotes": 0,
+        "createdAt": "2026-07-09T07:01:15.678Z"
+      },
+      {
+        "id": "9ca242b2-896b-45ba-918a-7ea1ec9806c2",
+        "author": "울산 발바리",
+        "content": "오..! 사진 멋지게 찍어주셨네요 ㅎㅎ",
+        "createdAt": "2026-07-05T13:06:32.520Z",
+        "upvotes": 7,
+        "downvotes": 0
+      }
+    ]
+  },
+  {
+    "id": "638844e5-d057-4e3a-a3ae-8e8af1bbaca7",
+    "title": "슈퍼메테오650 입문",
+    "author": "슈메",
+    "location": "천안",
+    "category": "바이크",
+    "imageUrl": "/uploads/gallery/1783256053709-46150a7d-8fba-4b75-a433-415d149d8b58.jpg",
+    "caption": "슈퍼메테오650 입문!",
+    "likes": 6,
+    "createdAt": "2026-07-05T12:54:13.776Z",
+    "views": 8,
+    "comments": [
+      {
+        "id": "9bb03fe2-94b0-422a-850d-40c9555e2b72",
+        "author": "청주_s1000r_31",
+        "content": "멋지네요 슈퍼메테오! 안라무복하세요 :)",
+        "upvotes": 3,
+        "downvotes": 0,
+        "createdAt": "2026-07-09T03:15:29.379Z"
+      },
+      {
+        "id": "f175fd08-6590-4823-b68e-8fa8aab90066",
+        "author": "육교로 달린다",
+        "content": "슈퍼메테오650 괜찮나요?? 지금 인터셉터랑 고민중인데...",
+        "upvotes": 7,
+        "downvotes": 0,
+        "createdAt": "2026-07-05T13:07:45.161Z"
+      }
+    ]
+  }
+]

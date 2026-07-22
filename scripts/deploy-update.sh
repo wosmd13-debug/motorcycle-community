@@ -27,13 +27,8 @@ mkdir -p data public/uploads
 
 if command -v git >/dev/null 2>&1 && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   echo "==> git remote update && git reset --hard origin/main"
-  # shellcheck disable=SC1091
-  source scripts/persist-deploy-data.sh
-  persist_deploy_data_backup
   git remote update
   git reset --hard origin/main
-  persist_deploy_data_restore
-  persist_deploy_data_merge_gallery
 fi
 
 echo "==> docker compose build & restart"
