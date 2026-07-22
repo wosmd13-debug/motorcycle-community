@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import MemberRouteLinkActions from "@/components/member-routes/MemberRouteLinkActions";
+import MemberRouteMapPrompt from "@/components/member-routes/MemberRouteMapPrompt";
 import WaypointRouteMap from "@/components/member-routes/WaypointRouteMap";
 import AuthorWithGrade from "@/components/ranking/AuthorWithGrade";
 import RouteDifficultyPanel from "@/components/routes/RouteDifficultyPanel";
@@ -20,11 +21,13 @@ import { buildMemberMapHref, buildMemberRouteEditHref } from "@/lib/route-links"
 
 type MemberRouteDetailProps = {
   route: MemberRoute;
+  showMap?: boolean;
   onDeleted?: (routeId: string) => void;
 };
 
 export default function MemberRouteDetail({
   route,
+  showMap = false,
   onDeleted,
 }: MemberRouteDetailProps) {
   const { user } = useAuth();
@@ -80,7 +83,11 @@ export default function MemberRouteDetail({
         <div className="flex flex-wrap gap-2">
           <Link
             href={buildMemberMapHref(route.id)}
-            className="rounded-full border border-signature/30 bg-signature-light px-4 py-2 text-xs font-semibold text-signature-dark hover:bg-signature-muted"
+            className={
+              showMap
+                ? "rounded-full border border-signature/30 bg-signature-light px-4 py-2 text-xs font-semibold text-signature-dark hover:bg-signature-muted"
+                : "portal-btn px-5 py-2.5 text-xs font-bold shadow-sm"
+            }
           >
             지도에서 보기
           </Link>
@@ -167,7 +174,27 @@ export default function MemberRouteDetail({
         </div>
       </dl>
 
-      <WaypointRouteMap waypoints={route.waypoints} mapKey={route.id} />
+      {showMap ? (
+        <div className="space-y-3">
+          <div className="rounded-2xl border border-signature/25 bg-signature-light/50 px-4 py-3 text-sm text-stone-600">
+            <strong className="text-signature-dark">지도에서 보기</strong>로
+            연 경로 화면입니다. 아래 지도에서{" "}
+            <strong className="text-stone-800">{route.name}</strong> 동선을
+            확인할 수 있습니다.
+          </div>
+          <WaypointRouteMap
+            key={route.id}
+            waypoints={route.waypoints}
+            mapKey={route.id}
+          />
+        </div>
+      ) : (
+        <MemberRouteMapPrompt
+          routeId={route.id}
+          routeName={route.name}
+          waypointCount={route.waypoints.length}
+        />
+      )}
 
       {route.waypoints.length >= 2 && (
         <MemberRouteLinkActions

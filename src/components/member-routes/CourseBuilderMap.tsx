@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { useCallback, useState } from "react";
 import MapErrorBoundary from "@/components/map/MapErrorBoundary";
 import NaverMapSetupGuide from "@/components/map/NaverMapSetupGuide";
-import { USE_NAVER_MAP } from "@/lib/map-config";
+import { useNaverMapsReady } from "@/components/map/NaverMapsProvider";
 import type { RouteWaypoint } from "@/lib/routes-data";
 
 const NaverCourseBuilder = dynamic(
@@ -38,12 +38,15 @@ type CourseBuilderMapProps = {
 
 export default function CourseBuilderMap(props: CourseBuilderMapProps) {
   const [authFailed, setAuthFailed] = useState(false);
+  const { ready, loading, error, configured, reload } = useNaverMapsReady();
+  const useNaver = configured && (ready || loading) && !error && !authFailed;
 
   const handleAuthFailure = useCallback(() => {
     setAuthFailed(true);
-  }, []);
+    reload();
+  }, [reload]);
 
-  if (USE_NAVER_MAP && !authFailed) {
+  if (useNaver) {
     return (
       <MapErrorBoundary resetKey="course-builder">
         <NaverCourseBuilder {...props} onAuthFailure={handleAuthFailure} />
@@ -53,7 +56,23 @@ export default function CourseBuilderMap(props: CourseBuilderMapProps) {
 
   return (
     <div className="space-y-3">
-      {USE_NAVER_MAP && authFailed && <NaverMapSetupGuide />}
+      {configured && (authFailed || (error && !loading)) && (
+        <>
+          {error && (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
+              <p>{error}</p>
+              <button
+                type="button"
+                onClick={reload}
+                className="mt-3 min-h-[44px] rounded-full border border-[#03c75a]/35 bg-[#03c75a] px-4 py-2 text-xs font-bold text-white hover:bg-[#02b350]"
+              >
+                자동 복구 시도
+              </button>
+            </div>
+          )}
+          <NaverMapSetupGuide />
+        </>
+      )}
       <LeafletCourseBuilder {...props} />
     </div>
   );

@@ -74,7 +74,11 @@ export default function MemberRouteMapPanel({ route }: MemberRouteMapPanelProps)
         </div>
       </dl>
 
-      <WaypointRouteMap waypoints={route.waypoints} mapKey={`map-${route.id}`} />
+      <WaypointRouteMap
+        key={route.id}
+        waypoints={route.waypoints}
+        mapKey={route.id}
+      />
 
       {route.waypoints.length >= 2 && (
         <MemberRouteLinkActions

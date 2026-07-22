@@ -43,6 +43,7 @@ export default function WaypointRouteMap({ waypoints, mapKey }: WaypointRouteMap
     return (
       <MapErrorBoundary resetKey={mapKey}>
         <NaverWaypointRouteMap
+          key={mapKey}
           waypoints={waypoints}
           mapKey={mapKey}
           onAuthFailure={reload}
@@ -68,7 +69,11 @@ export default function WaypointRouteMap({ waypoints, mapKey }: WaypointRouteMap
           <NaverMapSetupGuide />
         </>
       )}
-      <LeafletWaypointRouteMap waypoints={waypoints} mapKey={mapKey} />
+      <LeafletWaypointRouteMap
+        key={mapKey}
+        waypoints={waypoints}
+        mapKey={mapKey}
+      />
     </div>
   );
 }

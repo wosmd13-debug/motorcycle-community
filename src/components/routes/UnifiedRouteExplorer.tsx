@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import MemberRouteCard from "@/components/member-routes/MemberRouteCard";
 import MemberRouteDetail from "@/components/member-routes/MemberRouteDetail";
@@ -84,6 +85,8 @@ export default function UnifiedRouteExplorer({
   const [difficulty, setDifficulty] = useState<RouteDifficulty | "전체">("전체");
   const [type, setType] = useState<RouteType | "전체">("전체");
   const [query, setQuery] = useState(initialQuery);
+  const searchParams = useSearchParams();
+  const urlRouteId = searchParams.get("id") ?? "";
 
   const initialSelection = resolveInitialSelection(
     initialOpenId,
@@ -149,6 +152,11 @@ export default function UnifiedRouteExplorer({
 
   const selectedItem =
     unifiedRoutes.find((item) => item.key === selectedKey) ?? unifiedRoutes[0];
+
+  const showMemberRouteMap = useMemo(() => {
+    if (!urlRouteId || selectedItem?.kind !== "member") return false;
+    return selectedItem.route.id === urlRouteId;
+  }, [selectedItem, urlRouteId]);
 
   useEffect(() => {
     if (
@@ -318,7 +326,9 @@ export default function UnifiedRouteExplorer({
                 </>
               ) : (
                 <MemberRouteDetail
+                  key={selectedItem.key}
                   route={selectedItem.route}
+                  showMap={showMemberRouteMap}
                   onDeleted={(routeId) => {
                     setMemberRoutes((prev) =>
                       prev.filter((route) => route.id !== routeId)
