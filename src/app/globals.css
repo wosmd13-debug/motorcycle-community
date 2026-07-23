@@ -542,8 +542,26 @@ body {
 }
 
 .gallery-ig-mobile-meta {
-  display: none;
+  display: block;
   min-width: 0;
+}
+
+.gallery-ig-card .gallery-ig-like-btn {
+  min-height: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  filter: none !important;
+  transform: none !important;
+}
+
+.gallery-ig-card .gallery-ig-like-btn:hover,
+.gallery-ig-card .gallery-ig-like-btn:active {
+  background: transparent !important;
+  filter: none !important;
+  transform: none !important;
 }
 
 .gallery-ig-mobile-meta .board-post-title-wrap,
@@ -572,10 +590,6 @@ body {
   .gallery-ig-overlay {
     opacity: 0;
     pointer-events: none;
-  }
-
-  .gallery-ig-mobile-meta {
-    display: block;
   }
 
   /* 모바일·로그인(코스메틱) 후에도 제목 가로 유지 */
