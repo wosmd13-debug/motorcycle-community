@@ -10,6 +10,11 @@ gallery_is_seed_file() {
   [[ -f "$file" ]] && grep -q 'seed-1' "$file" 2>/dev/null
 }
 
+cafe_is_seed_file() {
+  local file="$1"
+  [[ -f "$file" ]] && grep -q 'seed-cafe-1' "$file" 2>/dev/null
+}
+
 persist_deploy_data_backup() {
   DEPLOY_DATA_BACKUP="$(mktemp -d)"
   mkdir -p "$DEPLOY_DATA_BACKUP/data" "$DEPLOY_DATA_BACKUP/uploads"
@@ -38,6 +43,10 @@ persist_deploy_data_restore() {
       while IFS= read -r -d '' entry; do
         base="$(basename "$entry")"
         [[ "$base" == "gallery.json" ]] && continue
+        if [[ "$base" == "rider-cafes.json" ]] && cafe_is_seed_file "$entry"; then
+          echo "    rider-cafes 백업이 샘플 데이터 → rider-cafes.json 복원 제외"
+          continue
+        fi
         cp -a "$entry" "$ROOT_DIR/data/"
       done < <(find "$DEPLOY_DATA_BACKUP/data" -mindepth 1 -maxdepth 1 -print0)
     else
@@ -67,5 +76,21 @@ fix_gallery_seed_data() {
     cp -f "$snapshot" "$target"
     chmod 664 "$target" 2>/dev/null || true
     echo "    gallery.json 샘플 데이터 → 운영 스냅샷으로 복원"
+  fi
+}
+
+fix_cafe_seed_data() {
+  local target="$ROOT_DIR/data/rider-cafes.json"
+  local snapshot="$ROOT_DIR/scripts/rider-cafes.snapshot.json"
+
+  if [[ ! -f "$snapshot" ]]; then
+    echo "    rider-cafes 스냅샷 없음 (건너뜀)"
+    return 0
+  fi
+
+  if [[ ! -f "$target" ]] || cafe_is_seed_file "$target"; then
+    cp -f "$snapshot" "$target"
+    chmod 664 "$target" 2>/dev/null || true
+    echo "    rider-cafes.json 샘플 데이터 → 운영 스냅샷으로 복원"
   fi
 }

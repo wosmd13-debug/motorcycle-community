@@ -57,6 +57,7 @@ git reset --hard origin/main
 
 persist_deploy_data_restore
 fix_gallery_seed_data
+fix_cafe_seed_data
 export APP_COMMIT="$(git rev-parse --short HEAD)"
 echo "    commit: $APP_COMMIT"
 
@@ -64,6 +65,7 @@ echo "==> 3/5 Docker 재빌드 (.env.production 값 반영)"
 docker compose up -d --build
 
 fix_gallery_seed_data
+fix_cafe_seed_data
 chown -R 1001:1001 data public/uploads
 chmod -R u+rwX,g+rwX data public/uploads
 find data -type f -exec chmod 664 {} \; 2>/dev/null || true
@@ -74,6 +76,13 @@ docker compose ps
 if gallery_is_seed_file "data/gallery.json" 2>/dev/null; then
   echo "    gallery.json 아직 샘플 데이터 → 컨테이너 재시작"
   fix_gallery_seed_data
+  chown -R 1001:1001 data public/uploads
+  docker compose up -d --force-recreate
+fi
+
+if cafe_is_seed_file "data/rider-cafes.json" 2>/dev/null; then
+  echo "    rider-cafes.json 아직 샘플 데이터 → 복원 후 컨테이너 재시작"
+  fix_cafe_seed_data
   chown -R 1001:1001 data public/uploads
   docker compose up -d --force-recreate
 fi
