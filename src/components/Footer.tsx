@@ -80,6 +80,14 @@ export default function Footer() {
 
           </Link>
 
+          <span className="text-[var(--text-faint)]">·</span>
+
+          <Link href="/feedback" className="hover:text-signature-dark hover:underline">
+
+            건의·문의
+
+          </Link>
+
         </nav>
 
 

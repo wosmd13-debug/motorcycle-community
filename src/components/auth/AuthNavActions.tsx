@@ -91,13 +91,22 @@ export default function AuthNavActions({
   return (
     <div className={containerClass}>
       {user.isAdmin && (
-        <Link
-          href="/admin/reports"
-          onClick={onNavigate}
-          className={`${buttonClass} border-red-200 bg-red-50 text-red-700 hover:bg-red-100 dark:border-red-900 dark:bg-red-950/50 dark:text-red-300 dark:hover:bg-red-950`}
-        >
-          {compact ? "신고" : "신고관리"}
-        </Link>
+        <>
+          <Link
+            href="/admin/reports"
+            onClick={onNavigate}
+            className={`${buttonClass} border-red-200 bg-red-50 text-red-700 hover:bg-red-100 dark:border-red-900 dark:bg-red-950/50 dark:text-red-300 dark:hover:bg-red-950`}
+          >
+            {compact ? "신고" : "신고관리"}
+          </Link>
+          <Link
+            href="/admin/feedback"
+            onClick={onNavigate}
+            className={`${buttonClass} border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100 dark:border-amber-900 dark:bg-amber-950/50 dark:text-amber-300 dark:hover:bg-amber-950`}
+          >
+            {compact ? "건의" : "건의·문의"}
+          </Link>
+        </>
       )}
       <Link
         href="/profile"

@@ -69,12 +69,20 @@ export default function SidebarAuth() {
             로그아웃
           </button>
           {user.isAdmin && (
-            <Link
-              href="/admin/reports"
-              className="block w-full border border-red-200 bg-red-50 py-2 text-center text-xs font-semibold text-red-700 hover:bg-red-100"
-            >
-              신고 관리
-            </Link>
+            <>
+              <Link
+                href="/admin/reports"
+                className="block w-full border border-red-200 bg-red-50 py-2 text-center text-xs font-semibold text-red-700 hover:bg-red-100"
+              >
+                신고 관리
+              </Link>
+              <Link
+                href="/admin/feedback"
+                className="block w-full border border-amber-200 bg-amber-50 py-2 text-center text-xs font-semibold text-amber-800 hover:bg-amber-100"
+              >
+                건의·문의 관리
+              </Link>
+            </>
           )}
         </div>
       </section>
