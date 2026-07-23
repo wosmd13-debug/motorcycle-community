@@ -212,7 +212,7 @@ function ProfileForm() {
             onChange={(event) => setNickname(event.target.value)}
             required
             autoComplete="nickname"
-            placeholder="2~12자, 게시글에 표시됩니다"
+            placeholder="지역_닉네임_기종"
             className="mt-2 w-full border border-signature/20 bg-signature-light/40 px-4 py-3 text-sm outline-none focus:border-signature"
           />
         </label>

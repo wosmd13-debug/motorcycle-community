@@ -51,8 +51,8 @@ export function validateLoginId(loginId: string): string | null {
 
 export function validateNickname(nickname: string): string | null {
   const value = nickname.trim();
-  if (value.length < 2 || value.length > 12) {
-    return "닉네임은 2~12자여야 합니다.";
+  if (value.length < 2 || value.length > 24) {
+    return "닉네임은 2~24자여야 합니다.";
   }
   if (!/^[a-zA-Z0-9가-힣_]+$/.test(value)) {
     return "닉네임은 한글, 영문, 숫자, 밑줄(_)만 사용할 수 있습니다.";
