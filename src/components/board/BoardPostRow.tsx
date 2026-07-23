@@ -77,7 +77,7 @@ export default function BoardPostRow({
           <span className="text-[var(--text-faint)]">·</span>
           <span>조회 {post.views.toLocaleString("ko-KR")}</span>
           <span className="text-[var(--text-faint)]">·</span>
-          <span>추천 {post.likes.toLocaleString("ko-KR")}</span>
+          <span>👍 {post.likes.toLocaleString("ko-KR")}</span>
           <span className="text-[var(--text-faint)] sm:hidden">·</span>
           <span className="sm:hidden">{formatBoardListTime(post.createdAt)}</span>
         </div>

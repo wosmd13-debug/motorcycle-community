@@ -170,12 +170,13 @@ export default function BoardDetailModal({
             {post.content}
           </p>
 
-          <div className="flex flex-wrap items-center gap-3 text-sm text-stone-500">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-stone-500">
             <EngagementLikeButton
               likes={post.likes}
               liking={liking}
               onLike={() => onLike(post.id)}
-              className="portal-btn px-4 py-2 text-sm disabled:opacity-60"
+              label="👍"
+              className="gallery-ig-like-btn inline-flex min-h-0 items-center border-0 bg-transparent p-0 text-sm font-medium text-stone-600 shadow-none transition hover:text-signature-dark disabled:opacity-60 touch-manipulation dark:text-stone-300"
             />
             <span>조회 {post.views}</span>
             <span>댓글 {post.comments.length}</span>
