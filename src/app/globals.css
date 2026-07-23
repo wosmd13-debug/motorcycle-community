@@ -564,6 +564,10 @@ body {
   transform: none !important;
 }
 
+.gallery-ig-stats-bar {
+  pointer-events: auto;
+}
+
 .gallery-ig-mobile-meta .board-post-title-wrap,
 .gallery-ig-mobile-meta .gallery-ig-title-wrap {
   display: block;
