@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { buildMemberMapHref } from "@/lib/route-links";
+import ViewOnMapButton from "@/components/routes/ViewOnMapButton";
 
 type MemberRouteMapPromptProps = {
   routeId: string;
@@ -39,12 +38,11 @@ export default function MemberRouteMapPrompt({
           {waypointCount}개 경유지 · 네이버 지도 경로 · 내비 연동
         </p>
       )}
-      <Link
-        href={buildMemberMapHref(routeId)}
+      <ViewOnMapButton
+        routeId={routeId}
+        memberRoute
         className="portal-btn mt-6 inline-flex min-h-[48px] items-center justify-center px-6 py-3 text-sm font-bold shadow-md"
-      >
-        지도에서 보기
-      </Link>
+      />
       <p className="mt-3 text-xs text-stone-400">
         전용 화면에서 경로가 지도에 표시됩니다
       </p>

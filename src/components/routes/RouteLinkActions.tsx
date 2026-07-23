@@ -1,8 +1,10 @@
-﻿import Link from "next/link";
+﻿"use client";
+
+import Link from "next/link";
 import { NaverNavActionGroup } from "@/components/routes/NaverNavButton";
+import ViewOnMapButton from "@/components/routes/ViewOnMapButton";
 import {
   buildCafeHref,
-  buildMapHref,
   buildRouteHref,
 } from "@/lib/route-links";
 import type { RouteWaypoint } from "@/lib/routes-data";
@@ -30,9 +32,7 @@ export default function RouteLinkActions({
     <div className="space-y-3">
       <div className="flex flex-wrap gap-2">
         {routeId != null && (
-          <Link href={buildMapHref({ routeId, placeId })} className={linkClass}>
-            지도에서 보기
-          </Link>
+          <ViewOnMapButton routeId={routeId} className={linkClass} />
         )}
         {routeId != null && (
           <Link href={buildRouteHref(routeId)} className={linkClass}>

@@ -3,11 +3,12 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import MemberRouteCard from "@/components/member-routes/MemberRouteCard";
 import MemberRouteDetail from "@/components/member-routes/MemberRouteDetail";
 import RouteCard from "@/components/routes/RouteCard";
 import RouteDetail from "@/components/routes/RouteDetail";
+import { RoutesExplorerProvider } from "@/components/routes/RoutesExplorerContext";
 import {
   filterMemberRoutes,
   type MemberRoute,
@@ -22,6 +23,10 @@ import {
   type RouteDifficulty,
   type RouteType,
 } from "@/lib/routes-data";
+import {
+  replaceRoutesOpenId,
+  runWithRoutesScrollPin,
+} from "@/lib/routes-page-scroll";
 
 const RouteMap = dynamic(() => import("@/components/routes/RouteMap"), {
   ssr: false,
@@ -31,6 +36,18 @@ const RouteMap = dynamic(() => import("@/components/routes/RouteMap"), {
     </div>
   ),
 });
+
+const WaypointRouteMap = dynamic(
+  () => import("@/components/member-routes/WaypointRouteMap"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex min-h-[320px] items-center justify-center rounded-3xl border border-signature/20 bg-signature-light text-sm text-slate-500 lg:min-h-[420px]">
+        지도 불러오는 중...
+      </div>
+    ),
+  }
+);
 
 type RouteSourceFilter = "전체" | "추천" | "회원등록";
 
@@ -153,10 +170,43 @@ export default function UnifiedRouteExplorer({
   const selectedItem =
     unifiedRoutes.find((item) => item.key === selectedKey) ?? unifiedRoutes[0];
 
-  const showMemberRouteMap = useMemo(() => {
-    if (!urlRouteId || selectedItem?.kind !== "member") return false;
-    return selectedItem.route.id === urlRouteId;
-  }, [selectedItem, urlRouteId]);
+  const handleSelect = useCallback((key: string) => {
+    runWithRoutesScrollPin(() => {
+      setSelectedKey(key);
+    }, 1200);
+  }, []);
+
+  const viewOnMap = useCallback(
+    (routeId: string) => {
+      runWithRoutesScrollPin(() => {
+        const selection = resolveInitialSelection(
+          routeId,
+          bariRoutes,
+          memberRoutes
+        );
+        if (selection) {
+          setSelectedKey(selection.key);
+        }
+        replaceRoutesOpenId(routeId);
+      }, 1200);
+    },
+    [bariRoutes, memberRoutes]
+  );
+
+  useEffect(() => {
+    if (!urlRouteId) return;
+
+    const selection = resolveInitialSelection(
+      urlRouteId,
+      bariRoutes,
+      memberRoutes
+    );
+    if (!selection || selection.key === selectedKey) return;
+
+    runWithRoutesScrollPin(() => {
+      setSelectedKey(selection.key);
+    }, 1200);
+  }, [urlRouteId, bariRoutes, memberRoutes, selectedKey]);
 
   useEffect(() => {
     if (
@@ -168,7 +218,8 @@ export default function UnifiedRouteExplorer({
   }, [unifiedRoutes, selectedKey]);
 
   return (
-    <div className="mt-8 space-y-6">
+    <RoutesExplorerProvider viewOnMap={viewOnMap}>
+      <div className="mt-8 space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-slate-500">
           추천 바리코스와 회원이 등록한 동선을 함께 둘러보고, 직접 코스를
@@ -279,14 +330,59 @@ export default function UnifiedRouteExplorer({
         </div>
       ) : (
         <div className="grid gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
-          <div className="min-w-0 space-y-4">
-            {unifiedRoutes.map((item) =>
-              item.kind === "official" ? (
-                <RouteCard
-                  key={item.key}
-                  route={item.route}
-                  isSelected={selectedItem?.key === item.key}
-                  onSelect={() => setSelectedKey(item.key)}
+          <div className="min-w-0 space-y-4 [overflow-anchor:none]">
+            {unifiedRoutes.map((item) => {
+              const isSelected = selectedItem?.key === item.key;
+
+              return (
+                <Fragment key={item.key}>
+                  {item.kind === "official" ? (
+                    <RouteCard
+                      route={item.route}
+                      isSelected={isSelected}
+                      onSelect={() => handleSelect(item.key)}
+                      onDeleted={(routeId) => {
+                        setBariRoutes((prev) =>
+                          prev.filter((route) => route.id !== routeId)
+                        );
+                      }}
+                    />
+                  ) : (
+                    <MemberRouteCard
+                      route={item.route}
+                      isSelected={isSelected}
+                      onSelect={() => handleSelect(item.key)}
+                      onDeleted={(routeId) => {
+                        setMemberRoutes((prev) =>
+                          prev.filter((route) => route.id !== routeId)
+                        );
+                      }}
+                    />
+                  )}
+                  {isSelected && (
+                    <div className="min-h-[320px] pt-1 lg:min-h-[420px]">
+                      {item.kind === "official" ? (
+                        <RouteMap route={item.route} />
+                      ) : (
+                        <WaypointRouteMap
+                          key={item.route.id}
+                          waypoints={item.route.waypoints}
+                          mapKey={item.route.id}
+                        />
+                      )}
+                    </div>
+                  )}
+                </Fragment>
+              );
+            })}
+          </div>
+
+          {selectedItem && (
+            <div className="min-w-0 space-y-6">
+              {selectedItem.kind === "official" ? (
+                <RouteDetail
+                  route={selectedItem.route}
+                  communityCafes={initialCommunityCafes}
                   onDeleted={(routeId) => {
                     setBariRoutes((prev) =>
                       prev.filter((route) => route.id !== routeId)
@@ -294,41 +390,10 @@ export default function UnifiedRouteExplorer({
                   }}
                 />
               ) : (
-                <MemberRouteCard
-                  key={item.key}
-                  route={item.route}
-                  isSelected={selectedItem?.key === item.key}
-                  onSelect={() => setSelectedKey(item.key)}
-                  onDeleted={(routeId) => {
-                    setMemberRoutes((prev) =>
-                      prev.filter((route) => route.id !== routeId)
-                    );
-                  }}
-                />
-              )
-            )}
-          </div>
-
-          {selectedItem && (
-            <div className="min-w-0 space-y-6">
-              {selectedItem.kind === "official" ? (
-                <>
-                  <RouteMap route={selectedItem.route} />
-                  <RouteDetail
-                    route={selectedItem.route}
-                    communityCafes={initialCommunityCafes}
-                    onDeleted={(routeId) => {
-                      setBariRoutes((prev) =>
-                        prev.filter((route) => route.id !== routeId)
-                      );
-                    }}
-                  />
-                </>
-              ) : (
                 <MemberRouteDetail
                   key={selectedItem.key}
                   route={selectedItem.route}
-                  showMap={showMemberRouteMap}
+                  showMapSection={false}
                   onDeleted={(routeId) => {
                     setMemberRoutes((prev) =>
                       prev.filter((route) => route.id !== routeId)
@@ -340,7 +405,8 @@ export default function UnifiedRouteExplorer({
           )}
         </div>
       )}
-    </div>
+      </div>
+    </RoutesExplorerProvider>
   );
 }
 

@@ -17,17 +17,20 @@ import {
   type MemberRoute,
 } from "@/lib/member-route";
 import { estimateRestBreakCount } from "@/lib/route-detail";
-import { buildMemberMapHref, buildMemberRouteEditHref } from "@/lib/route-links";
+import { buildMemberRouteEditHref } from "@/lib/route-links";
+import ViewOnMapButton from "@/components/routes/ViewOnMapButton";
 
 type MemberRouteDetailProps = {
   route: MemberRoute;
   showMap?: boolean;
+  showMapSection?: boolean;
   onDeleted?: (routeId: string) => void;
 };
 
 export default function MemberRouteDetail({
   route,
   showMap = false,
+  showMapSection = true,
   onDeleted,
 }: MemberRouteDetailProps) {
   const { user } = useAuth();
@@ -81,16 +84,15 @@ export default function MemberRouteDetail({
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Link
-            href={buildMemberMapHref(route.id)}
+          <ViewOnMapButton
+            routeId={route.id}
+            memberRoute
             className={
               showMap
                 ? "rounded-full border border-signature/30 bg-signature-light px-4 py-2 text-xs font-semibold text-signature-dark hover:bg-signature-muted"
                 : "portal-btn px-5 py-2.5 text-xs font-bold shadow-sm"
             }
-          >
-            지도에서 보기
-          </Link>
+          />
           <Link
             href={`/routes?id=${encodeURIComponent(route.id)}`}
             className="rounded-full border border-signature/30 bg-white px-4 py-2 text-xs font-semibold text-signature-dark hover:bg-signature-light"
@@ -174,27 +176,28 @@ export default function MemberRouteDetail({
         </div>
       </dl>
 
-      {showMap ? (
-        <div className="space-y-3">
-          <div className="rounded-2xl border border-signature/25 bg-signature-light/50 px-4 py-3 text-sm text-stone-600">
-            <strong className="text-signature-dark">지도에서 보기</strong>로
-            연 경로 화면입니다. 아래 지도에서{" "}
-            <strong className="text-stone-800">{route.name}</strong> 동선을
-            확인할 수 있습니다.
+      {showMapSection &&
+        (showMap ? (
+          <div className="space-y-3">
+            <div className="rounded-2xl border border-signature/25 bg-signature-light/50 px-4 py-3 text-sm text-stone-600">
+              <strong className="text-signature-dark">지도에서 보기</strong>로
+              연 경로 화면입니다. 아래 지도에서{" "}
+              <strong className="text-stone-800">{route.name}</strong> 동선을
+              확인할 수 있습니다.
+            </div>
+            <WaypointRouteMap
+              key={route.id}
+              waypoints={route.waypoints}
+              mapKey={route.id}
+            />
           </div>
-          <WaypointRouteMap
-            key={route.id}
-            waypoints={route.waypoints}
-            mapKey={route.id}
+        ) : (
+          <MemberRouteMapPrompt
+            routeId={route.id}
+            routeName={route.name}
+            waypointCount={route.waypoints.length}
           />
-        </div>
-      ) : (
-        <MemberRouteMapPrompt
-          routeId={route.id}
-          routeName={route.name}
-          waypointCount={route.waypoints.length}
-        />
-      )}
+        ))}
 
       {route.waypoints.length >= 2 && (
         <MemberRouteLinkActions
