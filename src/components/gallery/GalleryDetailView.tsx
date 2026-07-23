@@ -245,13 +245,6 @@ export default function GalleryDetailView({ initialPost }: GalleryDetailViewProp
                     </button>
                   </div>
                 )}
-                <EngagementLikeButton
-                  likes={post.likes}
-                  liking={liking}
-                  onLike={() => void handleLike()}
-                  label="❤️"
-                  className="portal-btn px-4 py-2 text-sm disabled:opacity-60"
-                />
               </div>
             </div>
             <div className="min-w-0 w-full">
@@ -277,7 +270,14 @@ export default function GalleryDetailView({ initialPost }: GalleryDetailViewProp
         </div>
 
         <div className="p-5 sm:p-8">
-          <div className="flex gap-4 text-sm text-stone-500">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-stone-500">
+            <EngagementLikeButton
+              likes={post.likes}
+              liking={liking}
+              onLike={() => void handleLike()}
+              label="❤️"
+              className="gallery-ig-like-btn inline-flex min-h-0 items-center border-0 bg-transparent p-0 text-sm font-medium text-stone-600 shadow-none transition hover:text-signature-dark disabled:opacity-60 touch-manipulation dark:text-stone-300"
+            />
             <span>👁 조회 {post.views}</span>
             <span>💬 댓글 {post.comments.length}</span>
           </div>

@@ -546,7 +546,7 @@ body {
   min-width: 0;
 }
 
-.gallery-ig-card .gallery-ig-like-btn {
+.gallery-ig-like-btn {
   min-height: 0 !important;
   background: transparent !important;
   background-image: none !important;
@@ -557,8 +557,8 @@ body {
   transform: none !important;
 }
 
-.gallery-ig-card .gallery-ig-like-btn:hover,
-.gallery-ig-card .gallery-ig-like-btn:active {
+.gallery-ig-like-btn:hover,
+.gallery-ig-like-btn:active {
   background: transparent !important;
   filter: none !important;
   transform: none !important;
