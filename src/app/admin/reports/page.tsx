@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import AdminReportsExplorer from "@/components/admin/AdminReportsExplorer";
-import { isAdminUser } from "@/lib/admin";
+import { isOperatorUser } from "@/lib/admin";
 import { getCurrentUser } from "@/lib/auth-server";
 import { readReports } from "@/lib/report-store";
 
@@ -11,7 +11,7 @@ export default async function AdminReportsPage() {
     redirect("/login?next=/admin/reports");
   }
 
-  if (!isAdminUser(user)) {
+  if (!isOperatorUser(user)) {
     redirect("/");
   }
 
@@ -24,7 +24,7 @@ export default async function AdminReportsPage() {
     <main className="mx-auto max-w-4xl px-4 py-10">
       <div className="mb-8">
         <p className="text-xs font-semibold uppercase tracking-wide text-signature-dark">
-          Admin
+          운영자
         </p>
         <h1 className="mt-2 text-3xl font-bold text-stone-800">신고 관리</h1>
         <p className="mt-2 text-sm text-stone-500">

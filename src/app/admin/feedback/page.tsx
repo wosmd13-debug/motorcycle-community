@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import AdminFeedbackExplorer from "@/components/admin/AdminFeedbackExplorer";
-import { isAdminUser } from "@/lib/admin";
+import { isOperatorUser } from "@/lib/admin";
 import { getCurrentUser } from "@/lib/auth-server";
 import { readFeedback } from "@/lib/feedback-store";
 
@@ -11,7 +11,7 @@ export default async function AdminFeedbackPage() {
     redirect("/login?next=/admin/feedback");
   }
 
-  if (!isAdminUser(user)) {
+  if (!isOperatorUser(user)) {
     redirect("/");
   }
 

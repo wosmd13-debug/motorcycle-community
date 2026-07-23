@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   getCurrentUserFromRequest,
-  requireAdminFromRequest,
+  requireOperatorFromRequest,
 } from "@/lib/auth-server";
 import {
   createFeedback,
@@ -12,6 +12,7 @@ import {
   feedbackCategories,
   type FeedbackCategory,
 } from "@/lib/feedback";
+import { isOperatorUser } from "@/lib/admin";
 import {
   checkRateLimit,
   clientKeyFromRequest,
@@ -52,8 +53,8 @@ function isValidEmail(value: string): boolean {
 }
 
 export async function GET(request: NextRequest) {
-  const admin = await requireAdminFromRequest(request);
-  if (admin instanceof NextResponse) return admin;
+  const operator = await requireOperatorFromRequest(request);
+  if (operator instanceof NextResponse) return operator;
 
   const status = request.nextUrl.searchParams.get("status");
   const entries = await readFeedback();
@@ -68,6 +69,13 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const user = await getCurrentUserFromRequest(request);
+  if (user && isOperatorUser(user)) {
+    return NextResponse.json(
+      { error: "운영자 계정은 건의·문의 관리 페이지를 이용해 주세요." },
+      { status: 403 }
+    );
+  }
+
   const limited = rateLimitFeedback(request, user?.id);
   if (limited) return limited;
 
@@ -139,8 +147,8 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  const admin = await requireAdminFromRequest(request);
-  if (admin instanceof NextResponse) return admin;
+  const operator = await requireOperatorFromRequest(request);
+  if (operator instanceof NextResponse) return operator;
 
   try {
     const body = await request.json();

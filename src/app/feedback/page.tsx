@@ -1,7 +1,15 @@
+import { redirect } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
 import FeedbackForm from "@/components/feedback/FeedbackForm";
+import { isOperatorUser } from "@/lib/admin";
+import { getCurrentUser } from "@/lib/auth-server";
 
-export default function FeedbackPage() {
+export default async function FeedbackPage() {
+  const user = await getCurrentUser();
+  if (user && isOperatorUser(user)) {
+    redirect("/admin/feedback");
+  }
+
   return (
     <div className="portal-page py-4">
       <div className="portal-container mx-auto max-w-2xl space-y-6">

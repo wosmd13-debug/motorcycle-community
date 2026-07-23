@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdminFromRequest } from "@/lib/auth-server";
+import { requireOperatorFromRequest } from "@/lib/auth-server";
+import { isOperatorUser } from "@/lib/admin";
 import { getContentTitle } from "@/lib/content-delete";
 import {
   createReport,
@@ -16,8 +17,8 @@ import {
 import { requireUserWithRateLimit } from "@/lib/request-guards";
 
 export async function GET(request: NextRequest) {
-  const admin = await requireAdminFromRequest(request);
-  if (admin instanceof NextResponse) return admin;
+  const operator = await requireOperatorFromRequest(request);
+  if (operator instanceof NextResponse) return operator;
 
   const status = request.nextUrl.searchParams.get("status");
   const reports = await readReports();
@@ -33,6 +34,13 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const user = await requireUserWithRateLimit(request, "report");
   if (user instanceof NextResponse) return user;
+
+  if (isOperatorUser(user)) {
+    return NextResponse.json(
+      { error: "운영자 계정은 신고 관리 페이지에서 처리해 주세요." },
+      { status: 403 }
+    );
+  }
 
   try {
     const body = await request.json();
@@ -92,8 +100,8 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  const admin = await requireAdminFromRequest(request);
-  if (admin instanceof NextResponse) return admin;
+  const operator = await requireOperatorFromRequest(request);
+  if (operator instanceof NextResponse) return operator;
 
   try {
     const body = await request.json();

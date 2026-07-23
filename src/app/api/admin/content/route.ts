@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdminFromRequest } from "@/lib/auth-server";
+import { requireOperatorFromRequest } from "@/lib/auth-server";
 import { deleteContentByTarget } from "@/lib/content-delete";
 import { resolveReportsForTarget } from "@/lib/report-store";
 import { reportTargetTypes, type ReportTargetType } from "@/lib/reports";
 
 export async function POST(request: NextRequest) {
-  const admin = await requireAdminFromRequest(request);
-  if (admin instanceof NextResponse) return admin;
+  const operator = await requireOperatorFromRequest(request);
+  if (operator instanceof NextResponse) return operator;
 
   try {
     const body = await request.json();

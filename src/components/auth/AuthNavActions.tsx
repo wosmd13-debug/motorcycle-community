@@ -90,7 +90,7 @@ export default function AuthNavActions({
 
   return (
     <div className={containerClass}>
-      {user.isAdmin && (
+      {user.isOperator && (
         <>
           <Link
             href="/admin/reports"

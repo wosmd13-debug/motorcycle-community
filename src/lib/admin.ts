@@ -50,3 +50,9 @@ export function withAdminFlag<T extends PublicUser>(
 export function shouldAssignOperatorRole(loginId: string): boolean {
   return getAdminLoginIds().includes(loginId.trim());
 }
+
+export function canModerateCommunity(
+  user: PublicUser | User | null | undefined
+): boolean {
+  return isOperatorUser(user);
+}

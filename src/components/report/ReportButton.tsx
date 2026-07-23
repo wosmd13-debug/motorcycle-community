@@ -82,6 +82,10 @@ export default function ReportButton({
     );
   }
 
+  if (user.isOperator) {
+    return null;
+  }
+
   return (
     <>
       <button

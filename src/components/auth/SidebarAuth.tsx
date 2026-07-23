@@ -68,7 +68,7 @@ export default function SidebarAuth() {
           >
             로그아웃
           </button>
-          {user.isAdmin && (
+          {user.isOperator && (
             <>
               <Link
                 href="/admin/reports"
