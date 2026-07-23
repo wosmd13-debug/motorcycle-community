@@ -112,7 +112,7 @@ export default function MarketplaceEditForm({
       onUpdated(data.item as MarketplaceItem);
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "������ �����߽��ϴ�.");
+      setError(err instanceof Error ? err.message : "수정에 실패했습니다.");
     } finally {
       setSubmitting(false);
     }
@@ -127,23 +127,26 @@ export default function MarketplaceEditForm({
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs font-bold text-signature-dark">
-              {isOwner ? "�� �Ź� ����" : "��� ����"}
+              {isOwner ? "내 매물 수정" : "운영자 수정"}
             </p>
-            <h2 className="mt-1 text-xl font-bold text-stone-800">�Ź� ����</h2>
+            <h2 className="mt-1 text-xl font-bold text-stone-800">매물 수정</h2>
           </div>
           <button
             type="button"
+            onClick={onClose}
             className="rounded-full px-3 py-1 text-sm text-stone-500 hover:bg-stone-100"
           >
-            �ݱ�
+            닫기
           </button>
         </div>
 
         <div className="mt-6 space-y-4">
-          <Field label="ī�װ���">
+          <Field label="카테고리">
             <select
               value={category}
-              onChange={(event) => setCategory(event.target.value as MarketplaceCategory)}
+              onChange={(event) =>
+                setCategory(event.target.value as MarketplaceCategory)
+              }
               className={inputClass}
             >
               {marketplaceCategories
@@ -156,10 +159,12 @@ export default function MarketplaceEditForm({
             </select>
           </Field>
 
-          <Field label="�Ǹ� ����">
+          <Field label="판매 상태">
             <select
               value={status}
-              onChange={(event) => setStatus(event.target.value as MarketplaceStatus)}
+              onChange={(event) =>
+                setStatus(event.target.value as MarketplaceStatus)
+              }
               className={inputClass}
             >
               {marketplaceStatuses.map((value) => (
@@ -170,7 +175,7 @@ export default function MarketplaceEditForm({
             </select>
           </Field>
 
-          <Field label="����">
+          <Field label="제목">
             <input
               value={title}
               onChange={(event) => setTitle(event.target.value)}
@@ -179,7 +184,7 @@ export default function MarketplaceEditForm({
             />
           </Field>
 
-          <Field label="���� (��)">
+          <Field label="가격 (원)">
             <input
               type="number"
               min={0}
@@ -190,7 +195,7 @@ export default function MarketplaceEditForm({
           </Field>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="��ǰ ����">
+            <Field label="제품 상태">
               <select
                 value={condition}
                 onChange={(event) =>
@@ -206,7 +211,7 @@ export default function MarketplaceEditForm({
               </select>
             </Field>
 
-            <Field label="�ŷ� ���">
+            <Field label="거래 방식">
               <select
                 value={delivery}
                 onChange={(event) =>
@@ -224,10 +229,12 @@ export default function MarketplaceEditForm({
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="�ǿ�">
+            <Field label="지역">
               <select
                 value={region}
-                onChange={(event) => setRegion(event.target.value as DetailRegion)}
+                onChange={(event) =>
+                  setRegion(event.target.value as DetailRegion)
+                }
                 className={inputClass}
               >
                 {marketplaceRegions
@@ -240,7 +247,7 @@ export default function MarketplaceEditForm({
               </select>
             </Field>
 
-            <Field label="�ŷ� ����">
+            <Field label="거래 장소">
               <input
                 value={location}
                 onChange={(event) => setLocation(event.target.value)}
@@ -250,7 +257,7 @@ export default function MarketplaceEditForm({
             </Field>
           </div>
 
-          <Field label="���� ���">
+          <Field label="연락 방법">
             <input
               value={contactMethod}
               onChange={(event) => setContactMethod(event.target.value)}
@@ -258,7 +265,7 @@ export default function MarketplaceEditForm({
             />
           </Field>
 
-          <Field label="��ǰ ����">
+          <Field label="제품 설명">
             <textarea
               value={description}
               onChange={(event) => setDescription(event.target.value)}
@@ -272,22 +279,25 @@ export default function MarketplaceEditForm({
             <div className="grid gap-2 sm:grid-cols-2">
               {imageUrls.map((url) => (
                 <div key={url} className="relative overflow-hidden rounded-2xl">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={url} alt="" className="h-32 w-full object-cover" />
                   <button
                     type="button"
                     onClick={() =>
-                      setImageUrls((current) => current.filter((item) => item !== url))
+                      setImageUrls((current) =>
+                        current.filter((item) => item !== url)
+                      )
                     }
                     className="absolute right-2 top-2 rounded-full bg-red-600 px-2 py-1 text-[10px] font-bold text-white"
                   >
-                    ����
+                    삭제
                   </button>
                 </div>
               ))}
             </div>
           )}
 
-          <Field label="���� �߰�">
+          <Field label="사진 추가">
             <input
               type="file"
               accept="image/jpeg,image/png,image/webp"
@@ -300,6 +310,7 @@ export default function MarketplaceEditForm({
           {previews.length > 0 && (
             <div className="grid gap-2 sm:grid-cols-2">
               {previews.map((url) => (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img
                   key={url}
                   src={url}
@@ -322,7 +333,7 @@ export default function MarketplaceEditForm({
           disabled={submitting}
           className="portal-btn mt-6 w-full py-3 text-sm disabled:opacity-60"
         >
-          {submitting ? "���� ��..." : "���� ����"}
+          {submitting ? "저장 중..." : "수정 저장"}
         </button>
       </form>
     </PortalModal>

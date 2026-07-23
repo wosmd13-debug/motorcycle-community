@@ -27,12 +27,18 @@ export default function MarketplaceWriteForm({
   onCreated,
 }: MarketplaceWriteFormProps) {
   const { user } = useAuth();
-  const [category, setCategory] = useState<MarketplaceCategory>(marketplaceCategories[1]);
+  const [category, setCategory] = useState<MarketplaceCategory>(
+    marketplaceCategories[1]
+  );
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
-  const [condition, setCondition] = useState<MarketplaceCondition>(marketplaceConditions[0]);
-  const [delivery, setDelivery] = useState<MarketplaceDelivery>(marketplaceDeliveries[0]);
+  const [condition, setCondition] = useState<MarketplaceCondition>(
+    marketplaceConditions[0]
+  );
+  const [delivery, setDelivery] = useState<MarketplaceDelivery>(
+    marketplaceDeliveries[0]
+  );
   const [region, setRegion] = useState<DetailRegion>(
     marketplaceRegions[1] as DetailRegion
   );
@@ -100,7 +106,7 @@ export default function MarketplaceWriteForm({
       onCreated(data.item as MarketplaceItem);
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "��Ͽ� �����߽��ϴ�.");
+      setError(err instanceof Error ? err.message : "등록에 실패했습니다.");
     } finally {
       setSubmitting(false);
     }
@@ -114,16 +120,17 @@ export default function MarketplaceWriteForm({
       >
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold text-stone-800">�߰��ŷ� ���</h2>
+            <h2 className="text-xl font-bold text-stone-800">중고거래 등록</h2>
             <p className="mt-1 text-xs text-stone-500">
-              �Ǹ���: <strong>{user?.nickname}</strong>
+              작성자: <strong>{user?.nickname}</strong>
             </p>
           </div>
           <button
             type="button"
+            onClick={onClose}
             className="rounded-full px-3 py-1 text-sm text-stone-500 hover:bg-stone-100"
           >
-            �ݱ�
+            닫기
           </button>
         </div>
 
@@ -132,10 +139,12 @@ export default function MarketplaceWriteForm({
         </div>
 
         <div className="mt-6 space-y-4">
-          <Field label="ī�װ���">
+          <Field label="카테고리">
             <select
               value={category}
-              onChange={(event) => setCategory(event.target.value as MarketplaceCategory)}
+              onChange={(event) =>
+                setCategory(event.target.value as MarketplaceCategory)
+              }
               className={inputClass}
             >
               {marketplaceCategories
@@ -148,17 +157,17 @@ export default function MarketplaceWriteForm({
             </select>
           </Field>
 
-          <Field label="����">
+          <Field label="제목">
             <input
               value={title}
               onChange={(event) => setTitle(event.target.value)}
               required
-              placeholder="��: SHOEI ��� M������ �Ǹ��մϴ�"
+              placeholder="예: SHOEI 헬멧 M사이즈 판매합니다"
               className={inputClass}
             />
           </Field>
 
-          <Field label="���� (��, 0�̸� ���� ����)">
+          <Field label="가격 (원, 0이면 가격 문의)">
             <input
               type="number"
               min={0}
@@ -170,7 +179,7 @@ export default function MarketplaceWriteForm({
           </Field>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="��ǰ ����">
+            <Field label="제품 상태">
               <select
                 value={condition}
                 onChange={(event) =>
@@ -186,7 +195,7 @@ export default function MarketplaceWriteForm({
               </select>
             </Field>
 
-            <Field label="�ŷ� ���">
+            <Field label="거래 방식">
               <select
                 value={delivery}
                 onChange={(event) =>
@@ -204,10 +213,12 @@ export default function MarketplaceWriteForm({
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="�ǿ�">
+            <Field label="지역">
               <select
                 value={region}
-                onChange={(event) => setRegion(event.target.value as DetailRegion)}
+                onChange={(event) =>
+                  setRegion(event.target.value as DetailRegion)
+                }
                 className={inputClass}
               >
                 {marketplaceRegions
@@ -220,38 +231,38 @@ export default function MarketplaceWriteForm({
               </select>
             </Field>
 
-            <Field label="�ŷ� ���� (��)">
+            <Field label="거래 장소 (예)">
               <input
                 value={location}
                 onChange={(event) => setLocation(event.target.value)}
                 required
-                placeholder="��: ���� ������"
+                placeholder="예: 서울 강남구"
                 className={inputClass}
               />
             </Field>
           </div>
 
-          <Field label="���� ���">
+          <Field label="연락 방법">
             <input
               value={contactMethod}
               onChange={(event) => setContactMethod(event.target.value)}
-              placeholder="��۷� ���� �ּ���"
+              placeholder="댓글로 문의 주세요"
               className={inputClass}
             />
           </Field>
 
-          <Field label="��ǰ ����">
+          <Field label="제품 설명">
             <textarea
               value={description}
               onChange={(event) => setDescription(event.target.value)}
               required
               rows={5}
-              placeholder="��� �Ⱓ, ����, ���� ����ǰ, �ŷ� ������ �����ּ���."
+              placeholder="사용 기간, 상태, 포함 구성품, 거래 조건을 적어주세요."
               className={inputClass}
             />
           </Field>
 
-          <Field label="���� (�ִ� 5��)">
+          <Field label="사진 (최대 5장)">
             <input
               type="file"
               accept="image/jpeg,image/png,image/webp"
@@ -264,6 +275,7 @@ export default function MarketplaceWriteForm({
           {previews.length > 0 && (
             <div className="grid gap-2 sm:grid-cols-2">
               {previews.map((url) => (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img
                   key={url}
                   src={url}
@@ -286,7 +298,7 @@ export default function MarketplaceWriteForm({
           disabled={submitting}
           className="portal-btn mt-6 w-full py-3 text-sm disabled:opacity-60"
         >
-          {submitting ? "��� ��..." : "�Ź� ���"}
+          {submitting ? "등록 중..." : "매물 등록"}
         </button>
       </form>
     </PortalModal>
