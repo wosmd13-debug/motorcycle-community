@@ -76,7 +76,7 @@ function RegisterForm() {
           onChange={(event) => setNickname(event.target.value)}
           required
           autoComplete="nickname"
-          placeholder="2~12자, 게시글에 표시됩니다"
+          placeholder="지역_기종_나이"
           className="mt-2 w-full border border-signature/20 bg-signature-light/40 px-4 py-3 text-base outline-none focus:border-signature sm:text-sm"
         />
       </label>
