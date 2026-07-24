@@ -40,26 +40,26 @@ export default function SiteHeader() {
           <HeaderSearch />
         </div>
 
-        <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
+        <div className="ml-auto flex min-w-0 flex-1 items-center justify-end gap-1 sm:gap-2">
           <button
             type="button"
             aria-expanded={menuOpen}
             aria-controls="site-all-menus"
             onClick={() => setMenuOpen((open) => !open)}
-            className="inline-flex items-center gap-1 rounded-full border border-signature/30 bg-signature-light px-2.5 py-1.5 text-[11px] font-bold text-signature-darker lg:hidden"
+            className="inline-flex shrink-0 items-center gap-1 rounded-full border border-signature/30 bg-signature-light px-2.5 py-1.5 text-[11px] font-bold text-signature-darker lg:hidden"
           >
             {menuOpen ? "닫기" : "전체 메뉴"}
           </button>
 
-          <div className="site-header-touch-only lg:hidden">
+          <div className="site-header-touch-only shrink-0 lg:hidden">
             <ThemeToggle />
           </div>
 
-          <div className="site-header-touch-only max-w-[min(100%,14rem)] min-w-0 shrink lg:hidden">
+          <div className="site-header-touch-only min-w-0 flex-1 basis-0 lg:hidden">
             <AuthNavActions compact />
           </div>
 
-          <div className="site-header-desktop-only hidden lg:block">
+          <div className="site-header-desktop-only hidden shrink-0 lg:block">
             <AuthNavActions />
           </div>
         </div>

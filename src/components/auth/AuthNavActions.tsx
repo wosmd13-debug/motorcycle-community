@@ -28,12 +28,12 @@ export default function AuthNavActions({
   const containerClass = isStacked
     ? "flex flex-col gap-2"
     : compact
-      ? "flex max-w-full min-w-0 flex-wrap items-center justify-end gap-1"
+      ? "flex w-full min-w-0 flex-wrap items-center justify-end gap-1"
       : "flex shrink-0 items-center gap-2";
   const buttonClass = isStacked
     ? "w-full border border-signature/30 bg-[var(--surface)] px-3 py-2.5 text-sm font-semibold text-center"
     : compact
-      ? "border border-signature/30 bg-[var(--surface)] px-2 py-1 text-[10px] font-semibold whitespace-nowrap"
+      ? "shrink-0 border border-signature/30 bg-[var(--surface)] px-2 py-1 text-[10px] font-semibold whitespace-nowrap"
       : "border border-signature/30 bg-[var(--surface)] px-3 py-1.5 text-xs font-semibold";
 
   useEffect(() => {
@@ -113,27 +113,27 @@ export default function AuthNavActions({
         onClick={onNavigate}
         className={
           compact
-            ? "max-w-[5.5rem] truncate px-1 py-1 text-[10px] font-semibold text-signature-dark hover:underline"
+            ? "min-w-0 max-w-full px-0.5 py-1 text-[10px] font-semibold text-signature-dark hover:underline"
             : isStacked
               ? "w-full max-w-full px-1 py-1 text-sm font-semibold text-signature-dark"
               : "max-w-full text-xs font-semibold text-signature-dark hover:underline"
         }
       >
-        {compact ? (
-          user.nickname
-        ) : (
-          <AuthorWithGrade
-            author={user.nickname}
-            authorGradeId={user.isOperator ? "operator" : ranking?.grade?.id}
-            nicknameClassName={
-              isStacked
+        <AuthorWithGrade
+          author={user.nickname}
+          authorGradeId={
+            user.isOperator ? "operator" : ranking?.grade?.id ?? "beginner"
+          }
+          nicknameClassName={
+            compact
+              ? "text-[10px] font-semibold text-signature-dark"
+              : isStacked
                 ? "text-sm font-semibold text-signature-dark"
                 : "text-xs font-semibold text-signature-dark"
-            }
-            className="inline-flex max-w-full flex-wrap items-center gap-1"
-            hideGrade={compact}
-          />
-        )}
+          }
+          className="inline-flex max-w-full flex-wrap items-center justify-end gap-1"
+          badgeSize="sm"
+        />
       </Link>
       {!compact && (
         <Link

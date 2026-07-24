@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import AuthorWithGrade from "@/components/ranking/AuthorWithGrade";
 import MyRankSummary from "@/components/ranking/MyRankSummary";
+import type { MemberRankEntry } from "@/lib/ranking";
 
 export default function SidebarAuth() {
   const { user, loading, login, logout } = useAuth();
@@ -12,6 +13,30 @@ export default function SidebarAuth() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [ranking, setRanking] = useState<MemberRankEntry | null>(null);
+
+  useEffect(() => {
+    if (!user) {
+      setRanking(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    void fetch("/api/ranking/me")
+      .then(async (response) => {
+        if (!response.ok) return null;
+        const data = await response.json();
+        return data.ranking as MemberRankEntry;
+      })
+      .then((data) => {
+        if (!cancelled) setRanking(data);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -45,9 +70,11 @@ export default function SidebarAuth() {
             <p className="text-xs text-stone-500">닉네임</p>
             <AuthorWithGrade
               author={user.nickname}
-              authorGradeId={user.isOperator ? "operator" : undefined}
+              authorGradeId={
+                user.isOperator ? "operator" : ranking?.grade?.id ?? "beginner"
+              }
               nicknameClassName="text-sm font-bold text-signature-dark"
-              className="inline-flex max-w-full flex-wrap items-center gap-1"
+              className="inline-flex max-w-full flex-wrap items-center gap-1.5"
             />
           </div>
           <div>

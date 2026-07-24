@@ -48,7 +48,7 @@ export default async function MemberRankSidebar() {
               <AuthorWithGrade
                 author={entry.nickname}
                 authorGradeId={entry.grade.id}
-                nicknameClassName="truncate text-stone-700"
+                nicknameClassName="text-stone-700"
                 className="inline-flex min-w-0 flex-1 flex-wrap items-center gap-1"
               />
               <span className="shrink-0 text-xs font-semibold text-signature-dark">
