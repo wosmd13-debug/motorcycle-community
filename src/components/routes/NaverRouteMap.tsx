@@ -28,6 +28,7 @@ import {
 import { useNaverMapClientId, useNaverMapsReady } from "@/components/map/NaverMapsProvider";
 import NaverMapSetupGuide from "@/components/map/NaverMapSetupGuide";
 import { buildPlaceMapPopupHtml } from "@/lib/naver-booking";
+import { escapeHtml } from "@/lib/html-escape";
 import { getPlacesForRoute, placeCategoryLabels, placeCategoryMarker } from "@/lib/places-data";
 import { useLatest } from "@/lib/use-latest";
 
@@ -41,8 +42,8 @@ const ROUTE_COLOR = "#22c55e";
 function buildPopup(name: string, note?: string) {
   return `
     <div style="padding:10px 12px;font-family:sans-serif;min-width:140px;">
-      <strong style="font-size:13px;color:#1e293b;">${name}</strong>
-      ${note ? `<p style="margin:4px 0 0;font-size:12px;color:#64748b;">${note}</p>` : ""}
+      <strong style="font-size:13px;color:#1e293b;">${escapeHtml(name)}</strong>
+      ${note ? `<p style="margin:4px 0 0;font-size:12px;color:#64748b;">${escapeHtml(note)}</p>` : ""}
     </div>
   `;
 }

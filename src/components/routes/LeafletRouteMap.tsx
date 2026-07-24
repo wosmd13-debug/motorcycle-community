@@ -13,6 +13,7 @@ import {
 import { buildPlaceMapPopupHtml } from "@/lib/naver-booking";
 import { getPlacesForRoute, placeCategoryLabels, placeCategoryMarker } from "@/lib/places-data";
 import { bootstrapLeafletMap } from "@/lib/leaflet-map";
+import { escapeHtml } from "@/lib/html-escape";
 
 type LeafletRouteMapProps = {
   route: BariRoute;
@@ -120,7 +121,11 @@ export default function LeafletRouteMap({ route }: LeafletRouteMapProps) {
           fillOpacity: 1,
         })
           .bindPopup(
-            `<strong>${wp.name}</strong>${wp.note ? `<br/><span style="color:#64748b;font-size:12px">${wp.note}</span>` : ""}`
+            `<strong>${escapeHtml(wp.name)}</strong>${
+              wp.note
+                ? `<br/><span style="color:#64748b;font-size:12px">${escapeHtml(wp.note)}</span>`
+                : ""
+            }`
           )
           .addTo(layersRef.current!);
       });

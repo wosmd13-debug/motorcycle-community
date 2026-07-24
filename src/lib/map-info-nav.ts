@@ -85,16 +85,27 @@ export function buildServiceInfoElement(place: RiderPlace): HTMLElement {
   wrapper.style.cssText =
     "padding:12px 14px;min-width:200px;max-width:260px;border-radius:12px;background:#fff;box-shadow:0 4px 12px rgba(0,0,0,.12);font-family:sans-serif;touch-action:manipulation;";
 
-  wrapper.innerHTML = `
-    <strong style="font-size:14px;color:#1e293b;">${place.name}</strong>
-    <p style="margin:6px 0 0;font-size:11px;color:#64748b;">${placeCategoryLabels[place.category]} · ${place.region}</p>
-    <p style="margin:4px 0 0;font-size:11px;color:#94a3b8;">${place.address}</p>
-    ${
-      place.openHours
-        ? `<p style="margin:6px 0 0;font-size:11px;font-weight:600;color:#16a34a;">${place.openHours}</p>`
-        : ""
-    }
-  `;
+  const title = document.createElement("strong");
+  title.style.cssText = "font-size:14px;color:#1e293b;";
+  title.textContent = place.name;
+
+  const meta = document.createElement("p");
+  meta.style.cssText = "margin:6px 0 0;font-size:11px;color:#64748b;";
+  meta.textContent = `${placeCategoryLabels[place.category]} · ${place.region}`;
+
+  const address = document.createElement("p");
+  address.style.cssText = "margin:4px 0 0;font-size:11px;color:#94a3b8;";
+  address.textContent = place.address;
+
+  wrapper.append(title, meta, address);
+
+  if (place.openHours) {
+    const hours = document.createElement("p");
+    hours.style.cssText =
+      "margin:6px 0 0;font-size:11px;font-weight:600;color:#16a34a;";
+    hours.textContent = place.openHours;
+    wrapper.appendChild(hours);
+  }
 
   attachNavButtons(wrapper, {
     lat: place.lat,

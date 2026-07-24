@@ -1,4 +1,5 @@
 import type { RiderPlace } from "@/lib/places-data";
+import { escapeHtml } from "@/lib/html-escape";
 
 const NAVER_BOOKING_HOSTS = [
   "hotels.naver.com",
@@ -64,12 +65,4 @@ export function buildPlaceMapPopupHtml(
       ${bookingButton}
     </div>
   `;
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
 }

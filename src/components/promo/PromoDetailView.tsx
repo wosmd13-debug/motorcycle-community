@@ -13,6 +13,7 @@ import PromoMedia from "@/components/promo/PromoMedia";
 import AuthorWithGrade from "@/components/ranking/AuthorWithGrade";
 import ReportButton from "@/components/report/ReportButton";
 import { fetchEngagementAction } from "@/lib/engagement-client";
+import { getSafeHttpUrl } from "@/lib/html-escape";
 import {
   canManagePromoPost,
   formatCommentDate,
@@ -213,6 +214,8 @@ export default function PromoDetailView({ initialPost }: PromoDetailViewProps) {
     }
   };
 
+  const safeLinkUrl = getSafeHttpUrl(post.linkUrl);
+
   return (
     <>
       <article className="portal-panel overflow-hidden">
@@ -332,9 +335,9 @@ export default function PromoDetailView({ initialPost }: PromoDetailViewProps) {
           </p>
 
           <div className="flex flex-wrap items-center gap-3 text-sm">
-            {post.linkUrl && (
+            {safeLinkUrl && (
               <a
-                href={post.linkUrl}
+                href={safeLinkUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-medium text-signature-dark hover:underline"

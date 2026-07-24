@@ -15,6 +15,7 @@ import { buildMemberMapHref } from "@/lib/route-links";
 import RoutePlacesPanel from "@/components/map/RoutePlacesPanel";
 import AuthorWithGrade from "@/components/ranking/AuthorWithGrade";
 import { buildPlaceMapPopupHtml } from "@/lib/naver-booking";
+import { escapeHtml } from "@/lib/html-escape";
 import {
   getPlacesForRoute,
   placeCategoryLabels,
@@ -114,7 +115,7 @@ export default function NationalBariMapSection({
           map
         );
         marker.bindPopup(
-          `<strong>${route.name}</strong><br/>${route.region} · ${route.distance}`
+          `<strong>${escapeHtml(route.name)}</strong><br/>${escapeHtml(route.region)} · ${escapeHtml(route.distance)}`
         );
         marker.on("click", () => setSelectedId(route.id));
       });

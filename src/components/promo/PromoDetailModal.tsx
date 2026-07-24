@@ -13,6 +13,7 @@ import PromoCategoryBadge from "@/components/promo/PromoCategoryBadge";
 import PromoMedia from "@/components/promo/PromoMedia";
 import AuthorWithGrade from "@/components/ranking/AuthorWithGrade";
 import ReportButton from "@/components/report/ReportButton";
+import { getSafeHttpUrl } from "@/lib/html-escape";
 import {
   formatCommentDate,
   formatPromoDate,
@@ -62,6 +63,7 @@ export default function PromoDetailModal({
   const [commentError, setCommentError] = useState<string | null>(null);
 
   const meta = promoCategoryMeta[post.category];
+  const safeLinkUrl = getSafeHttpUrl(post.linkUrl);
 
   const handleCommentSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -197,9 +199,9 @@ export default function PromoDetailModal({
           </p>
 
           <div className="flex flex-wrap items-center gap-3 text-sm">
-            {post.linkUrl && (
+            {safeLinkUrl && (
               <a
-                href={post.linkUrl}
+                href={safeLinkUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-medium text-signature-dark hover:underline"
