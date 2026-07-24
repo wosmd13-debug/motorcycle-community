@@ -13,31 +13,40 @@ export type HomeHotCard = {
   createdAt: string;
 };
 
-function localDateKey(date: Date): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
+/** Content Spec: (likes×3) + (comments×4) + (views×0.2) */
+export function getHotEngagementScore(post: BoardPost): number {
+  return (post.likes ?? 0) * 3 + post.comments.length * 4 + (post.views ?? 0) * 0.2;
 }
 
-function toDateKey(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "";
-  return localDateKey(d);
+function hoursAgoMs(hours: number): number {
+  return Date.now() - hours * 60 * 60 * 1000;
 }
 
-function todayKey(): string {
-  return localDateKey(new Date());
+function postsSince(posts: BoardPost[], sinceMs: number): BoardPost[] {
+  return posts.filter((p) => {
+    const t = new Date(p.createdAt).getTime();
+    return !Number.isNaN(t) && t >= sinceMs;
+  });
 }
 
-function daysAgoKey(days: number): Date {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  d.setDate(d.getDate() - days);
-  return d;
+/**
+ * Content Spec window: prefer last 24h; if fewer than 3 posts, expand to 48h.
+ * Sparse fallback: 7 days, then all posts (so empty communities still surface content).
+ */
+export function pickHotCandidatePosts(posts: BoardPost[]): BoardPost[] {
+  const h24 = postsSince(posts, hoursAgoMs(24));
+  if (h24.length >= 3) return h24;
+
+  const h48 = postsSince(posts, hoursAgoMs(48));
+  if (h48.length >= 3) return h48;
+  if (h48.length > 0) return h48;
+
+  const week = postsSince(posts, hoursAgoMs(24 * 7));
+  if (week.length > 0) return week;
+  return posts;
 }
 
-function toHotCard(post: BoardPost): HomeHotCard {
+export function toHotCard(post: BoardPost): HomeHotCard {
   return {
     id: post.id,
     title: post.title,
@@ -59,22 +68,23 @@ function sortByKey(posts: BoardPost[], key: HotSortKey): BoardPost[] {
   });
 }
 
-/** Prefer today's posts; fall back to last 7 days when sparse. */
-export function pickHotCandidatePosts(posts: BoardPost[]): BoardPost[] {
-  const today = todayKey();
-  const todays = posts.filter((p) => toDateKey(p.createdAt) === today);
-  if (todays.length >= 3) return todays;
-
-  const since = daysAgoKey(7).getTime();
-  const week = posts.filter((p) => {
-    const t = new Date(p.createdAt).getTime();
-    return !Number.isNaN(t) && t >= since;
-  });
-
-  if (week.length > 0) return week;
-  return posts;
+/** Primary home Hot list (Content Spec / Sprint 1). */
+export function buildTodayHotCards(
+  posts: BoardPost[],
+  limit = 6
+): HomeHotCard[] {
+  const pool = pickHotCandidatePosts(posts);
+  return [...pool]
+    .sort((a, b) => {
+      const scoreDiff = getHotEngagementScore(b) - getHotEngagementScore(a);
+      if (scoreDiff !== 0) return scoreDiff;
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    })
+    .slice(0, limit)
+    .map(toHotCard);
 }
 
+/** @deprecated Tabs removed from home UI; kept for compatibility. */
 export function buildHotLists(
   posts: BoardPost[],
   limit = 8

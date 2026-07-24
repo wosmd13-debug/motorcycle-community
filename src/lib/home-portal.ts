@@ -3,6 +3,8 @@
  * Swap href / comingSoon when news or brand pages ship — no DB changes needed.
  */
 
+import { SITE_NAME } from "@/lib/seo";
+
 export type BikeBrandLink = {
   id: string;
   label: string;
@@ -22,10 +24,10 @@ export type DiscoverMenuItem = {
 };
 
 export const HOME_HERO = {
-  brand: "Byanra",
+  brand: SITE_NAME,
   tagline: "라이더가 모이는 바이크 커뮤니티",
   subcopy:
-    "코스·정비·장비부터 라이딩 모집까지. 오늘도 함께 달릴 이야기를 나눠보세요.",
+    "오늘 뜨는 이야기부터 라이딩 모집까지. 바이크를 좋아하는 사람들이 모이는 곳입니다.",
 } as const;
 
 export const BIKE_BRANDS: BikeBrandLink[] = [

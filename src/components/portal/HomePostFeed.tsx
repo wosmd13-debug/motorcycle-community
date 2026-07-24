@@ -1,58 +1,44 @@
 import Link from "next/link";
-import { formatBoardDate } from "@/lib/board";
-import { readBoardPosts } from "@/lib/board-store";
-import { readGalleryPosts } from "@/lib/gallery-store";
-import { buildHomeFeedItems, type HomeFeedItem } from "@/lib/home-feed";
+import {
+  formatHomeRelativeTime,
+  isHomeFeedItemNew,
+  type HomeFeedItem,
+} from "@/lib/home-feed";
 
-function FeedCard({ item }: { item: HomeFeedItem }) {
-  const fallbackIcon = item.source === "gallery" ? "📷" : "📝";
+type HomePostFeedProps = {
+  posts: HomeFeedItem[];
+};
+
+function LatestRow({ item }: { item: HomeFeedItem }) {
+  const isNew = isHomeFeedItemNew(item.createdAt);
 
   return (
-    <Link href={item.href} className="home-post-card group">
-      <div className="home-post-card-thumb">
-        {item.thumb ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={item.thumb}
-            alt={`${item.title} 썸네일`}
-            loading="lazy"
-            decoding="async"
-          />
-        ) : (
-          <div className="home-post-card-fallback" aria-hidden>
-            {fallbackIcon}
-          </div>
-        )}
-      </div>
-      <div className="min-w-0">
-        <p className="board-post-title board-post-title-clamp text-sm font-semibold text-stone-800 group-hover:text-signature-dark">
+    <Link href={item.href} className="home-latest-row home-latest-item group">
+      <div className="home-latest-main min-w-0">
+        <span className="home-post-card-cat shrink-0">{item.category}</span>
+        {isNew && <span className="home-latest-new">NEW</span>}
+        <span className="board-post-title board-post-title-clamp home-latest-title group-hover:text-signature-dark">
           {item.title}
-        </p>
-        <div className="home-post-card-meta mt-1.5">
-          <span className="home-post-card-cat">{item.category}</span>
-          {item.commentCount > 0 && <span>댓글 {item.commentCount}</span>}
-          <span className="ml-auto">{formatBoardDate(item.createdAt)}</span>
-        </div>
+        </span>
+      </div>
+      <div className="home-latest-meta shrink-0">
+        {item.commentCount > 0 && (
+          <span className="home-hot-comments">[{item.commentCount}]</span>
+        )}
+        <time dateTime={item.createdAt}>
+          {formatHomeRelativeTime(item.createdAt)}
+        </time>
       </div>
     </Link>
   );
 }
 
-export default async function HomePostFeed() {
-  const [boardPosts, galleryPosts] = await Promise.all([
-    readBoardPosts(),
-    readGalleryPosts(),
-  ]);
-
-  const posts = buildHomeFeedItems({
-    boardPosts,
-    galleryPosts,
-    sort: "latest",
-    limit: 12,
-  });
-
+export default function HomePostFeed({ posts }: HomePostFeedProps) {
   return (
-    <section className="portal-panel home-reveal overflow-hidden">
+    <section
+      id="latest-posts"
+      className="portal-panel home-reveal overflow-hidden"
+    >
       <div className="portal-panel-head">
         <h2 className="portal-panel-title">최신 게시글</h2>
         <Link href="/board" className="portal-panel-more">
@@ -61,13 +47,17 @@ export default async function HomePostFeed() {
       </div>
 
       {posts.length === 0 ? (
-        <p className="px-3 py-8 text-center text-sm text-slate-500">
-          아직 게시글이 없습니다.
-        </p>
+        <div className="home-empty-state">
+          <p className="home-empty-state-title">아직 게시글이 없습니다</p>
+          <p className="home-empty-state-copy">첫 글을 남겨 주세요.</p>
+          <Link href="/board" className="home-hero-cta home-hero-cta-primary">
+            자유게시판 가기
+          </Link>
+        </div>
       ) : (
-        <div className="home-card-grid">
+        <div className="home-latest-list">
           {posts.map((post) => (
-            <FeedCard key={post.key} item={post} />
+            <LatestRow key={post.key} item={post} />
           ))}
         </div>
       )}

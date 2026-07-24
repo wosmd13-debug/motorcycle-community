@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
 import { siteLegalInfo } from "@/lib/site-legal";
 
-/** 공개 브랜드명 (검색·OG). UI 헤더의 anra와 병행. */
+/**
+ * 브랜드 표기 규칙
+ * - UI·메타 1차 표기: SITE_NAME (Byanra)
+ * - 부제: SITE_TAGLINE
+ * - 짧은 표기(SITE_NAME_SHORT)도 Byanra로 통일
+ */
 export const SITE_NAME = "Byanra";
-export const SITE_NAME_SHORT = "anra";
+export const SITE_NAME_SHORT = "Byanra";
 export const SITE_TAGLINE = "바이크 커뮤니티";
 
 export const DEFAULT_DESCRIPTION =
@@ -21,7 +26,6 @@ export const DEFAULT_KEYWORDS = [
   "오토바이 중고거래",
   "주유소 지도",
   "Byanra",
-  "anra",
 ] as const;
 
 export function getSiteUrl(): string {
@@ -137,7 +141,7 @@ export function organizationJsonLd() {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: SITE_NAME,
-    alternateName: [SITE_NAME_SHORT, "바이크커뮤니티"],
+    alternateName: [SITE_NAME_SHORT, SITE_TAGLINE, "바이크커뮤니티"],
     url,
     logo: absoluteUrl("/opengraph-image"),
     email: siteLegalInfo.contactEmail,

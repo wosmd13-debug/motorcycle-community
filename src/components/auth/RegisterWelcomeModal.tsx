@@ -1,10 +1,10 @@
 "use client";
 
-import PortalModal from "@/components/portal/PortalModal";
-
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import PortalModal from "@/components/portal/PortalModal";
+import { SITE_NAME } from "@/lib/seo";
 import {
   clearRegisterWelcome,
   peekRegisterWelcome,
@@ -43,7 +43,7 @@ export default function RegisterWelcomeModal() {
           </h2>
           <p className="mt-2 text-sm leading-6 text-stone-600">
             <span className="font-semibold text-signature-darker">{nickname}</span>
-            님, 바이크커뮤니티에 오신 것을 환영합니다.
+            님, {SITE_NAME}에 오신 것을 환영합니다.
           </p>
         </div>
 

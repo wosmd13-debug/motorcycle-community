@@ -1,19 +1,31 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 import { formatBoardDate } from "@/lib/board";
 import type { HomeHotCard } from "@/lib/home-hot";
-import { HOT_SORT_TABS, type HotSortKey } from "@/lib/home-portal";
 
 type HomeTodayHotClientProps = {
-  lists: Record<HotSortKey, HomeHotCard[]>;
+  posts: HomeHotCard[];
 };
 
-function HotCard({ post }: { post: HomeHotCard }) {
+function CategoryFallback({ category }: { category: string }) {
+  const initial = category.trim().slice(0, 1) || "글";
   return (
-    <Link href={post.href} className="home-post-card group">
+    <div className="home-post-card-fallback home-post-card-fallback-cat" aria-hidden>
+      <span>{initial}</span>
+    </div>
+  );
+}
+
+function HotCard({ post, rank }: { post: HomeHotCard; rank: number }) {
+  return (
+    <Link href={post.href} className="home-post-card home-hot-item group">
       <div className="home-post-card-thumb">
+        {rank <= 3 && (
+          <span className="home-hot-rank" data-rank={rank}>
+            {rank}
+          </span>
+        )}
         {post.thumb ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -23,9 +35,7 @@ function HotCard({ post }: { post: HomeHotCard }) {
             decoding="async"
           />
         ) : (
-          <div className="home-post-card-fallback" aria-hidden>
-            📝
-          </div>
+          <CategoryFallback category={post.category} />
         )}
       </div>
       <div className="min-w-0">
@@ -36,7 +46,11 @@ function HotCard({ post }: { post: HomeHotCard }) {
           <span className="home-post-card-cat">{post.category}</span>
           <span>조회 {post.views}</span>
           <span>좋아요 {post.likes}</span>
-          <span>댓글 {post.commentCount}</span>
+          {post.commentCount > 0 ? (
+            <span className="home-hot-comments">댓글 {post.commentCount}</span>
+          ) : (
+            <span>댓글 0</span>
+          )}
           <span className="ml-auto hidden sm:inline">
             {formatBoardDate(post.createdAt)}
           </span>
@@ -46,12 +60,12 @@ function HotCard({ post }: { post: HomeHotCard }) {
   );
 }
 
-export default function HomeTodayHotClient({ lists }: HomeTodayHotClientProps) {
-  const [tab, setTab] = useState<HotSortKey>("views");
-  const posts = lists[tab];
-
+export default function HomeTodayHotClient({ posts }: HomeTodayHotClientProps) {
   return (
-    <section id="today-hot" className="portal-panel home-reveal scroll-mt-20 overflow-hidden">
+    <section
+      id="today-hot"
+      className="portal-panel home-reveal scroll-mt-20 overflow-hidden"
+    >
       <div className="portal-panel-head">
         <div className="flex items-center gap-2">
           <h2 className="portal-panel-title">오늘의 인기글</h2>
@@ -62,29 +76,22 @@ export default function HomeTodayHotClient({ lists }: HomeTodayHotClientProps) {
         </Link>
       </div>
 
-      <div className="home-hot-tabs" role="tablist" aria-label="인기 기준">
-        {HOT_SORT_TABS.map((item) => (
-          <button
-            key={item.key}
-            type="button"
-            role="tab"
-            aria-selected={tab === item.key}
-            className="home-hot-tab"
-            onClick={() => setTab(item.key)}
-          >
-            {item.label}
-          </button>
-        ))}
-      </div>
-
       {posts.length === 0 ? (
-        <p className="px-3 py-8 text-center text-sm text-slate-500">
-          아직 인기 게시글이 없습니다.
-        </p>
+        <div className="home-empty-state">
+          <p className="home-empty-state-title">
+            아직 오늘의 인기글이 없어요
+          </p>
+          <p className="home-empty-state-copy">
+            첫 이야기의 주인공이 되어 보세요.
+          </p>
+          <Link href="/board" className="home-hero-cta home-hero-cta-primary">
+            글 작성하러 가기
+          </Link>
+        </div>
       ) : (
-        <div className="home-card-grid">
-          {posts.map((post) => (
-            <HotCard key={`${tab}-${post.id}`} post={post} />
+        <div className="home-card-grid home-hot-list">
+          {posts.map((post, index) => (
+            <HotCard key={post.id} post={post} rank={index + 1} />
           ))}
         </div>
       )}

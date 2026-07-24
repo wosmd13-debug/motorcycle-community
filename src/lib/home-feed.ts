@@ -66,3 +66,51 @@ export function buildHomeFeedItems(options: {
 
   return items.slice(0, limit);
 }
+
+/** Sprint 1 Latest Posts: board only, newest first, exclude Today Hot ids. */
+export function buildLatestBoardFeedItems(options: {
+  boardPosts: BoardPost[];
+  excludeIds?: Iterable<string>;
+  limit?: number;
+}): HomeFeedItem[] {
+  const exclude = new Set(options.excludeIds ?? []);
+  const limit = options.limit ?? 10;
+
+  return options.boardPosts
+    .filter((post) => !exclude.has(post.id))
+    .map(boardToFeedItem)
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )
+    .slice(0, limit);
+}
+
+export function isHomeFeedItemNew(
+  createdAt: string,
+  withinMs = 60 * 60 * 1000
+): boolean {
+  const t = new Date(createdAt).getTime();
+  if (Number.isNaN(t)) return false;
+  return Date.now() - t <= withinMs;
+}
+
+/** Relative time for home latest list (Content Spec). */
+export function formatHomeRelativeTime(iso: string): string {
+  const t = new Date(iso).getTime();
+  if (Number.isNaN(t)) return "";
+
+  const diffSec = Math.max(0, Math.floor((Date.now() - t) / 1000));
+  if (diffSec < 60) return "방금";
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `${diffMin}분 전`;
+  const diffHour = Math.floor(diffMin / 60);
+  if (diffHour < 24) return `${diffHour}시간 전`;
+  const diffDay = Math.floor(diffHour / 24);
+  if (diffDay < 7) return `${diffDay}일 전`;
+
+  return new Date(iso).toLocaleDateString("ko-KR", {
+    month: "2-digit",
+    day: "2-digit",
+  });
+}

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SITE_NAME, SITE_TAGLINE } from "@/lib/seo";
 import { legalDocuments, siteLegalInfo } from "@/lib/site-legal";
 
 const seoLinks = [
@@ -23,11 +24,11 @@ export default function Footer() {
         <div className="text-center">
           <p className="text-sm font-bold text-signature">
             <Link href="/" className="hover:underline">
-              Byanra
+              {SITE_NAME}
             </Link>
           </p>
           <p className="mt-1 text-xs text-[var(--text-muted)]">
-            anra · 바이크 커뮤니티
+            {SITE_TAGLINE}
           </p>
         </div>
 
@@ -97,7 +98,7 @@ export default function Footer() {
             수 있습니다.
           </p>
           <p className="mt-3 text-[var(--text-faint)]">
-            © {new Date().getFullYear()} Byanra. All rights reserved.
+            © {new Date().getFullYear()} {SITE_NAME}. All rights reserved.
           </p>
         </div>
       </div>

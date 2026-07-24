@@ -2,7 +2,7 @@
 export const siteLegalInfo = {
   serviceName: "Byanra",
   serviceNameEn: "Byanra",
-  operatorName: process.env.NEXT_PUBLIC_SITE_OPERATOR_NAME ?? "바이크커뮤니티 운영팀",
+  operatorName: process.env.NEXT_PUBLIC_SITE_OPERATOR_NAME ?? "Byanra 운영팀",
   contactEmail:
     process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "wosmd13@naver.com",
   contactPhone: process.env.NEXT_PUBLIC_CONTACT_PHONE ?? "",

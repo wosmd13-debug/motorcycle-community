@@ -1,6 +1,7 @@
-# 라이더모임 (motorcycle-community)
+# Byanra (motorcycle-community)
 
-오토바이를 취미로 타는 사람들을 위한 Next.js 커뮤니티 사이트입니다.
+오토바이·바이크 라이더를 위한 Next.js 커뮤니티 사이트입니다.  
+공개 브랜드명: **Byanra** · 도메인: [byanra.com](https://byanra.com)
 
 ## 주요 기능
 

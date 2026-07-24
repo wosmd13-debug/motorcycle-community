@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import HomeBikeCategories from "@/components/portal/HomeBikeCategories";
 import HomeDiscoverMenu from "@/components/portal/HomeDiscoverMenu";
 import HomeHero from "@/components/portal/HomeHero";
-import HomePostFeed from "@/components/portal/HomePostFeed";
+import HomePrimaryFeed from "@/components/portal/HomePrimaryFeed";
 import HomePromoPreview from "@/components/portal/HomePromoPreview";
 import HomeQuickMenu from "@/components/portal/HomeQuickMenu";
 import HomeSidebar from "@/components/portal/HomeSidebar";
-import HomeTodayHot from "@/components/portal/HomeTodayHot";
+import HomeTodaysBike from "@/components/portal/HomeTodaysBike";
+import HomeTodaysRiding from "@/components/portal/HomeTodaysRiding";
 import HomeVideosFeatured from "@/components/portal/HomeVideosFeatured";
 import JsonLd from "@/components/seo/JsonLd";
 import {
@@ -47,8 +48,9 @@ export default function Home() {
       <div className="portal-container portal-layout">
         <div className="min-w-0 space-y-3 sm:space-y-4">
           <HomeHero />
-          <HomeTodayHot />
-          <HomePostFeed />
+          <HomePrimaryFeed />
+          <HomeTodaysRiding />
+          <HomeTodaysBike />
           <HomeBikeCategories />
           <HomeDiscoverMenu />
           <HomeVideosFeatured />

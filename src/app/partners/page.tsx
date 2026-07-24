@@ -17,7 +17,7 @@ export default async function PartnersPage() {
         />
 
         <section className="space-y-4">
-          <h2 className="text-xl font-bold text-slate-800">왜 바이크커뮤니티인가요?</h2>
+          <h2 className="text-xl font-bold text-slate-800">왜 Byanra인가요?</h2>
           <div className="grid gap-4 sm:grid-cols-3">
             {[
               {

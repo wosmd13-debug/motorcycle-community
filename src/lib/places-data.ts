@@ -839,7 +839,7 @@ export const riderPlaces: RiderPlace[] = [
     promotion: {
       tier: "premium",
       headline: "기념품 10% 할인",
-      offer: "바이크커뮤니티 방문 인증 시",
+      offer: "Byanra 방문 인증 시",
       badge: "프리미엄 제휴",
     },
     status: "active",

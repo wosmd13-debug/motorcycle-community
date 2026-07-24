@@ -1,9 +1,10 @@
 import HomeTodayHotClient from "@/components/portal/HomeTodayHotClient";
-import { readBoardPosts } from "@/lib/board-store";
-import { buildHotLists } from "@/lib/home-hot";
+import type { HomeHotCard } from "@/lib/home-hot";
 
-export default async function HomeTodayHot() {
-  const posts = await readBoardPosts();
-  const lists = buildHotLists(posts, 8);
-  return <HomeTodayHotClient lists={lists} />;
+type HomeTodayHotProps = {
+  posts: HomeHotCard[];
+};
+
+export default function HomeTodayHot({ posts }: HomeTodayHotProps) {
+  return <HomeTodayHotClient posts={posts} />;
 }

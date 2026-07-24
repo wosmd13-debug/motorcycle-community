@@ -1,3 +1,4 @@
+import { SITE_NAME } from "@/lib/seo";
 import { siteLegalInfo } from "@/lib/site-legal";
 
 export const feedbackCategories = [
@@ -62,7 +63,7 @@ export function buildFeedbackMailtoUrl(input: {
   nickname?: string;
 }): string {
   const label = feedbackCategoryLabels[input.category];
-  const subject = encodeURIComponent(`[anra ${label}] ${input.title}`);
+  const subject = encodeURIComponent(`[${SITE_NAME} ${label}] ${input.title}`);
   const lines = [
     `분류: ${label}`,
     input.nickname ? `작성자: ${input.nickname}` : "",

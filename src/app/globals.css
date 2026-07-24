@@ -1943,11 +1943,34 @@ html[data-theme="dark"] .bg-portal-muted\/50 {
   opacity: 0.55;
 }
 
+/* Soft horizon band — bike-community atmosphere without stock photos */
+.home-hero-scene {
+  pointer-events: none;
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 42%;
+  background:
+    linear-gradient(
+      to top,
+      color-mix(in srgb, var(--signature-dark) 14%, transparent),
+      transparent 70%
+    ),
+    repeating-linear-gradient(
+      -12deg,
+      transparent,
+      transparent 10px,
+      color-mix(in srgb, var(--signature-darker) 5%, transparent) 10px,
+      color-mix(in srgb, var(--signature-darker) 5%, transparent) 11px
+    );
+  opacity: 0.9;
+  mask-image: linear-gradient(to top, rgba(0, 0, 0, 0.55), transparent);
+}
+
 .home-hero-kicker {
   margin: 0 0 0.35rem;
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--signature-darker);
 }
@@ -2075,6 +2098,13 @@ html[data-theme="dark"] .bg-portal-muted\/50 {
   }
 }
 
+/* Content Spec: mobile shows 4 Hot items */
+@media (max-width: 639px) {
+  .home-hot-list > .home-hot-item:nth-child(n + 5) {
+    display: none;
+  }
+}
+
 .home-post-card {
   display: flex;
   flex-direction: column;
@@ -2110,27 +2140,358 @@ html[data-theme="dark"] .bg-portal-muted\/50 {
   object-fit: cover;
 }
 
+.home-hot-rank {
+  position: absolute;
+  top: 0.4rem;
+  left: 0.4rem;
+  z-index: 1;
+  display: inline-flex;
+  height: 1.35rem;
+  min-width: 1.35rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #fff;
+  background: var(--signature-darker);
+  border: 1px solid color-mix(in srgb, #fff 20%, transparent);
+}
+
+.home-hot-rank[data-rank="1"] {
+  background: #ca8a04;
+}
+
+.home-hot-rank[data-rank="2"] {
+  background: #64748b;
+}
+
+.home-hot-rank[data-rank="3"] {
+  background: #a16207;
+}
+
+.home-hot-comments {
+  font-weight: 700;
+  color: var(--portal-accent, #d31900);
+}
+
 .home-post-card-fallback {
   display: flex;
   height: 100%;
   align-items: center;
   justify-content: center;
-  font-size: 1.35rem;
-  color: var(--signature-dark);
+  font-size: 1.5rem;
+  color: var(--text-muted);
+}
+
+.home-post-card-fallback-cat span {
+  display: inline-flex;
+  height: 2.5rem;
+  width: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--signature-darker);
+  background: color-mix(in srgb, var(--signature) 18%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--signature) 30%, var(--border-subtle));
 }
 
 .home-post-card-meta {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.35rem 0.65rem;
-  font-size: 0.6875rem;
-  font-weight: 600;
+  gap: 0.35rem 0.55rem;
+  font-size: 0.7rem;
   color: var(--text-muted);
 }
 
 .home-post-card-cat {
+  font-weight: 700;
+  color: var(--signature-dark);
+}
+
+.home-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 2rem 1rem;
+  text-align: center;
+}
+
+.home-empty-state-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.home-empty-state-copy {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* Latest Posts — list (differentiated from Hot cards) */
+.home-latest-list {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.home-latest-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 2.75rem;
+  padding: 0.7rem 0.85rem;
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background 0.15s ease;
+}
+
+.home-latest-row:hover {
+  background: var(--signature-light);
+}
+
+.home-latest-main {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.home-latest-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.home-latest-new {
+  flex-shrink: 0;
+  padding: 0.1rem 0.35rem;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #fff;
+  background: var(--signature-darker);
+}
+
+.home-latest-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+/* Content Spec: mobile 6 / desktop 10 */
+@media (max-width: 639px) {
+  .home-latest-list > .home-latest-item:nth-child(n + 7) {
+    display: none;
+  }
+}
+
+/* Sprint 2 — Today's Riding / Today's Bike (action-first) */
+.home-riding-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.home-action-error {
+  margin: 0;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #b91c1c;
+  background: #fef2f2;
+  border-bottom: 1px solid #fecaca;
+}
+
+.home-riding-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  padding: 0.9rem 0.85rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.home-riding-item:last-child {
+  border-bottom: none;
+}
+
+.home-riding-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.home-riding-dday {
+  padding: 0.1rem 0.4rem;
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #fff;
+  background: var(--signature-darker);
+}
+
+.home-riding-title {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.35;
+}
+
+.home-riding-title:hover {
   color: var(--signature-darker);
+}
+
+.home-riding-point {
+  margin: 0.3rem 0 0;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.home-riding-seats {
+  margin: 0.35rem 0 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--signature-darker);
+}
+
+.home-riding-actions {
+  display: flex;
+  align-items: center;
+}
+
+.home-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.4rem;
+  padding: 0.45rem 0.95rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border: 1px solid transparent;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.home-action-btn:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.home-action-btn-primary {
+  color: #fff;
+  background: linear-gradient(
+    135deg,
+    var(--signature-dark),
+    var(--signature-darker)
+  );
+}
+
+.home-action-btn-primary:hover {
+  filter: brightness(1.05);
+}
+
+.home-action-btn-done {
+  color: var(--signature-darker);
+  background: var(--signature-light);
+  border-color: color-mix(in srgb, var(--signature) 35%, var(--border-subtle));
+}
+
+.home-action-btn-muted {
+  color: var(--text-secondary);
+  background: var(--surface);
+  border-color: var(--border-subtle);
+}
+
+@media (max-width: 639px) {
+  .home-riding-list > .home-riding-item:nth-child(n + 4) {
+    display: none;
+  }
+}
+
+.home-todays-bike {
+  display: grid;
+  gap: 0;
+}
+
+@media (min-width: 640px) {
+  .home-todays-bike {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  }
+}
+
+.home-todays-bike-media {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  min-height: 11rem;
+  background: var(--signature-light);
+}
+
+.home-todays-bike-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 1rem 0.95rem 1.15rem;
+}
+
+.home-todays-bike-label {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--signature-darker);
+}
+
+.home-todays-bike-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+
+.home-todays-bike-blurb {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.home-todays-bike-author {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.home-todays-bike-cta {
+  margin-top: 0.45rem;
+  align-self: flex-start;
+}
+
+html.dark .home-action-error,
+html[data-theme="dark"] .home-action-error {
+  color: #fecaca;
+  background: color-mix(in srgb, #7f1d1d 45%, var(--surface));
+  border-bottom-color: color-mix(in srgb, #f87171 35%, transparent);
 }
 
 .home-brand-grid {
@@ -2248,6 +2609,11 @@ html[data-theme="dark"] .home-hero {
 
 html.dark .home-post-card:hover,
 html[data-theme="dark"] .home-post-card:hover {
+  background: var(--surface-hover);
+}
+
+html.dark .home-latest-row:hover,
+html[data-theme="dark"] .home-latest-row:hover {
   background: var(--surface-hover);
 }
 

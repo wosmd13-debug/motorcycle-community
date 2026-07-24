@@ -1,7 +1,8 @@
 import { ImageResponse } from "next/og";
+import { SITE_NAME, SITE_TAGLINE } from "@/lib/seo";
 
 export const runtime = "edge";
-export const alt = "Byanra — 바이크 커뮤니티";
+export const alt = `${SITE_NAME} — ${SITE_TAGLINE}`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -43,7 +44,7 @@ export default function OpenGraphImage() {
             lineHeight: 1,
           }}
         >
-          Byanra
+          {SITE_NAME}
         </div>
         <div
           style={{
@@ -56,7 +57,7 @@ export default function OpenGraphImage() {
             lineHeight: 1.35,
           }}
         >
-          라이더가 모이는 바이크 커뮤니티
+          라이더가 모이는 {SITE_TAGLINE}
         </div>
         <div
           style={{
