@@ -6,6 +6,10 @@ data/**
 !data/.gitkeep
 public/uploads/**
 !public/uploads/**/.gitkeep
+public/uploads.bak*
+public/**/*.bak*
+uploads.bak*
+data.bak*
 .env*
 *.md
 !DEPLOY.md

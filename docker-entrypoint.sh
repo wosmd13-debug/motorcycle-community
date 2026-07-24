@@ -12,6 +12,9 @@ fix_dir() {
   fi
 }
 
+# Backup dirs under public/ make Next.js crash with EACCES on scandir
+rm -rf /app/public/uploads.bak.* /app/public/data.bak.* 2>/dev/null || true
+
 fix_dir /app/data
 fix_dir /app/public/uploads
 
