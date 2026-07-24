@@ -21,18 +21,6 @@ const NaverServicePlacesMap = dynamic(
   }
 );
 
-const OsmServicePlacesMap = dynamic(
-  () => import("@/components/services/OsmServicePlacesMap"),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="portal-map-frame flex items-center justify-center rounded-3xl border border-signature/20 bg-signature-light text-sm text-slate-500">
-        지도 불러오는 중...
-      </div>
-    ),
-  }
-);
-
 type ServicePlacesMapProps = {
   places: RiderPlace[];
   liveStations?: LiveFuelStation[];
@@ -50,28 +38,27 @@ export default function ServicePlacesMap({
   ...props
 }: ServicePlacesMapProps) {
   const { ready, loading, error, configured, reload } = useNaverMapsReady();
-  const useNaver = configured && (ready || loading) && !error;
 
-  if (useNaver) {
+  if (!configured && !loading) {
     return (
-      <MapErrorBoundary>
-        <NaverServicePlacesMap
-          {...props}
-          viewMode={viewMode}
-          onAuthFailure={reload}
-        />
-      </MapErrorBoundary>
+      <div className="space-y-3">
+        <div className="portal-map-frame flex items-center justify-center rounded-3xl border border-dashed border-signature/30 bg-signature-light px-6 text-center text-sm text-slate-600">
+          네이버 지도 API 키가 설정되지 않았습니다. 서버 `.env.production`의
+          Client ID를 확인한 뒤 재빌드해 주세요.
+        </div>
+        <NaverMapSetupGuide />
+      </div>
     );
   }
 
   return (
     <div className="space-y-3">
-      {configured && error && !loading && (
+      {error && !loading && !ready && (
         <>
           <div className="rounded-2xl bg-amber-50 px-4 py-3 text-xs leading-6 text-amber-800">
             <p>
-              네이버 지도 인증에 실패해 OpenStreetMap으로 표시합니다. 아래 서버
-              진단을 확인하거나 자동 복구를 시도해 주세요.
+              네이버 지도를 불러오지 못했습니다. OpenStreetMap으로 대체하지
+              않습니다. 아래 진단으로 인증을 복구한 뒤 다시 시도해 주세요.
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
               <button
@@ -79,7 +66,7 @@ export default function ServicePlacesMap({
                 onClick={reload}
                 className="min-h-[44px] rounded-full border border-[#03c75a]/35 bg-[#03c75a] px-4 py-2 text-xs font-bold text-white hover:bg-[#02b350]"
               >
-                자동 복구 시도
+                다시 시도
               </button>
               <a
                 href="/naver-map-test.html"
@@ -94,7 +81,16 @@ export default function ServicePlacesMap({
           <NaverMapSetupGuide />
         </>
       )}
-      <OsmServicePlacesMap {...props} viewMode={viewMode} />
+
+      {(ready || loading) && (
+        <MapErrorBoundary>
+          <NaverServicePlacesMap
+            {...props}
+            viewMode={viewMode}
+            onAuthFailure={reload}
+          />
+        </MapErrorBoundary>
+      )}
     </div>
   );
 }
