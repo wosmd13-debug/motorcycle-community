@@ -1,14 +1,14 @@
 /** 법적 고지·푸터. 배포 시 NEXT_PUBLIC_* 환경 변수로 덮어쓰세요. */
 export const siteLegalInfo = {
-  serviceName: "바이크커뮤니티",
-  serviceNameEn: "Bike Community",
+  serviceName: "Byanra",
+  serviceNameEn: "Byanra",
   operatorName: process.env.NEXT_PUBLIC_SITE_OPERATOR_NAME ?? "바이크커뮤니티 운영팀",
   contactEmail:
     process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "wosmd13@naver.com",
   contactPhone: process.env.NEXT_PUBLIC_CONTACT_PHONE ?? "",
-  siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+  siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? "https://byanra.com",
   effectiveDate: "2026-07-07",
-  lastUpdated: "2026-07-14",
+  lastUpdated: "2026-07-24",
 } as const;
 
 export const legalDocuments = [

@@ -1,5 +1,14 @@
+import type { Metadata } from "next";
 import PageHeader from "@/components/PageHeader";
 import LoginPageClient from "@/components/auth/LoginPageClient";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata: Metadata = buildPageMetadata({
+  title: "로그인",
+  description: "Byanra 바이크 커뮤니티 로그인",
+  path: "/login",
+  noIndex: true,
+});
 
 export default function LoginPage() {
   return (

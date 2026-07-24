@@ -1,5 +1,14 @@
+import type { Metadata } from "next";
 import PageHeader from "@/components/PageHeader";
 import RegisterPageClient from "@/components/auth/RegisterPageClient";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata: Metadata = buildPageMetadata({
+  title: "회원가입",
+  description: "Byanra 바이크 커뮤니티 회원가입",
+  path: "/register",
+  noIndex: true,
+});
 
 export default function RegisterPage() {
   return (

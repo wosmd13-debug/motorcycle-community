@@ -16,9 +16,16 @@ function HotCard({ post }: { post: HomeHotCard }) {
       <div className="home-post-card-thumb">
         {post.thumb ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={post.thumb} alt="" />
+          <img
+            src={post.thumb}
+            alt={`${post.title} 썸네일`}
+            loading="lazy"
+            decoding="async"
+          />
         ) : (
-          <div className="home-post-card-fallback">📝</div>
+          <div className="home-post-card-fallback" aria-hidden>
+            📝
+          </div>
         )}
       </div>
       <div className="min-w-0">

@@ -12,9 +12,16 @@ function FeedCard({ item }: { item: HomeFeedItem }) {
       <div className="home-post-card-thumb">
         {item.thumb ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={item.thumb} alt="" />
+          <img
+            src={item.thumb}
+            alt={`${item.title} 썸네일`}
+            loading="lazy"
+            decoding="async"
+          />
         ) : (
-          <div className="home-post-card-fallback">{fallbackIcon}</div>
+          <div className="home-post-card-fallback" aria-hidden>
+            {fallbackIcon}
+          </div>
         )}
       </div>
       <div className="min-w-0">
