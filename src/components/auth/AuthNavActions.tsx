@@ -115,8 +115,8 @@ export default function AuthNavActions({
           compact
             ? "max-w-[5.5rem] truncate px-1 py-1 text-[10px] font-semibold text-signature-dark hover:underline"
             : isStacked
-              ? "w-full truncate px-1 py-1 text-sm font-semibold text-signature-dark"
-              : "max-w-[160px] truncate text-xs font-semibold text-signature-dark hover:underline"
+              ? "w-full max-w-full px-1 py-1 text-sm font-semibold text-signature-dark"
+              : "max-w-full text-xs font-semibold text-signature-dark hover:underline"
         }
       >
         {compact ? (
@@ -127,8 +127,8 @@ export default function AuthNavActions({
             authorGradeId={user.isOperator ? "operator" : ranking?.grade?.id}
             nicknameClassName={
               isStacked
-                ? "truncate text-sm font-semibold text-signature-dark"
-                : "truncate text-xs font-semibold text-signature-dark"
+                ? "text-sm font-semibold text-signature-dark"
+                : "text-xs font-semibold text-signature-dark"
             }
             className="inline-flex max-w-full flex-wrap items-center gap-1"
             hideGrade={compact}
