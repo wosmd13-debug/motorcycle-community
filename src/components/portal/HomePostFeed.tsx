@@ -4,39 +4,29 @@ import { readBoardPosts } from "@/lib/board-store";
 import { readGalleryPosts } from "@/lib/gallery-store";
 import { buildHomeFeedItems, type HomeFeedItem } from "@/lib/home-feed";
 
-function FeedRow({ item }: { item: HomeFeedItem }) {
-  const thumb = item.thumb;
+function FeedCard({ item }: { item: HomeFeedItem }) {
   const fallbackIcon = item.source === "gallery" ? "📷" : "📝";
 
   return (
-    <Link href={item.href} className="portal-post-row group">
-      {thumb ? (
-        <div className="relative h-11 w-11 shrink-0 overflow-hidden border border-signature/20 bg-signature-light ring-1 ring-signature/10">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={thumb} alt="" className="h-full w-full object-cover" />
-        </div>
-      ) : (
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center border border-signature/20 bg-signature-light text-lg leading-none text-signature-dark">
-          {fallbackIcon}
-        </div>
-      )}
-
-      <div className="board-post-title-wrap min-w-0 flex-1">
-        <p className="board-post-title board-post-title-clamp text-sm text-stone-800 group-hover:text-signature-dark">
+    <Link href={item.href} className="home-post-card group">
+      <div className="home-post-card-thumb">
+        {item.thumb ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={item.thumb} alt="" />
+        ) : (
+          <div className="home-post-card-fallback">{fallbackIcon}</div>
+        )}
+      </div>
+      <div className="min-w-0">
+        <p className="board-post-title board-post-title-clamp text-sm font-semibold text-stone-800 group-hover:text-signature-dark">
           {item.title}
         </p>
+        <div className="home-post-card-meta mt-1.5">
+          <span className="home-post-card-cat">{item.category}</span>
+          {item.commentCount > 0 && <span>댓글 {item.commentCount}</span>}
+          <span className="ml-auto">{formatBoardDate(item.createdAt)}</span>
+        </div>
       </div>
-
-      {item.commentCount > 0 && (
-        <span className="portal-comment-count">[{item.commentCount}]</span>
-      )}
-
-      <span className="hidden w-14 shrink-0 truncate text-[11px] font-medium text-signature-dark/80 sm:inline">
-        {item.category}
-      </span>
-      <span className="portal-meta hidden w-16 text-right md:inline">
-        {formatBoardDate(item.createdAt)}
-      </span>
     </Link>
   );
 }
@@ -51,11 +41,11 @@ export default async function HomePostFeed() {
     boardPosts,
     galleryPosts,
     sort: "latest",
-    limit: 20,
+    limit: 12,
   });
 
   return (
-    <section className="portal-panel overflow-hidden">
+    <section className="portal-panel home-reveal overflow-hidden">
       <div className="portal-panel-head">
         <h2 className="portal-panel-title">최신 게시글</h2>
         <Link href="/board" className="portal-panel-more">
@@ -68,9 +58,9 @@ export default async function HomePostFeed() {
           아직 게시글이 없습니다.
         </p>
       ) : (
-        <div>
+        <div className="home-card-grid">
           {posts.map((post) => (
-            <FeedRow key={post.key} item={post} />
+            <FeedCard key={post.key} item={post} />
           ))}
         </div>
       )}

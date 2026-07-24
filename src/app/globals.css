@@ -1868,3 +1868,397 @@ html[data-theme="dark"] .bg-portal-muted\/50 {
     animation: none !important;
   }
 }
+
+/* ——— Home portal (Byanra) ——— */
+
+@keyframes home-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.home-reveal {
+  animation: home-reveal 0.55s ease-out both;
+}
+
+.home-hero {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--portal-border);
+  background:
+    linear-gradient(
+      145deg,
+      var(--signature-light) 0%,
+      var(--surface) 48%,
+      var(--signature-muted) 100%
+    );
+  box-shadow: 0 1px 4px var(--shadow-color);
+  padding: 1.75rem 1.25rem 1.85rem;
+  min-height: 11.5rem;
+}
+
+@media (min-width: 640px) {
+  .home-hero {
+    padding: 2.25rem 1.75rem 2.35rem;
+    min-height: 13.5rem;
+  }
+}
+
+.home-hero-glow {
+  pointer-events: none;
+  position: absolute;
+  inset: -20% -10% auto auto;
+  width: min(420px, 70%);
+  height: min(280px, 90%);
+  background: radial-gradient(
+    circle at 70% 30%,
+    color-mix(in srgb, var(--signature) 35%, transparent),
+    transparent 70%
+  );
+  opacity: 0.85;
+}
+
+.home-hero-grid {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(
+      to right,
+      color-mix(in srgb, var(--signature-dark) 6%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--signature-dark) 6%, transparent) 1px,
+      transparent 1px
+    );
+  background-size: 28px 28px;
+  mask-image: linear-gradient(120deg, rgba(0, 0, 0, 0.45), transparent 72%);
+  opacity: 0.55;
+}
+
+.home-hero-kicker {
+  margin: 0 0 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--signature-darker);
+}
+
+.home-hero-brand {
+  margin: 0;
+  font-size: clamp(2.15rem, 7vw, 3.15rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+  color: var(--text-primary);
+}
+
+.home-hero-tagline {
+  margin: 0.55rem 0 0;
+  font-size: clamp(1rem, 2.6vw, 1.2rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--signature-darker);
+}
+
+.home-hero-sub {
+  margin: 0.45rem 0 0;
+  max-width: 34rem;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+.home-hero-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0.65rem 1.15rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.home-hero-cta:active {
+  transform: translateY(1px);
+}
+
+.home-hero-cta-primary {
+  background: linear-gradient(
+    135deg,
+    var(--signature-dark),
+    var(--signature-darker)
+  );
+  color: #fff;
+  border: 1px solid transparent;
+}
+
+.home-hero-cta-primary:hover {
+  filter: brightness(1.05);
+}
+
+.home-hero-cta-secondary {
+  background: var(--surface);
+  color: var(--signature-darker);
+  border: 1px solid color-mix(in srgb, var(--signature-dark) 35%, var(--portal-border));
+}
+
+.home-hero-cta-secondary:hover {
+  background: var(--signature-light);
+  border-color: var(--signature-dark);
+}
+
+.home-hot-tabs {
+  display: flex;
+  gap: 0.35rem;
+  padding: 0.65rem 0.75rem 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.home-hot-tab {
+  flex-shrink: 0;
+  min-height: 2rem;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.home-hot-tab:hover {
+  color: var(--signature-darker);
+  border-color: color-mix(in srgb, var(--signature) 40%, var(--border-subtle));
+}
+
+.home-hot-tab[aria-selected="true"] {
+  color: #fff;
+  background: linear-gradient(
+    135deg,
+    var(--signature-dark),
+    var(--signature-darker)
+  );
+  border-color: transparent;
+}
+
+.home-card-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.65rem;
+  padding: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .home-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+    padding: 0.85rem;
+  }
+}
+
+.home-post-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  min-width: 0;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface);
+  padding: 0.75rem;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.home-post-card:hover {
+  border-color: color-mix(in srgb, var(--signature) 45%, var(--border-subtle));
+  background: var(--signature-light);
+  box-shadow: 0 2px 10px var(--shadow-color);
+}
+
+.home-post-card-thumb {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--signature) 20%, var(--border-subtle));
+  background: var(--signature-light);
+}
+
+.home-post-card-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.home-post-card-fallback {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+  color: var(--signature-dark);
+}
+
+.home-post-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.65rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.home-post-card-cat {
+  color: var(--signature-darker);
+}
+
+.home-brand-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  padding: 0.75rem;
+}
+
+@media (min-width: 480px) {
+  .home-brand-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 768px) {
+  .home-brand-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .home-brand-grid {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+}
+
+.home-brand-chip {
+  display: flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.home-brand-chip:hover {
+  border-color: color-mix(in srgb, var(--signature-dark) 40%, var(--border-subtle));
+  background: var(--signature-light);
+  color: var(--signature-darker);
+}
+
+.home-discover-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+}
+
+@media (min-width: 640px) {
+  .home-discover-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.home-discover-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  border-bottom: 1px solid var(--border-subtle);
+  border-right: 1px solid var(--border-subtle);
+  padding: 0.95rem 1rem;
+  transition: background 0.15s ease;
+}
+
+@media (min-width: 640px) {
+  .home-discover-item:nth-child(2n) {
+    border-right: none;
+  }
+}
+
+.home-discover-item:hover {
+  background: var(--signature-light);
+}
+
+.home-discover-item.is-disabled {
+  cursor: default;
+  opacity: 0.85;
+}
+
+.home-discover-item.is-disabled:hover {
+  background: transparent;
+}
+
+.home-discover-icon {
+  display: flex;
+  height: 2.25rem;
+  width: 2.25rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid color-mix(in srgb, var(--signature) 30%, var(--border-subtle));
+  background: var(--signature-light);
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--signature-darker);
+}
+
+html.dark .home-hero,
+html[data-theme="dark"] .home-hero {
+  background: linear-gradient(
+    145deg,
+    var(--signature-light) 0%,
+    var(--surface) 55%,
+    var(--signature-muted) 100%
+  );
+}
+
+html.dark .home-post-card:hover,
+html[data-theme="dark"] .home-post-card:hover {
+  background: var(--surface-hover);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-reveal {
+    animation: none !important;
+  }
+
+  .home-hero-cta,
+  .home-post-card,
+  .home-brand-chip {
+    transition: none !important;
+  }
+}
