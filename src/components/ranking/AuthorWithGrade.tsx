@@ -30,7 +30,7 @@ export default function AuthorWithGrade({
   looksByNickname,
   autoCosmetic = true,
   nicknameClassName = "truncate font-semibold text-stone-800",
-  className = "inline-flex min-w-0 max-w-full flex-wrap items-center gap-1.5",
+  className = "inline-flex min-w-0 max-w-full flex-nowrap items-center gap-1.5",
   badgeSize = "sm",
   hideGrade = false,
 }: AuthorWithGradeProps) {
@@ -59,8 +59,8 @@ export default function AuthorWithGrade({
       <span
         className={
           look.frameClassName
-            ? `shop-author-frame inline-flex max-w-full items-center ${look.frameClassName}`
-            : "shop-author-frame inline-flex max-w-full items-center"
+            ? `shop-author-frame inline-flex min-w-0 shrink items-center overflow-hidden ${look.frameClassName}`
+            : "shop-author-frame inline-flex min-w-0 shrink items-center overflow-hidden"
         }
       >
         <span className={nameClass}>{author}</span>
@@ -68,7 +68,9 @@ export default function AuthorWithGrade({
       {look.titleBadge ? (
         <span
           className={
-            look.titleBadgeClassName ?? "shop-title-badge"
+            look.titleBadgeClassName
+              ? `shrink-0 ${look.titleBadgeClassName}`
+              : "shop-title-badge shrink-0"
           }
         >
           {look.titleBadge}

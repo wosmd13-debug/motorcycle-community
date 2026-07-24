@@ -660,30 +660,43 @@ body {
 .shop-author {
   position: relative;
   z-index: 1;
+  display: inline-flex;
   min-width: 0;
   max-width: 100%;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center;
   writing-mode: horizontal-tb;
 }
 
 .shop-author-frame {
   min-width: 0;
   max-width: 100%;
+  flex: 0 1 auto;
+  overflow: hidden;
 }
 
 .shop-author-name {
+  display: block;
   min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
   writing-mode: horizontal-tb;
   text-orientation: mixed;
-  word-break: keep-all;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  word-break: normal;
 }
 
 .shop-author .inline-flex.shrink-0 {
   position: relative;
   z-index: 2;
+  flex-shrink: 0;
 }
 
 .shop-title-badge {
   display: inline-flex;
+  flex-shrink: 0;
   align-items: center;
   border-radius: 9999px;
   background: color-mix(in srgb, var(--signature) 16%, transparent);
