@@ -29,7 +29,7 @@ export default function BoardPostRow({
   return (
     <Link
       href={`/board/${post.id}`}
-      className={`flex w-full min-w-0 items-center gap-3 border-b border-[var(--dc-border-light)] px-3 py-2.5 text-left transition hover:bg-[var(--dc-hover)] sm:gap-4 sm:px-4 ${
+      className={`flex w-full min-w-0 max-w-full items-center gap-3 overflow-hidden border-b border-[var(--dc-border-light)] px-3 py-2.5 text-left transition hover:bg-[var(--dc-hover)] sm:gap-4 sm:px-4 ${
         highlight ? "shop-post-highlight" : ""
       }`}
     >
@@ -50,7 +50,7 @@ export default function BoardPostRow({
         </div>
       )}
 
-      <div className="board-post-title-wrap">
+      <div className="board-post-title-wrap min-w-0 max-w-full">
         <p className="board-post-title board-post-title-clamp text-[13px] leading-snug text-[var(--text-primary)] sm:text-sm sm:leading-5">
           {post.title}
           {post.comments.length > 0 && (
@@ -60,26 +60,30 @@ export default function BoardPostRow({
           )}
         </p>
 
-        <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] text-[var(--text-muted)]">
-          <AuthorWithGrade
-            author={post.author}
-            authorGradeId={post.authorGradeId}
-            gradesByNickname={gradesByNickname}
-            looksByNickname={looksByNickname}
-            nicknameClassName="font-medium text-[var(--text-secondary)]"
-            className="inline-flex min-w-0 items-center gap-1"
-          />
-          {highlight ? (
-            <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-800">
-              HOT
-            </span>
-          ) : null}
-          <span className="text-[var(--text-faint)]">·</span>
-          <span>조회 {post.views.toLocaleString("ko-KR")}</span>
-          <span className="text-[var(--text-faint)]">·</span>
-          <span>👍 {post.likes.toLocaleString("ko-KR")}</span>
-          <span className="text-[var(--text-faint)] sm:hidden">·</span>
-          <span className="sm:hidden">{formatBoardListTime(post.createdAt)}</span>
+        <div className="mt-1 flex flex-col gap-1 text-[11px] text-[var(--text-muted)] sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-1.5 sm:gap-y-0.5">
+          <div className="flex min-w-0 max-w-full flex-wrap items-center gap-x-1.5 gap-y-0.5">
+            <AuthorWithGrade
+              author={post.author}
+              authorGradeId={post.authorGradeId}
+              gradesByNickname={gradesByNickname}
+              looksByNickname={looksByNickname}
+              nicknameClassName="font-medium text-[var(--text-secondary)]"
+              className="inline-flex min-w-0 max-w-full flex-wrap items-center gap-1"
+            />
+            {highlight ? (
+              <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-800">
+                HOT
+              </span>
+            ) : null}
+          </div>
+
+          <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5">
+            <span>조회 {post.views.toLocaleString("ko-KR")}</span>
+            <span className="text-[var(--text-faint)]">·</span>
+            <span>👍 {post.likes.toLocaleString("ko-KR")}</span>
+            <span className="text-[var(--text-faint)] sm:hidden">·</span>
+            <span className="sm:hidden">{formatBoardListTime(post.createdAt)}</span>
+          </div>
         </div>
       </div>
 
