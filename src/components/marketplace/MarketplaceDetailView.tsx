@@ -1,19 +1,18 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
+import BoardCommentThread from "@/components/board/BoardCommentThread";
 import EngagementLikeButton from "@/components/engagement/EngagementLikeButton";
-import CommentVoteButtons from "@/components/gallery/CommentVoteButtons";
 import MarketplaceEditForm from "@/components/marketplace/MarketplaceEditForm";
 import MarketplaceSellerPanel from "@/components/marketplace/MarketplaceSellerPanel";
 import AuthorWithGrade from "@/components/ranking/AuthorWithGrade";
 import ReportButton from "@/components/report/ReportButton";
-import { fetchEngagementAction } from "@/lib/engagement-client";
+import { useContentView } from "@/hooks/useContentView";
+import { fetchEngagementAction, fetchEngagementPost } from "@/lib/engagement-client";
 import {
   canManageMarketplaceItem,
-  formatCommentDate,
   formatMarketplaceDate,
   formatMarketplacePrice,
   marketplaceStatusClass,
@@ -34,7 +33,6 @@ export default function MarketplaceDetailView({
   const { user } = useAuth();
   const pathname = usePathname();
   const [item, setItem] = useState(initialItem);
-  const [content, setContent] = useState("");
   const [commentError, setCommentError] = useState<string | null>(null);
   const [liking, setLiking] = useState(false);
   const [commenting, setCommenting] = useState(false);
@@ -53,40 +51,45 @@ export default function MarketplaceDetailView({
     setItem(initialItem);
   }, [initialItem]);
 
+  useContentView({
+    contentId: initialItem.id,
+    storagePrefix: "marketplace-view",
+    apiPath: `/api/marketplace/${initialItem.id}`,
+    onViews: (views) => {
+      setItem((current) =>
+        current.id === initialItem.id ? { ...current, views } : current
+      );
+    },
+    onError: (message) => setError(message),
+  });
+
   useEffect(() => {
-    const viewKey = `marketplace-view-${initialItem.id}`;
+    let cancelled = false;
 
-    async function recordView() {
+    async function refreshDetail() {
       try {
-        let latest = initialItem;
-
-        if (!sessionStorage.getItem(viewKey)) {
-          sessionStorage.setItem(viewKey, "1");
-          const viewRes = await fetch(`/api/marketplace/${initialItem.id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ action: "view" }),
-          });
-          const viewData = await viewRes.json();
-          if (viewRes.ok) {
-            latest = viewData.item as MarketplaceItem;
-          }
-        }
-
         const detailRes = await fetch(`/api/marketplace/${initialItem.id}`);
         const detailData = await detailRes.json();
-        if (detailRes.ok) {
-          latest = detailData.item as MarketplaceItem;
+        if (!cancelled && detailRes.ok) {
+          const fresh = detailData.item as MarketplaceItem;
+          setItem((current) => ({
+            ...fresh,
+            views: Math.max(current.views ?? 0, fresh.views ?? 0),
+          }));
         }
-
-        setItem(latest);
       } catch {
-        setError("매물 정보를 불러오지 못했습니다.");
+        if (!cancelled) {
+          setError("매물 정보를 불러오지 못했습니다.");
+        }
       }
     }
 
-    void recordView();
-  }, [initialItem]);
+    void refreshDetail();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [initialItem.id]);
 
   const handleCopyLink = async () => {
     const url = `${window.location.origin}/marketplace/${item.id}`;
@@ -219,8 +222,7 @@ export default function MarketplaceDetailView({
     }
   };
 
-  const handleCommentSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
+  const handleCommentSubmit = async (text: string, parentId?: string) => {
     setCommentError(null);
 
     if (!user) {
@@ -228,7 +230,7 @@ export default function MarketplaceDetailView({
       return;
     }
 
-    if (!content.trim()) {
+    if (!text.trim()) {
       setCommentError("댓글 내용을 입력해 주세요.");
       return;
     }
@@ -236,10 +238,9 @@ export default function MarketplaceDetailView({
     setCommenting(true);
 
     try {
-      const response = await fetch(`/api/marketplace/${item.id}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: content.trim() }),
+      const response = await fetchEngagementPost(`/api/marketplace/${item.id}`, {
+        content: text.trim(),
+        ...(parentId ? { parentId } : {}),
       });
       const data = await response.json();
 
@@ -248,11 +249,11 @@ export default function MarketplaceDetailView({
       }
 
       setItem(data.item as MarketplaceItem);
-      setContent("");
     } catch (err) {
       setCommentError(
         err instanceof Error ? err.message : "댓글 등록에 실패했습니다."
       );
+      throw err;
     } finally {
       setCommenting(false);
     }
@@ -402,83 +403,21 @@ export default function MarketplaceDetailView({
           )}
 
           <section className="rounded-3xl border border-signature/20 bg-signature-light/30 p-5">
-            <h2 className="font-bold text-stone-800">거래 관련 댓글</h2>
-            <p className="mt-1 text-xs text-stone-500">
+            <p className="text-xs text-stone-500">
               개인 연락처나 계좌번호를 댓글에 남기지 말고, 사이트 내에서 문의해 주세요.
             </p>
-
-            {user ? (
-              <form onSubmit={handleCommentSubmit} className="mt-4 space-y-3">
-                <p className="text-xs text-stone-500">
-                  {user.nickname}으로 댓글 작성
-                </p>
-                <textarea
-                  value={content}
-                  onChange={(event) => setContent(event.target.value)}
-                  required
-                  rows={3}
-                  placeholder="구매 문의, 직거래 가능 시간 등을 남겨주세요."
-                  className="w-full rounded-2xl border border-signature/20 bg-white px-4 py-3 text-sm outline-none focus:border-signature"
-                />
-                {commentError && (
-                  <p className="text-sm text-red-600">{commentError}</p>
-                )}
-                <button
-                  type="submit"
-                  disabled={commenting}
-                  className="portal-btn px-4 py-2 text-sm disabled:opacity-60"
-                >
-                  {commenting ? "등록 중..." : "댓글 등록"}
-                </button>
-              </form>
-            ) : (
-              <p className="mt-4 text-sm text-stone-500">
-                <Link
-                  href={`/login?next=${encodeURIComponent(pathname || "/marketplace")}`}
-                  className="font-semibold text-signature-dark hover:underline"
-                >
-                  로그인
-                </Link>
-                후 댓글을 작성할 수 있습니다.
-              </p>
-            )}
-
-            <div className="mt-6 space-y-4">
-              {item.comments.length === 0 ? (
-                <p className="text-sm text-stone-500">첫 문의를 남겨보세요.</p>
-              ) : (
-                item.comments.map((comment) => (
-                  <article
-                    key={comment.id}
-                    className="rounded-2xl border border-signature/20 bg-white p-4"
-                  >
-                    <div className="flex flex-wrap items-center gap-2">
-                      <AuthorWithGrade
-                        author={comment.author}
-                        nicknameClassName="text-sm font-semibold text-stone-800"
-                        className="inline-flex max-w-full flex-wrap items-center gap-1"
-                      />
-                      <span className="text-xs text-stone-400">
-                        {formatCommentDate(comment.createdAt)}
-                      </span>
-                    </div>
-                    <p className="mt-2 text-sm leading-6 text-stone-600">
-                      {comment.content}
-                    </p>
-                    <CommentVoteButtons
-                      commentId={comment.id}
-                      upvotes={comment.upvotes}
-                      downvotes={comment.downvotes}
-                      onVote={(commentId, choice) =>
-                        handleCommentVote(commentId, choice)
-                      }
-                      disabled={votingComment}
-                      storagePrefix="marketplace-comment-vote"
-                    />
-                  </article>
-                ))
-              )}
-            </div>
+            <BoardCommentThread
+              comments={item.comments}
+              user={user}
+              loginNextPath={pathname || "/marketplace"}
+              commenting={commenting}
+              votingComment={votingComment}
+              commentError={commentError}
+              heading="h2"
+              voteStoragePrefix="marketplace-comment-vote"
+              onSubmitComment={handleCommentSubmit}
+              onVote={handleCommentVote}
+            />
           </section>
         </div>
       </article>

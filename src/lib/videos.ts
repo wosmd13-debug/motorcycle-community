@@ -1,3 +1,5 @@
+import { normalizeThreadComment } from "@/lib/engagement-comments";
+
 export const videoCategories = [
   "전체",
   "브이로그",
@@ -19,6 +21,7 @@ export type VideoComment = {
   id: string;
   author: string;
   content: string;
+  parentId?: string;
   upvotes: number;
   downvotes: number;
   /** 서버 전용 — API 응답에서는 제거 */
@@ -216,11 +219,7 @@ export function filterVideos(options: {
 }
 
 export function normalizeVideoComment(comment: VideoComment): VideoComment {
-  return {
-    ...comment,
-    upvotes: comment.upvotes ?? 0,
-    downvotes: comment.downvotes ?? 0,
-  };
+  return normalizeThreadComment(comment);
 }
 
 export function normalizeVideoPost(video: VideoPost): VideoPost {

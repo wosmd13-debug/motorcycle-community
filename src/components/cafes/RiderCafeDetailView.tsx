@@ -7,6 +7,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import RiderCafeEditForm from "@/components/cafes/RiderCafeEditForm";
 import EngagementLikeButton from "@/components/engagement/EngagementLikeButton";
 import AuthorWithGrade from "@/components/ranking/AuthorWithGrade";
+import { useContentView } from "@/hooks/useContentView";
 import { fetchEngagementAction } from "@/lib/engagement-client";
 import {
   WEEK_DAYS,
@@ -46,40 +47,45 @@ export default function RiderCafeDetailView({
     setEntry(initialEntry);
   }, [initialEntry]);
 
+  useContentView({
+    contentId: initialEntry.id,
+    storagePrefix: "rider-cafe-view",
+    apiPath: `/api/rider-cafes/${initialEntry.id}`,
+    onViews: (views) => {
+      setEntry((current) =>
+        current.id === initialEntry.id ? { ...current, views } : current
+      );
+    },
+    onError: (message) => setError(message),
+  });
+
   useEffect(() => {
-    const viewKey = `rider-cafe-view-${initialEntry.id}`;
+    let cancelled = false;
 
-    async function recordView() {
+    async function refreshDetail() {
       try {
-        let latest = initialEntry;
-
-        if (!sessionStorage.getItem(viewKey)) {
-          sessionStorage.setItem(viewKey, "1");
-          const viewRes = await fetch(`/api/rider-cafes/${initialEntry.id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ action: "view" }),
-          });
-          const viewData = await viewRes.json();
-          if (viewRes.ok) {
-            latest = viewData.entry as RiderCafeEntry;
-          }
-        }
-
         const detailRes = await fetch(`/api/rider-cafes/${initialEntry.id}`);
         const detailData = await detailRes.json();
-        if (detailRes.ok) {
-          latest = detailData.entry as RiderCafeEntry;
+        if (!cancelled && detailRes.ok) {
+          const fresh = detailData.entry as RiderCafeEntry;
+          setEntry((current) => ({
+            ...fresh,
+            views: Math.max(current.views ?? 0, fresh.views ?? 0),
+          }));
         }
-
-        setEntry(latest);
       } catch {
-        setError("카페 정보를 불러오지 못했습니다.");
+        if (!cancelled) {
+          setError("카페 정보를 불러오지 못했습니다.");
+        }
       }
     }
 
-    void recordView();
-  }, [initialEntry]);
+    void refreshDetail();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [initialEntry.id]);
 
   const handleLike = async () => {
     setLiking(true);

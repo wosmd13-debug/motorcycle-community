@@ -8,6 +8,7 @@ import {
   type MeetupParticipant,
   type UpdateMeetupInput,
 } from "@/lib/meetup";
+import { incrementViews } from "@/lib/engagement-comments";
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const DATA_FILE = path.join(DATA_DIR, "meetups.json");
@@ -78,7 +79,7 @@ export async function viewMeetup(id: string): Promise<MeetupEntry | null> {
   const index = entries.findIndex((entry) => entry.id === id);
   if (index === -1) return null;
 
-  entries[index] = { ...entries[index], views: entries[index].views + 1 };
+  entries[index] = { ...entries[index], views: incrementViews(entries[index].views) };
   await writeMeetups(entries);
   return entries[index];
 }

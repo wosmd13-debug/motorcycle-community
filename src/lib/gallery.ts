@@ -1,3 +1,5 @@
+import { normalizeThreadComment } from "@/lib/engagement-comments";
+
 export const galleryCategories = [
   "전체",
   "라이딩",
@@ -18,6 +20,7 @@ export type GalleryComment = {
   authorId?: string;
   authorGradeId?: import("@/lib/ranking").MemberGradeId;
   content: string;
+  parentId?: string;
   upvotes: number;
   downvotes: number;
   /** 서버 전용 — API 응답에서는 제거 */
@@ -214,11 +217,7 @@ export function filterGalleryPosts(options: {
 }
 
 export function normalizeGalleryComment(comment: GalleryComment): GalleryComment {
-  return {
-    ...comment,
-    upvotes: comment.upvotes ?? 0,
-    downvotes: comment.downvotes ?? 0,
-  };
+  return normalizeThreadComment(comment);
 }
 
 export function normalizeGalleryPost(post: GalleryPost): GalleryPost {

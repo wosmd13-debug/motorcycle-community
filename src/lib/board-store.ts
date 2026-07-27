@@ -9,6 +9,7 @@ import {
   type CreateBoardPostInput,
 } from "@/lib/board";
 import { applyCommentVoteChoice, toggleLikeByUser } from "@/lib/engagement";
+import { incrementViews } from "@/lib/engagement-comments";
 import { withJsonStoreLock } from "@/lib/json-store-lock";
 import {
   isPermissionError,
@@ -128,7 +129,7 @@ export async function viewBoardPost(id: string): Promise<BoardPost | null> {
     const index = posts.findIndex((post) => post.id === id);
     if (index === -1) return null;
 
-    posts[index] = { ...posts[index], views: (posts[index].views ?? 0) + 1 };
+    posts[index] = { ...posts[index], views: incrementViews(posts[index].views) };
     await writeBoardPosts(posts);
     return posts[index];
   });

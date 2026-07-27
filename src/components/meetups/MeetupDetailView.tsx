@@ -7,6 +7,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import NaverNavButton from "@/components/routes/NaverNavButton";
 import MeetupEditForm from "@/components/meetups/MeetupEditForm";
 import AuthorWithGrade from "@/components/ranking/AuthorWithGrade";
+import { useContentView } from "@/hooks/useContentView";
 import {
   canJoinMeetup,
   canLeaveMeetup,
@@ -48,40 +49,45 @@ export default function MeetupDetailView({ initialEntry }: MeetupDetailViewProps
     setEntry(initialEntry);
   }, [initialEntry]);
 
+  useContentView({
+    contentId: initialEntry.id,
+    storagePrefix: "meetup-view",
+    apiPath: `/api/meetups/${initialEntry.id}`,
+    onViews: (views) => {
+      setEntry((current) =>
+        current.id === initialEntry.id ? { ...current, views } : current
+      );
+    },
+    onError: (message) => setError(message),
+  });
+
   useEffect(() => {
-    const viewKey = `meetup-view-${initialEntry.id}`;
+    let cancelled = false;
 
-    async function recordView() {
+    async function refreshDetail() {
       try {
-        let latest = initialEntry;
-
-        if (!sessionStorage.getItem(viewKey)) {
-          sessionStorage.setItem(viewKey, "1");
-          const viewRes = await fetch(`/api/meetups/${initialEntry.id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ action: "view" }),
-          });
-          const viewData = await viewRes.json();
-          if (viewRes.ok) {
-            latest = viewData.entry as MeetupEntry;
-          }
-        }
-
         const detailRes = await fetch(`/api/meetups/${initialEntry.id}`);
         const detailData = await detailRes.json();
-        if (detailRes.ok) {
-          latest = detailData.entry as MeetupEntry;
+        if (!cancelled && detailRes.ok) {
+          const fresh = detailData.entry as MeetupEntry;
+          setEntry((current) => ({
+            ...fresh,
+            views: Math.max(current.views ?? 0, fresh.views ?? 0),
+          }));
         }
-
-        setEntry(latest);
       } catch {
-        setError("모임 정보를 불러오지 못했습니다.");
+        if (!cancelled) {
+          setError("모임 정보를 불러오지 못했습니다.");
+        }
       }
     }
 
-    void recordView();
-  }, [initialEntry]);
+    void refreshDetail();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [initialEntry.id]);
 
   const handleJoin = async () => {
     if (!user) {

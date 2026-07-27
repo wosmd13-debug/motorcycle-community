@@ -8,6 +8,11 @@ import {
   type GalleryComment,
   type GalleryPost,
 } from "@/lib/gallery";
+import {
+  incrementViews,
+  insertThreadComment,
+  normalizeThreadComment,
+} from "@/lib/engagement-comments";
 import { applyCommentVoteChoice, toggleLikeByUser } from "@/lib/engagement";
 import { withJsonStoreLock } from "@/lib/json-store-lock";
 import {
@@ -121,7 +126,7 @@ export async function viewGalleryPost(id: string): Promise<GalleryPost | null> {
     const index = posts.findIndex((post) => post.id === id);
     if (index === -1) return null;
 
-    posts[index] = { ...posts[index], views: posts[index].views + 1 };
+    posts[index] = { ...posts[index], views: incrementViews(posts[index].views) };
     await writeGalleryPosts(posts);
     return posts[index];
   });
@@ -134,6 +139,7 @@ export async function addGalleryComment(
     authorId?: string;
     authorGradeId?: import("@/lib/ranking").MemberGradeId;
     content: string;
+    parentId?: string;
   }
 ): Promise<GalleryPost | null> {
   return mutateGalleryPosts(async (posts) => {
@@ -146,14 +152,22 @@ export async function addGalleryComment(
       authorId: input.authorId,
       authorGradeId: input.authorGradeId,
       content: input.content,
+      parentId: input.parentId?.trim() || undefined,
       upvotes: 0,
       downvotes: 0,
       createdAt: new Date().toISOString(),
     };
 
+    const nextComments = insertThreadComment(
+      posts[index].comments,
+      comment,
+      input.parentId
+    );
+    if (!nextComments) return null;
+
     posts[index] = {
       ...posts[index],
-      comments: [comment, ...posts[index].comments],
+      comments: nextComments,
     };
 
     await writeGalleryPosts(posts);

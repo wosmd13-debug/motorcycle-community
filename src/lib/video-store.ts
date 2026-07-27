@@ -9,6 +9,10 @@ import {
   type VideoPost,
 } from "@/lib/videos";
 import { applyCommentVoteChoice, toggleLikeByUser } from "@/lib/engagement";
+import {
+  incrementViews,
+  insertThreadComment,
+} from "@/lib/engagement-comments";
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const DATA_FILE = path.join(DATA_DIR, "videos.json");
@@ -92,14 +96,14 @@ export async function viewVideo(id: string): Promise<VideoPost | null> {
   const index = videos.findIndex((video) => video.id === id);
   if (index === -1) return null;
 
-  videos[index] = { ...videos[index], views: videos[index].views + 1 };
+  videos[index] = { ...videos[index], views: incrementViews(videos[index].views) };
   await writeVideos(videos);
   return videos[index];
 }
 
 export async function addVideoComment(
   id: string,
-  input: { author: string; content: string }
+  input: { author: string; content: string; parentId?: string }
 ): Promise<VideoPost | null> {
   const videos = await readVideos();
   const index = videos.findIndex((video) => video.id === id);
@@ -109,14 +113,22 @@ export async function addVideoComment(
     id: crypto.randomUUID(),
     author: input.author,
     content: input.content,
+    parentId: input.parentId?.trim() || undefined,
     upvotes: 0,
     downvotes: 0,
     createdAt: new Date().toISOString(),
   };
 
+  const nextComments = insertThreadComment(
+    videos[index].comments,
+    comment,
+    input.parentId
+  );
+  if (!nextComments) return null;
+
   videos[index] = {
     ...videos[index],
-    comments: [comment, ...videos[index].comments],
+    comments: nextComments,
   };
 
   await writeVideos(videos);

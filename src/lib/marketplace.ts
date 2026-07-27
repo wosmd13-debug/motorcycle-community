@@ -1,5 +1,7 @@
 import { filterRegions, matchesDetailRegion, type DetailRegion } from "@/lib/regions";
 
+import { normalizeThreadComment } from "@/lib/engagement-comments";
+
 export const marketplaceTradeNotice = {
   title: "중고거래 안내",
   summary:
@@ -56,6 +58,7 @@ export type MarketplaceComment = {
   id: string;
   author: string;
   content: string;
+  parentId?: string;
   upvotes: number;
   downvotes: number;
   /** 서버 전용 — API 응답에서는 제거 */
@@ -137,11 +140,9 @@ export function normalizeMarketplaceItem(item: MarketplaceItem): MarketplaceItem
     imageUrls: item.imageUrls ?? [],
     likes: item.likes ?? 0,
     views: item.views ?? 0,
-    comments: (item.comments ?? []).map((comment) => ({
-      ...comment,
-      upvotes: comment.upvotes ?? 0,
-      downvotes: comment.downvotes ?? 0,
-    })),
+    comments: (item.comments ?? []).map((comment) =>
+      normalizeThreadComment(comment)
+    ),
     status: item.status ?? "판매중",
     statusUpdatedAt: item.statusUpdatedAt,
     bumpedAt: item.bumpedAt,

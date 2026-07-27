@@ -9,6 +9,7 @@ import {
   type UpdateRiderCafeInput,
 } from "@/lib/rider-cafe";
 import { toggleLikeByUser } from "@/lib/engagement";
+import { incrementViews } from "@/lib/engagement-comments";
 import { deleteUploadedPublicUrls } from "@/lib/upload-files";
 
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -93,7 +94,7 @@ export async function viewRiderCafe(id: string): Promise<RiderCafeEntry | null> 
   const index = entries.findIndex((entry) => entry.id === id);
   if (index === -1) return null;
 
-  entries[index] = { ...entries[index], views: entries[index].views + 1 };
+  entries[index] = { ...entries[index], views: incrementViews(entries[index].views) };
   await writeRiderCafes(entries);
   return entries[index];
 }

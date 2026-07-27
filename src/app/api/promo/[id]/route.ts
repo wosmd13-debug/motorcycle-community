@@ -258,6 +258,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const body = await request.json();
     const content = String(body.content ?? "").trim();
+    const parentId = String(body.parentId ?? "").trim() || undefined;
 
     if (!content) {
       return NextResponse.json(
@@ -266,10 +267,18 @@ export async function POST(request: NextRequest, context: RouteContext) {
       );
     }
 
-    const post = await addPromoComment(id, { author: user.nickname, content });
+    const post = await addPromoComment(id, {
+      author: user.nickname,
+      content,
+      parentId,
+    });
     if (!post) {
       return NextResponse.json(
-        { error: "홍보글을 찾을 수 없습니다." },
+        {
+          error: parentId
+            ? "답글을 등록할 댓글을 찾을 수 없습니다."
+            : "홍보글을 찾을 수 없습니다.",
+        },
         { status: 404 }
       );
     }

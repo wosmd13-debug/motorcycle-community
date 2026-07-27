@@ -5,17 +5,17 @@ import { useState } from "react";
 import CommentVoteButtons from "@/components/gallery/CommentVoteButtons";
 import AuthorWithGrade from "@/components/ranking/AuthorWithGrade";
 import {
-  formatCommentDate,
-  getBoardCommentReplies,
-  getRootBoardComments,
-  type BoardComment,
-} from "@/lib/board";
+  getRootThreadComments,
+  getThreadCommentReplies,
+  type ThreadComment,
+} from "@/lib/engagement-comments";
+import { formatCommentDate } from "@/lib/board";
 import type { MemberGradeId } from "@/lib/ranking";
 import type { ShopCosmeticLook } from "@/lib/shop";
 import type { PublicUser } from "@/lib/users";
 
 type BoardCommentThreadProps = {
-  comments: BoardComment[];
+  comments: ThreadComment[];
   user: PublicUser | null;
   loginNextPath: string;
   gradesByNickname?: Record<string, MemberGradeId>;
@@ -24,6 +24,7 @@ type BoardCommentThreadProps = {
   votingComment?: boolean;
   commentError?: string | null;
   heading?: "h2" | "h3";
+  voteStoragePrefix?: string;
   onSubmitComment: (content: string, parentId?: string) => Promise<void>;
   onVote: (
     commentId: string,
@@ -48,8 +49,9 @@ function CommentItem({
   onReplyContentChange,
   onSubmitReply,
   onVote,
+  voteStoragePrefix,
 }: {
-  comment: BoardComment;
+  comment: ThreadComment;
   depth: 0 | 1;
   parentAuthor?: string;
   replyCount?: number;
@@ -68,6 +70,7 @@ function CommentItem({
     commentId: string,
     choice: "up" | "down"
   ) => Promise<"up" | "down" | null | void>;
+  voteStoragePrefix?: string;
 }) {
   const isReplyFormOpen = replyingToId === comment.id;
 
@@ -115,7 +118,7 @@ function CommentItem({
           downvotes={comment.downvotes}
           onVote={onVote}
           disabled={votingComment}
-          storagePrefix="board-comment-vote"
+          storagePrefix={voteStoragePrefix ?? "comment-vote"}
         />
         {user && depth === 0 ? (
           <button
@@ -172,6 +175,7 @@ export default function BoardCommentThread({
   votingComment = false,
   commentError = null,
   heading = "h2",
+  voteStoragePrefix = "board-comment-vote",
   onSubmitComment,
   onVote,
 }: BoardCommentThreadProps) {
@@ -179,7 +183,7 @@ export default function BoardCommentThread({
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState("");
 
-  const rootComments = getRootBoardComments(comments);
+  const rootComments = getRootThreadComments(comments);
   const HeadingTag = heading;
 
   const handleRootSubmit = async (event: React.FormEvent) => {
@@ -247,7 +251,7 @@ export default function BoardCommentThread({
           <p className="text-sm text-stone-500">첫 댓글을 남겨보세요.</p>
         ) : (
           rootComments.map((comment) => {
-            const replies = getBoardCommentReplies(comments, comment.id);
+            const replies = getThreadCommentReplies(comments, comment.id);
 
             return (
               <div key={comment.id} className="space-y-3">
@@ -273,6 +277,7 @@ export default function BoardCommentThread({
                   onReplyContentChange={setReplyContent}
                   onSubmitReply={handleReplySubmit}
                   onVote={onVote}
+                  voteStoragePrefix={voteStoragePrefix}
                 />
 
                 {replies.length > 0 ? (
@@ -295,6 +300,7 @@ export default function BoardCommentThread({
                         onReplyContentChange={() => {}}
                         onSubmitReply={async () => {}}
                         onVote={onVote}
+                        voteStoragePrefix={voteStoragePrefix}
                       />
                     ))}
                   </div>

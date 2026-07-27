@@ -11,6 +11,10 @@ import {
   type MarketplaceStatus,
 } from "@/lib/marketplace";
 import { applyCommentVoteChoice, toggleLikeByUser } from "@/lib/engagement";
+import {
+  incrementViews,
+  insertThreadComment,
+} from "@/lib/engagement-comments";
 import { deleteUploadedPublicUrls } from "@/lib/upload-files";
 
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -105,14 +109,14 @@ export async function viewMarketplaceItem(
   const index = items.findIndex((item) => item.id === id);
   if (index === -1) return null;
 
-  items[index] = { ...items[index], views: items[index].views + 1 };
+  items[index] = { ...items[index], views: incrementViews(items[index].views) };
   await writeMarketplaceItems(items);
   return items[index];
 }
 
 export async function addMarketplaceComment(
   id: string,
-  input: { author: string; content: string }
+  input: { author: string; content: string; parentId?: string }
 ): Promise<MarketplaceItem | null> {
   const items = await readMarketplaceItems();
   const index = items.findIndex((item) => item.id === id);
@@ -122,14 +126,22 @@ export async function addMarketplaceComment(
     id: crypto.randomUUID(),
     author: input.author,
     content: input.content,
+    parentId: input.parentId?.trim() || undefined,
     upvotes: 0,
     downvotes: 0,
     createdAt: new Date().toISOString(),
   };
 
+  const nextComments = insertThreadComment(
+    items[index].comments,
+    comment,
+    input.parentId
+  );
+  if (!nextComments) return null;
+
   items[index] = {
     ...items[index],
-    comments: [comment, ...items[index].comments],
+    comments: nextComments,
   };
 
   await writeMarketplaceItems(items);

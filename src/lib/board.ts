@@ -1,4 +1,10 @@
-﻿export const boardCategories = [
+﻿import {
+  getRootThreadComments,
+  getThreadCommentReplies,
+  normalizeThreadComment,
+} from "@/lib/engagement-comments";
+
+export const boardCategories = [
   "전체",
   "자유",
   "코스",
@@ -333,29 +339,19 @@ export function filterBoardPosts(options: {
   });
 }
 
-export function normalizeBoardComment(comment: BoardComment): BoardComment {
-  return {
-    ...comment,
-    parentId: comment.parentId?.trim() || undefined,
-    upvotes: comment.upvotes ?? 0,
-    downvotes: comment.downvotes ?? 0,
-  };
-}
-
 export function getRootBoardComments(comments: BoardComment[]): BoardComment[] {
-  return comments.filter((comment) => !comment.parentId);
+  return getRootThreadComments(comments);
 }
 
 export function getBoardCommentReplies(
   comments: BoardComment[],
   parentId: string
 ): BoardComment[] {
-  return comments
-    .filter((comment) => comment.parentId === parentId)
-    .sort(
-      (a, b) =>
-        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-    );
+  return getThreadCommentReplies(comments, parentId);
+}
+
+export function normalizeBoardComment(comment: BoardComment): BoardComment {
+  return normalizeThreadComment(comment);
 }
 
 export function normalizeBoardPost(post: BoardPost): BoardPost {

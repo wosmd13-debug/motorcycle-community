@@ -9,6 +9,10 @@ import {
   type PromoPost,
 } from "@/lib/promo";
 import { applyCommentVoteChoice, toggleLikeByUser } from "@/lib/engagement";
+import {
+  incrementViews,
+  insertThreadComment,
+} from "@/lib/engagement-comments";
 import { deleteUploadedPublicUrls } from "@/lib/upload-files";
 
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -102,14 +106,14 @@ export async function viewPromoPost(id: string): Promise<PromoPost | null> {
   const index = posts.findIndex((post) => post.id === id);
   if (index === -1) return null;
 
-  posts[index] = { ...posts[index], views: posts[index].views + 1 };
+  posts[index] = { ...posts[index], views: incrementViews(posts[index].views) };
   await writePromoPosts(posts);
   return posts[index];
 }
 
 export async function addPromoComment(
   id: string,
-  input: { author: string; content: string }
+  input: { author: string; content: string; parentId?: string }
 ): Promise<PromoPost | null> {
   const posts = await readPromoPosts();
   const index = posts.findIndex((post) => post.id === id);
@@ -119,14 +123,22 @@ export async function addPromoComment(
     id: crypto.randomUUID(),
     author: input.author,
     content: input.content,
+    parentId: input.parentId?.trim() || undefined,
     upvotes: 0,
     downvotes: 0,
     createdAt: new Date().toISOString(),
   };
 
+  const nextComments = insertThreadComment(
+    posts[index].comments,
+    comment,
+    input.parentId
+  );
+  if (!nextComments) return null;
+
   posts[index] = {
     ...posts[index],
-    comments: [comment, ...posts[index].comments],
+    comments: nextComments,
   };
 
   await writePromoPosts(posts);

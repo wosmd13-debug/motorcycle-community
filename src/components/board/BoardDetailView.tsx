@@ -13,6 +13,7 @@ import AuthorWithGrade from "@/components/ranking/AuthorWithGrade";
 import ReportButton from "@/components/report/ReportButton";
 import { useMemberGradeLookup } from "@/hooks/useMemberGradeLookup";
 import { useCosmeticLookup } from "@/hooks/useCosmeticLookup";
+import { useContentView } from "@/hooks/useContentView";
 import {
   boardCategoryMeta,
   canManageBoardPost,
@@ -25,8 +26,6 @@ import { collectAuthorGradeSources } from "@/lib/member-grade-display";
 type BoardDetailViewProps = {
   initialPost: BoardPost;
 };
-
-const boardViewInflight = new Set<string>();
 
 export default function BoardDetailView({ initialPost }: BoardDetailViewProps) {
   const router = useRouter();
@@ -60,56 +59,17 @@ export default function BoardDetailView({ initialPost }: BoardDetailViewProps) {
     setPost(initialPost);
   }, [initialPost]);
 
-  useEffect(() => {
-    const viewKey = `board-view-${initialPost.id}`;
-    let cancelled = false;
-
-    async function recordView() {
-      if (sessionStorage.getItem(viewKey) === "1") return;
-      if (boardViewInflight.has(initialPost.id)) return;
-
-      boardViewInflight.add(initialPost.id);
-
-      try {
-        const viewRes = await fetch(`/api/board/${initialPost.id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ action: "view" }),
-        });
-        const viewData = await viewRes.json();
-
-        if (cancelled) return;
-
-        if (!viewRes.ok) {
-          setError(
-            (viewData.error as string | undefined) ??
-              "조회수를 반영하지 못했습니다."
-          );
-          return;
-        }
-
-        sessionStorage.setItem(viewKey, "1");
-
-        const viewed = viewData.post as BoardPost;
-        setPost((current) =>
-          current.id === viewed.id ? { ...current, views: viewed.views } : current
-        );
-      } catch {
-        if (!cancelled) {
-          setError("조회수를 반영하지 못했습니다.");
-        }
-      } finally {
-        boardViewInflight.delete(initialPost.id);
-      }
-    }
-
-    void recordView();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [initialPost.id]);
+  useContentView({
+    contentId: initialPost.id,
+    storagePrefix: "board-view",
+    apiPath: `/api/board/${initialPost.id}`,
+    onViews: (views) => {
+      setPost((current) =>
+        current.id === initialPost.id ? { ...current, views } : current
+      );
+    },
+    onError: (message) => setError(message),
+  });
 
   const handleLike = async () => {
     setLiking(true);

@@ -1,19 +1,18 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
+import BoardCommentThread from "@/components/board/BoardCommentThread";
 import EngagementLikeButton from "@/components/engagement/EngagementLikeButton";
-import CommentVoteButtons from "@/components/gallery/CommentVoteButtons";
 import GalleryEditForm from "@/components/gallery/GalleryEditForm";
 import AuthorWithGrade from "@/components/ranking/AuthorWithGrade";
 import { useMemberGradeLookup } from "@/hooks/useMemberGradeLookup";
 import { useCosmeticLookup } from "@/hooks/useCosmeticLookup";
+import { useContentView } from "@/hooks/useContentView";
 import { fetchEngagementAction, fetchEngagementPost } from "@/lib/engagement-client";
 import {
   canManageGalleryPost,
-  formatCommentDate,
   formatGalleryDate,
   type GalleryPost,
 } from "@/lib/gallery";
@@ -28,7 +27,6 @@ export default function GalleryDetailView({ initialPost }: GalleryDetailViewProp
   const { user } = useAuth();
   const pathname = usePathname();
   const [post, setPost] = useState(initialPost);
-  const [content, setContent] = useState("");
   const [commentError, setCommentError] = useState<string | null>(null);
   const [liking, setLiking] = useState(false);
   const [commenting, setCommenting] = useState(false);
@@ -55,42 +53,17 @@ export default function GalleryDetailView({ initialPost }: GalleryDetailViewProp
     setPost(initialPost);
   }, [initialPost]);
 
-  useEffect(() => {
-    const viewKey = `gallery-view-${initialPost.id}`;
-    let cancelled = false;
-
-    async function recordView() {
-      if (sessionStorage.getItem(viewKey)) return;
-
-      sessionStorage.setItem(viewKey, "1");
-
-      try {
-        const viewRes = await fetch(`/api/gallery/${initialPost.id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "view" }),
-        });
-        const viewData = await viewRes.json();
-
-        if (cancelled || !viewRes.ok) return;
-
-        const viewed = viewData.post as GalleryPost;
-        setPost((current) =>
-          current.id === viewed.id ? { ...current, views: viewed.views } : current
-        );
-      } catch {
-        if (!cancelled) {
-          setError("조회수를 반영하지 못했습니다.");
-        }
-      }
-    }
-
-    void recordView();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [initialPost.id]);
+  useContentView({
+    contentId: initialPost.id,
+    storagePrefix: "gallery-view",
+    apiPath: `/api/gallery/${initialPost.id}`,
+    onViews: (views) => {
+      setPost((current) =>
+        current.id === initialPost.id ? { ...current, views } : current
+      );
+    },
+    onError: (message) => setError(message),
+  });
 
   const handleLike = async () => {
     setLiking(true);
@@ -140,8 +113,7 @@ export default function GalleryDetailView({ initialPost }: GalleryDetailViewProp
     }
   };
 
-  const handleCommentSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
+  const handleCommentSubmit = async (text: string, parentId?: string) => {
     setCommentError(null);
 
     if (!user) {
@@ -149,7 +121,7 @@ export default function GalleryDetailView({ initialPost }: GalleryDetailViewProp
       return;
     }
 
-    if (!content.trim()) {
+    if (!text.trim()) {
       setCommentError("댓글 내용을 입력해 주세요.");
       return;
     }
@@ -158,7 +130,8 @@ export default function GalleryDetailView({ initialPost }: GalleryDetailViewProp
 
     try {
       const response = await fetchEngagementPost(`/api/gallery/${post.id}`, {
-        content: content.trim(),
+        content: text.trim(),
+        ...(parentId ? { parentId } : {}),
       });
       const data = await response.json();
 
@@ -171,11 +144,11 @@ export default function GalleryDetailView({ initialPost }: GalleryDetailViewProp
       }
 
       setPost(data.post as GalleryPost);
-      setContent("");
     } catch (err) {
       setCommentError(
         err instanceof Error ? err.message : "댓글 등록에 실패했습니다."
       );
+      throw err;
     } finally {
       setCommenting(false);
     }
@@ -307,83 +280,19 @@ export default function GalleryDetailView({ initialPost }: GalleryDetailViewProp
           )}
 
           <section className="mt-8 border-t border-signature/10 pt-6">
-            <h2 className="text-lg font-bold text-stone-800">
-              댓글 {post.comments.length}
-            </h2>
-
-            {user ? (
-              <form onSubmit={handleCommentSubmit} className="mt-4 space-y-3">
-                <p className="text-xs text-stone-500">
-                  {user.nickname}으로 댓글 작성
-                </p>
-                <textarea
-                  value={content}
-                  onChange={(event) => setContent(event.target.value)}
-                  placeholder="댓글을 입력하세요."
-                  rows={3}
-                  className="w-full rounded-2xl border border-signature/20 bg-signature-light/40 px-4 py-3 text-sm outline-none focus:border-signature"
-                />
-                {commentError && (
-                  <p className="text-sm text-red-600">{commentError}</p>
-                )}
-                <button
-                  type="submit"
-                  disabled={commenting}
-                  className="portal-btn px-4 py-2.5 text-sm disabled:opacity-60"
-                >
-                  {commenting ? "등록 중..." : "댓글 등록"}
-                </button>
-              </form>
-            ) : (
-              <p className="mt-4 text-sm text-stone-500">
-                <Link
-                  href={`/login?next=${encodeURIComponent(pathname || "/gallery")}`}
-                  className="font-semibold text-signature-dark hover:underline"
-                >
-                  로그인
-                </Link>
-                후 댓글을 작성할 수 있습니다.
-              </p>
-            )}
-
-            <div className="mt-6 space-y-3">
-              {post.comments.length === 0 ? (
-                <p className="rounded-2xl bg-signature-light/50 px-4 py-6 text-center text-sm text-stone-500">
-                  첫 댓글을 남겨보세요.
-                </p>
-              ) : (
-                post.comments.map((comment) => (
-                  <div
-                    key={comment.id}
-                    className="rounded-2xl border border-signature/10 bg-signature-light/40 px-4 py-3"
-                  >
-                    <div className="flex flex-wrap items-center gap-2">
-                      <AuthorWithGrade
-                        author={comment.author}
-                        authorGradeId={comment.authorGradeId}
-                        gradesByNickname={gradesByNickname}
-                        looksByNickname={looksByNickname}
-                      />
-                      <p className="text-xs text-stone-400">
-                        {formatCommentDate(comment.createdAt)}
-                      </p>
-                    </div>
-                    <p className="mt-2 text-sm leading-6 text-stone-600">
-                      {comment.content}
-                    </p>
-                    <CommentVoteButtons
-                      commentId={comment.id}
-                      upvotes={comment.upvotes}
-                      downvotes={comment.downvotes}
-                      onVote={(commentId, choice) =>
-                        handleCommentVote(commentId, choice)
-                      }
-                      disabled={votingComment}
-                    />
-                  </div>
-                ))
-              )}
-            </div>
+            <BoardCommentThread
+              comments={post.comments}
+              user={user}
+              loginNextPath={pathname || "/gallery"}
+              gradesByNickname={gradesByNickname}
+              looksByNickname={looksByNickname}
+              commenting={commenting}
+              votingComment={votingComment}
+              commentError={commentError}
+              voteStoragePrefix="gallery-comment-vote"
+              onSubmitComment={handleCommentSubmit}
+              onVote={handleCommentVote}
+            />
           </section>
         </div>
       </article>

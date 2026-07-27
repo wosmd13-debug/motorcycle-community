@@ -1,19 +1,18 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
+import BoardCommentThread from "@/components/board/BoardCommentThread";
 import EngagementLikeButton from "@/components/engagement/EngagementLikeButton";
-import CommentVoteButtons from "@/components/gallery/CommentVoteButtons";
 import OperatorContentActions from "@/components/admin/OperatorContentActions";
 import AuthorWithGrade from "@/components/ranking/AuthorWithGrade";
 import ReportButton from "@/components/report/ReportButton";
 import VideoEditForm from "@/components/videos/VideoEditForm";
-import { fetchEngagementAction } from "@/lib/engagement-client";
+import { useContentView } from "@/hooks/useContentView";
+import { fetchEngagementAction, fetchEngagementPost } from "@/lib/engagement-client";
 import {
   canManageVideo,
-  formatCommentDate,
   formatVideoDate,
   getYouTubeEmbedUrl,
   type VideoPost,
@@ -29,7 +28,6 @@ export default function VideoDetailView({ initialVideo }: VideoDetailViewProps) 
   const { user } = useAuth();
 
   const [video, setVideo] = useState(initialVideo);
-  const [content, setContent] = useState("");
   const [commentError, setCommentError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [liking, setLiking] = useState(false);
@@ -43,40 +41,45 @@ export default function VideoDetailView({ initialVideo }: VideoDetailViewProps) 
     setVideo(initialVideo);
   }, [initialVideo]);
 
+  useContentView({
+    contentId: initialVideo.id,
+    storagePrefix: "video-view",
+    apiPath: `/api/videos/${initialVideo.id}`,
+    onViews: (views) => {
+      setVideo((current) =>
+        current.id === initialVideo.id ? { ...current, views } : current
+      );
+    },
+    onError: (message) => setError(message),
+  });
+
   useEffect(() => {
-    const viewKey = `video-view-${initialVideo.id}`;
+    let cancelled = false;
 
-    async function recordView() {
+    async function refreshDetail() {
       try {
-        let latest = initialVideo;
-
-        if (!sessionStorage.getItem(viewKey)) {
-          sessionStorage.setItem(viewKey, "1");
-          const viewRes = await fetch(`/api/videos/${initialVideo.id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ action: "view" }),
-          });
-          const viewData = await viewRes.json();
-          if (viewRes.ok) {
-            latest = viewData.video as VideoPost;
-          }
-        }
-
         const detailRes = await fetch(`/api/videos/${initialVideo.id}`);
         const detailData = await detailRes.json();
-        if (detailRes.ok) {
-          latest = detailData.video as VideoPost;
+        if (!cancelled && detailRes.ok) {
+          const fresh = detailData.video as VideoPost;
+          setVideo((current) => ({
+            ...fresh,
+            views: Math.max(current.views ?? 0, fresh.views ?? 0),
+          }));
         }
-
-        setVideo(latest);
       } catch {
-        setError("영상 정보를 불러오지 못했습니다.");
+        if (!cancelled) {
+          setError("영상 정보를 불러오지 못했습니다.");
+        }
       }
     }
 
-    void recordView();
-  }, [initialVideo]);
+    void refreshDetail();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [initialVideo.id]);
 
   const handleCopyLink = async () => {
     const url = `${window.location.origin}/videos/${video.id}`;
@@ -112,8 +115,7 @@ export default function VideoDetailView({ initialVideo }: VideoDetailViewProps) 
     }
   };
 
-  const handleCommentSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
+  const handleCommentSubmit = async (text: string, parentId?: string) => {
     setCommentError(null);
 
     if (!user) {
@@ -121,7 +123,7 @@ export default function VideoDetailView({ initialVideo }: VideoDetailViewProps) 
       return;
     }
 
-    if (!content.trim()) {
+    if (!text.trim()) {
       setCommentError("댓글 내용을 입력해 주세요.");
       return;
     }
@@ -129,10 +131,9 @@ export default function VideoDetailView({ initialVideo }: VideoDetailViewProps) 
     setCommenting(true);
 
     try {
-      const response = await fetch(`/api/videos/${video.id}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: content.trim() }),
+      const response = await fetchEngagementPost(`/api/videos/${video.id}`, {
+        content: text.trim(),
+        ...(parentId ? { parentId } : {}),
       });
       const data = await response.json();
 
@@ -141,11 +142,11 @@ export default function VideoDetailView({ initialVideo }: VideoDetailViewProps) 
       }
 
       setVideo(data.video as VideoPost);
-      setContent("");
     } catch (err) {
       setCommentError(
         err instanceof Error ? err.message : "댓글 등록에 실패했습니다."
       );
+      throw err;
     } finally {
       setCommenting(false);
     }
@@ -314,82 +315,17 @@ export default function VideoDetailView({ initialVideo }: VideoDetailViewProps) 
           )}
 
           <section className="rounded-3xl border border-signature/20 bg-signature-light/30 p-5">
-            <h2 className="font-bold text-stone-800">
-              댓글 {video.comments.length}
-            </h2>
-
-            {user ? (
-              <form onSubmit={handleCommentSubmit} className="mt-4 space-y-3">
-                <p className="text-xs text-stone-500">
-                  {user.nickname}님으로 작성
-                </p>
-                <textarea
-                  value={content}
-                  onChange={(event) => setContent(event.target.value)}
-                  required
-                  placeholder="댓글을 입력하세요."
-                  rows={3}
-                  className="w-full rounded-2xl border border-signature/20 bg-white px-4 py-3 text-sm outline-none focus:border-signature"
-                />
-                {commentError && (
-                  <p className="text-sm text-red-600">{commentError}</p>
-                )}
-                <button
-                  type="submit"
-                  disabled={commenting}
-                  className="portal-btn px-4 py-2.5 text-sm disabled:opacity-60"
-                >
-                  {commenting ? "등록 중..." : "댓글 등록"}
-                </button>
-              </form>
-            ) : (
-              <p className="mt-4 text-sm text-stone-500">
-                <Link
-                  href={`/login?next=${encodeURIComponent(pathname || `/videos/${video.id}`)}`}
-                  className="font-semibold text-signature-dark hover:underline"
-                >
-                  로그인
-                </Link>
-                후 댓글을 작성할 수 있습니다.
-              </p>
-            )}
-
-            <div className="mt-6 space-y-4">
-              {video.comments.length === 0 ? (
-                <p className="text-sm text-stone-500">첫 댓글을 남겨보세요.</p>
-              ) : (
-                video.comments.map((comment) => (
-                  <article
-                    key={comment.id}
-                    className="rounded-2xl border border-signature/20 bg-white p-4"
-                  >
-                    <div className="flex flex-wrap items-center gap-2">
-                      <AuthorWithGrade
-                        author={comment.author}
-                        nicknameClassName="text-sm font-semibold text-stone-800"
-                        className="inline-flex max-w-full flex-wrap items-center gap-1"
-                      />
-                      <span className="text-xs text-stone-400">
-                        {formatCommentDate(comment.createdAt)}
-                      </span>
-                    </div>
-                    <p className="mt-2 text-sm leading-6 text-stone-600">
-                      {comment.content}
-                    </p>
-                    <CommentVoteButtons
-                      commentId={comment.id}
-                      upvotes={comment.upvotes}
-                      downvotes={comment.downvotes}
-                      onVote={(commentId, choice) =>
-                        handleCommentVote(commentId, choice)
-                      }
-                      disabled={votingComment}
-                      storagePrefix="video-comment-vote"
-                    />
-                  </article>
-                ))
-              )}
-            </div>
+            <BoardCommentThread
+              comments={video.comments}
+              user={user}
+              loginNextPath={pathname || `/videos/${video.id}`}
+              commenting={commenting}
+              votingComment={votingComment}
+              commentError={commentError}
+              voteStoragePrefix="video-comment-vote"
+              onSubmitComment={handleCommentSubmit}
+              onVote={handleCommentVote}
+            />
           </section>
         </div>
       </article>

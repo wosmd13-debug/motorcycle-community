@@ -1,3 +1,4 @@
+import { normalizeThreadComment } from "@/lib/engagement-comments";
 import {
   emptyWeeklyOpenHours,
   formatDayOpenHours,
@@ -50,6 +51,7 @@ export type PromoComment = {
   id: string;
   author: string;
   content: string;
+  parentId?: string;
   upvotes: number;
   downvotes: number;
   /** 서버 전용 — API 응답에서는 제거 */
@@ -412,11 +414,7 @@ export function filterPromoPosts(options: {
 }
 
 export function normalizePromoComment(comment: PromoComment): PromoComment {
-  return {
-    ...comment,
-    upvotes: comment.upvotes ?? 0,
-    downvotes: comment.downvotes ?? 0,
-  };
+  return normalizeThreadComment(comment);
 }
 
 export function normalizePromoPost(post: PromoPost): PromoPost {
