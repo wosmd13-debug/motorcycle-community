@@ -136,11 +136,26 @@ export async function viewBoardPost(id: string): Promise<BoardPost | null> {
 
 export async function addBoardComment(
   id: string,
-  input: { author: string; authorId?: string; authorGradeId?: import("@/lib/ranking").MemberGradeId; content: string }
+  input: {
+    author: string;
+    authorId?: string;
+    authorGradeId?: import("@/lib/ranking").MemberGradeId;
+    content: string;
+    parentId?: string;
+  }
 ): Promise<BoardPost | null> {
   return mutateBoardPosts(async (posts) => {
     const index = posts.findIndex((post) => post.id === id);
     if (index === -1) return null;
+
+    const parentId = input.parentId?.trim();
+    if (parentId) {
+      const parent = posts[index].comments.find(
+        (comment) => comment.id === parentId
+      );
+      if (!parent) return null;
+      if (parent.parentId) return null;
+    }
 
     const comment: BoardComment = {
       id: crypto.randomUUID(),
@@ -148,6 +163,7 @@ export async function addBoardComment(
       authorId: input.authorId,
       authorGradeId: input.authorGradeId,
       content: input.content,
+      parentId: parentId || undefined,
       upvotes: 0,
       downvotes: 0,
       createdAt: new Date().toISOString(),
@@ -155,7 +171,9 @@ export async function addBoardComment(
 
     posts[index] = {
       ...posts[index],
-      comments: [comment, ...posts[index].comments],
+      comments: parentId
+        ? [...posts[index].comments, comment]
+        : [comment, ...posts[index].comments],
     };
 
     await writeBoardPosts(posts);

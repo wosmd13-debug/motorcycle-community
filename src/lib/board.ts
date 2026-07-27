@@ -133,6 +133,8 @@ export type BoardComment = {
   authorId?: string;
   authorGradeId?: import("@/lib/ranking").MemberGradeId;
   content: string;
+  /** 답글 대상 댓글 ID (최상위 댓글에만 답글 가능) */
+  parentId?: string;
   upvotes: number;
   downvotes: number;
   /** 서버 전용 — API 응답에서는 제거 */
@@ -334,9 +336,26 @@ export function filterBoardPosts(options: {
 export function normalizeBoardComment(comment: BoardComment): BoardComment {
   return {
     ...comment,
+    parentId: comment.parentId?.trim() || undefined,
     upvotes: comment.upvotes ?? 0,
     downvotes: comment.downvotes ?? 0,
   };
+}
+
+export function getRootBoardComments(comments: BoardComment[]): BoardComment[] {
+  return comments.filter((comment) => !comment.parentId);
+}
+
+export function getBoardCommentReplies(
+  comments: BoardComment[],
+  parentId: string
+): BoardComment[] {
+  return comments
+    .filter((comment) => comment.parentId === parentId)
+    .sort(
+      (a, b) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    );
 }
 
 export function normalizeBoardPost(post: BoardPost): BoardPost {

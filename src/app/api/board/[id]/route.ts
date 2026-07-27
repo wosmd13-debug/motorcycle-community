@@ -218,6 +218,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const body = await request.json();
     const content = String(body.content ?? "").trim();
+    const parentId = String(body.parentId ?? "").trim() || undefined;
 
     if (!content) {
       return NextResponse.json(
@@ -233,10 +234,15 @@ export async function POST(request: NextRequest, context: RouteContext) {
       authorId: user.id,
       authorGradeId,
       content,
+      parentId,
     });
     if (!post) {
       return NextResponse.json(
-        { error: "게시글을 찾을 수 없습니다." },
+        {
+          error: parentId
+            ? "답글을 등록할 댓글을 찾을 수 없습니다."
+            : "게시글을 찾을 수 없습니다.",
+        },
         { status: 404 }
       );
     }
