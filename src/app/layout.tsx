@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { Noto_Sans_KR } from "next/font/google";
+import Script from "next/script";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import NavigationScrollReset from "@/components/portal/NavigationScrollReset";
@@ -23,6 +24,7 @@ import {
 import "./globals.css";
 
 const GA_MEASUREMENT_ID = "G-3RK5ZDBZLV";
+const CLARITY_PROJECT_ID = "xssanximhm";
 
 const notoSans = Noto_Sans_KR({
   variable: "--font-noto-sans",
@@ -133,7 +135,16 @@ export default async function RootLayout({
         </ThemeProvider>
       </body>
       {process.env.NODE_ENV === "production" ? (
-        <GoogleAnalytics gaId={GA_MEASUREMENT_ID} />
+        <>
+          <GoogleAnalytics gaId={GA_MEASUREMENT_ID} />
+          <Script id="microsoft-clarity" strategy="afterInteractive">
+            {`(function(c,l,a,r,i,t,y){
+c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+})(window, document, "clarity", "script", "${CLARITY_PROJECT_ID}");`}
+          </Script>
+        </>
       ) : null}
     </html>
   );
