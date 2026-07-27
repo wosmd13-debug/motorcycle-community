@@ -10,6 +10,7 @@
     "backup": "bash scripts/backup.sh"
   },
   "dependencies": {
+    "@next/third-parties": "^16.2.10",
     "leaflet": "^1.9.4",
     "next": "16.2.10",
     "proj4": "^2.20.9",

@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { Noto_Sans_KR } from "next/font/google";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
@@ -20,6 +21,8 @@ import {
   websiteJsonLd,
 } from "@/lib/seo";
 import "./globals.css";
+
+const GA_MEASUREMENT_ID = "G-3RK5ZDBZLV";
 
 const notoSans = Noto_Sans_KR({
   variable: "--font-noto-sans",
@@ -129,6 +132,9 @@ export default async function RootLayout({
           </AuthProvider>
         </ThemeProvider>
       </body>
+      {process.env.NODE_ENV === "production" ? (
+        <GoogleAnalytics gaId={GA_MEASUREMENT_ID} />
+      ) : null}
     </html>
   );
 }
