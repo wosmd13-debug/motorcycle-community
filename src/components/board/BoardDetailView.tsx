@@ -26,6 +26,8 @@ type BoardDetailViewProps = {
   initialPost: BoardPost;
 };
 
+const boardViewInflight = new Set<string>();
+
 export default function BoardDetailView({ initialPost }: BoardDetailViewProps) {
   const router = useRouter();
   const { user } = useAuth();
@@ -63,19 +65,31 @@ export default function BoardDetailView({ initialPost }: BoardDetailViewProps) {
     let cancelled = false;
 
     async function recordView() {
-      if (sessionStorage.getItem(viewKey)) return;
+      if (sessionStorage.getItem(viewKey) === "1") return;
+      if (boardViewInflight.has(initialPost.id)) return;
 
-      sessionStorage.setItem(viewKey, "1");
+      boardViewInflight.add(initialPost.id);
 
       try {
         const viewRes = await fetch(`/api/board/${initialPost.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify({ action: "view" }),
         });
         const viewData = await viewRes.json();
 
-        if (cancelled || !viewRes.ok) return;
+        if (cancelled) return;
+
+        if (!viewRes.ok) {
+          setError(
+            (viewData.error as string | undefined) ??
+              "조회수를 반영하지 못했습니다."
+          );
+          return;
+        }
+
+        sessionStorage.setItem(viewKey, "1");
 
         const viewed = viewData.post as BoardPost;
         setPost((current) =>
@@ -85,6 +99,8 @@ export default function BoardDetailView({ initialPost }: BoardDetailViewProps) {
         if (!cancelled) {
           setError("조회수를 반영하지 못했습니다.");
         }
+      } finally {
+        boardViewInflight.delete(initialPost.id);
       }
     }
 

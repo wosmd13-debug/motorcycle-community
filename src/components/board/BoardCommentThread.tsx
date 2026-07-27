@@ -34,6 +34,8 @@ type BoardCommentThreadProps = {
 function CommentItem({
   comment,
   depth,
+  parentAuthor,
+  replyCount = 0,
   gradesByNickname,
   looksByNickname,
   user,
@@ -49,6 +51,8 @@ function CommentItem({
 }: {
   comment: BoardComment;
   depth: 0 | 1;
+  parentAuthor?: string;
+  replyCount?: number;
   gradesByNickname?: Record<string, MemberGradeId>;
   looksByNickname?: Record<string, ShopCosmeticLook>;
   user: PublicUser | null;
@@ -69,20 +73,37 @@ function CommentItem({
 
   return (
     <article
-      className={`rounded-2xl border border-signature/20 bg-white p-4 ${
-        depth === 1 ? "ml-2 sm:ml-3" : ""
+      className={`rounded-2xl border bg-white p-4 ${
+        depth === 1
+          ? "ml-2 border-signature/25 bg-signature-light/20 sm:ml-3"
+          : "border-signature/20"
       }`}
     >
       <div className="flex flex-wrap items-center gap-2">
+        {depth === 1 ? (
+          <span className="rounded-full bg-signature/15 px-2 py-0.5 text-[10px] font-bold text-signature-dark">
+            답글
+          </span>
+        ) : null}
         <AuthorWithGrade
           author={comment.author}
           authorGradeId={comment.authorGradeId}
           gradesByNickname={gradesByNickname}
           looksByNickname={looksByNickname}
         />
+        {depth === 1 && parentAuthor ? (
+          <span className="text-[11px] text-stone-500">
+            <span className="text-stone-400">→</span> {parentAuthor}
+          </span>
+        ) : null}
         <span className="text-xs text-stone-400">
           {formatCommentDate(comment.createdAt)}
         </span>
+        {depth === 0 && replyCount > 0 ? (
+          <span className="rounded-full bg-stone-100 px-2 py-0.5 text-[10px] font-semibold text-stone-600">
+            답글 {replyCount}
+          </span>
+        ) : null}
       </div>
       <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-stone-600">
         {comment.content}
@@ -233,6 +254,7 @@ export default function BoardCommentThread({
                 <CommentItem
                   comment={comment}
                   depth={0}
+                  replyCount={replies.length}
                   gradesByNickname={gradesByNickname}
                   looksByNickname={looksByNickname}
                   user={user}
@@ -254,12 +276,13 @@ export default function BoardCommentThread({
                 />
 
                 {replies.length > 0 ? (
-                  <div className="space-y-3 border-l-2 border-signature/15 pl-2 sm:pl-3">
+                  <div className="space-y-3 border-l-2 border-signature/25 pl-2 sm:pl-3">
                     {replies.map((reply) => (
                       <CommentItem
                         key={reply.id}
                         comment={reply}
                         depth={1}
+                        parentAuthor={comment.author}
                         gradesByNickname={gradesByNickname}
                         looksByNickname={looksByNickname}
                         user={user}

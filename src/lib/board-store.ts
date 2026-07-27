@@ -128,7 +128,7 @@ export async function viewBoardPost(id: string): Promise<BoardPost | null> {
     const index = posts.findIndex((post) => post.id === id);
     if (index === -1) return null;
 
-    posts[index] = { ...posts[index], views: posts[index].views + 1 };
+    posts[index] = { ...posts[index], views: (posts[index].views ?? 0) + 1 };
     await writeBoardPosts(posts);
     return posts[index];
   });
