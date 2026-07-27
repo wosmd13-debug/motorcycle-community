@@ -59,8 +59,7 @@ export default function PartnerRegistrationForm({
           입점 신청이 접수되었습니다
         </h3>
         <p className="mt-3 text-sm leading-7 text-slate-600">
-          현재는 데모 단계입니다. 추후 관리자 승인·결제 연동 후 실제 등록이
-          진행됩니다.
+          신청 내용을 확인한 뒤 운영팀이 연락드립니다.
           <br />
           <strong>{form.businessName}</strong> · {form.ownerName}님
         </p>
@@ -247,10 +246,10 @@ export default function PartnerRegistrationForm({
         type="submit"
         className="w-full rounded-full bg-signature-dark py-3.5 text-sm font-bold text-white shadow-sm transition hover:bg-signature-darker"
       >
-        입점·홍보 신청하기 (데모)
+        입점·홍보 신청하기
       </button>
       <p className="text-center text-xs text-slate-400">
-        추후 사장님 대시보드, 결제, 승인 절차가 연결됩니다.
+        신청 접수 후 운영팀 검토와 플랜 안내가 진행됩니다.
       </p>
     </form>
   );

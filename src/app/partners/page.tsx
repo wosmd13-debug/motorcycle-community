@@ -44,7 +44,7 @@ export default async function PartnersPage() {
         <section className="mt-10">
           <h2 className="text-xl font-bold text-slate-800">홍보 플랜</h2>
           <p className="mt-2 text-sm text-slate-500">
-            추후 결제·관리자 승인 기능과 연결될 예정입니다.
+            매장 규모와 홍보 목표에 맞는 플랜을 선택해 주세요.
           </p>
           <div className="mt-6">
             <PartnerPlanCards />
@@ -64,7 +64,8 @@ export default async function PartnersPage() {
         <section className="mt-10" id="apply">
           <h2 className="text-xl font-bold text-slate-800">입점·홍보 신청</h2>
           <p className="mt-2 text-sm text-slate-500">
-            아래 양식은 데모입니다. 추후 사장님 계정과 연결됩니다.
+            아래 양식으로 입점·홍보를 신청해 주세요. 접수 후 운영팀이 검토하여
+            안내드립니다.
           </p>
           <div className="mt-6">
             <PartnerRegistrationForm bariRoutes={bariRoutes} />
