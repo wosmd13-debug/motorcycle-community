@@ -14,6 +14,7 @@ const seoLinks = [
   { href: "/weather", label: "라이딩 날씨" },
   { href: "/videos", label: "라이딩 영상" },
   { href: "/partners", label: "제휴·홍보" },
+  { href: "/about", label: "Byanra 소개" },
   { href: "/feedback", label: "건의·문의" },
 ] as const;
 

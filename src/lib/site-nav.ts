@@ -176,6 +176,11 @@ export const navGroups: SiteNavGroup[] = [
         description: "내 순위 확인",
       },
       {
+        href: "/about",
+        label: "Byanra 소개",
+        description: "Byanra 커뮤니티 소개",
+      },
+      {
         href: "/feedback",
         label: "건의·문의",
         description: "버그·기능 건의·이용 문의",
