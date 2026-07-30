@@ -38,15 +38,29 @@ export function checkRateLimit(
   return { ok: true, remaining: Math.max(0, limit - current.count) };
 }
 
+export function clientIpFromRequest(request: Request): string {
+  const forwarded = request.headers.get("x-forwarded-for");
+  return (
+    forwarded?.split(",")[0]?.trim() ||
+    request.headers.get("x-real-ip") ||
+    "unknown"
+  );
+}
+
 export function clientKeyFromRequest(
   request: Request,
   suffix: string,
   userId?: string
 ): string {
-  const forwarded = request.headers.get("x-forwarded-for");
-  const ip =
-    forwarded?.split(",")[0]?.trim() ||
-    request.headers.get("x-real-ip") ||
-    "unknown";
+  const ip = clientIpFromRequest(request);
   return userId ? `${suffix}:user:${userId}` : `${suffix}:ip:${ip}`;
+}
+
+/** 조회수 집계용 키 — 로그인 계정 또는 비로그인 IP */
+export function viewViewerKeyFromRequest(
+  request: Request,
+  userId?: string | null
+): string {
+  if (userId) return userId;
+  return `guest:${clientIpFromRequest(request)}`;
 }

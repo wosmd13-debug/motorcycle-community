@@ -57,24 +57,39 @@ export function userHasLiked(
   return (target.likedBy ?? []).includes(userId);
 }
 
-/** 로그인 계정당 게시물 1회만 조회수 증가 */
-export function recordViewByUser<T extends ViewTarget>(
+/**
+ * 조회자 키당 게시물 1회만 조회수 증가.
+ * - 로그인: user id
+ * - 비로그인: guest:{ip}
+ */
+export function recordViewByViewer<T extends ViewTarget>(
   target: T,
-  userId: string
+  viewerKey: string
 ): { item: T; recorded: boolean } {
+  const key = viewerKey.trim();
+  if (!key) return { item: target, recorded: false };
+
   const viewedBy = target.viewedBy ?? [];
-  if (viewedBy.includes(userId)) {
+  if (viewedBy.includes(key)) {
     return { item: target, recorded: false };
   }
 
   return {
     item: {
       ...target,
-      viewedBy: [...viewedBy, userId],
+      viewedBy: [...viewedBy, key],
       views: incrementViews(target.views),
     },
     recorded: true,
   };
+}
+
+/** @deprecated Prefer recordViewByViewer */
+export function recordViewByUser<T extends ViewTarget>(
+  target: T,
+  userId: string
+): { item: T; recorded: boolean } {
+  return recordViewByViewer(target, userId);
 }
 
 /** 댓글 추천/비추천 — 서버가 votesBy로 1인 1표 강제 */

@@ -10,7 +10,7 @@ import {
 } from "@/lib/board";
 import {
   applyCommentVoteChoice,
-  recordViewByUser,
+  recordViewByViewer,
   toggleLikeByUser,
 } from "@/lib/engagement";
 import { withJsonStoreLock } from "@/lib/json-store-lock";
@@ -129,15 +129,17 @@ export async function likeBoardPost(
 
 export async function viewBoardPost(
   id: string,
-  userId: string
+  viewerKey: string
 ): Promise<{ post: BoardPost; recorded: boolean } | null> {
   return mutateBoardPosts(async (posts) => {
     const index = posts.findIndex((post) => post.id === id);
     if (index === -1) return null;
 
-    const { item, recorded } = recordViewByUser(posts[index], userId);
+    const { item, recorded } = recordViewByViewer(posts[index], viewerKey);
     posts[index] = item;
-    await writeBoardPosts(posts);
+    if (recorded) {
+      await writeBoardPosts(posts);
+    }
     return { post: posts[index], recorded };
   });
 }

@@ -69,7 +69,6 @@ export default function BoardDetailView({ initialPost }: BoardDetailViewProps) {
     contentId: initialPost.id,
     storagePrefix: user ? `board-view-u-${user.id}` : "board-view-guest",
     apiPath: `/api/board/${initialPost.id}`,
-    enabled: Boolean(user),
     onViews: (views) => {
       setPost((current) =>
         current.id === initialPost.id ? { ...current, views } : current

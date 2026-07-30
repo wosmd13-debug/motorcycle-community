@@ -27,6 +27,7 @@ import {
   rateLimitContentView,
   requireUserWithRateLimit,
 } from "@/lib/request-guards";
+import { viewViewerKeyFromRequest } from "@/lib/rate-limit";
 import { BOARD_MAX_IMAGE_COUNT } from "@/lib/board-upload-limits";
 import { sanitizePublicUploadUrls } from "@/lib/upload-files";
 import type { PublicUser } from "@/lib/users";
@@ -114,21 +115,8 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       if (limited) return limited;
 
       const user = await getCurrentUserFromRequest(request);
-      if (!user) {
-        const post = await getBoardPost(id);
-        if (!post) {
-          return NextResponse.json(
-            { error: "게시글을 찾을 수 없습니다." },
-            { status: 404 }
-          );
-        }
-        return NextResponse.json({
-          post: toPublicEngagementItem(post),
-          viewRecorded: false,
-        });
-      }
-
-      const result = await viewBoardPost(id, user.id);
+      const viewerKey = viewViewerKeyFromRequest(request, user?.id);
+      const result = await viewBoardPost(id, viewerKey);
       if (!result) {
         return NextResponse.json(
           { error: "게시글을 찾을 수 없습니다." },
