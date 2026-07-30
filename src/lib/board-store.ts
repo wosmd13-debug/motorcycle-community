@@ -8,8 +8,11 @@ import {
   type CommentVoteChoice,
   type CreateBoardPostInput,
 } from "@/lib/board";
-import { applyCommentVoteChoice, toggleLikeByUser } from "@/lib/engagement";
-import { incrementViews } from "@/lib/engagement-comments";
+import {
+  applyCommentVoteChoice,
+  recordViewByUser,
+  toggleLikeByUser,
+} from "@/lib/engagement";
 import { withJsonStoreLock } from "@/lib/json-store-lock";
 import {
   isPermissionError,
@@ -124,14 +127,18 @@ export async function likeBoardPost(
   });
 }
 
-export async function viewBoardPost(id: string): Promise<BoardPost | null> {
+export async function viewBoardPost(
+  id: string,
+  userId: string
+): Promise<{ post: BoardPost; recorded: boolean } | null> {
   return mutateBoardPosts(async (posts) => {
     const index = posts.findIndex((post) => post.id === id);
     if (index === -1) return null;
 
-    posts[index] = { ...posts[index], views: incrementViews(posts[index].views) };
+    const { item, recorded } = recordViewByUser(posts[index], userId);
+    posts[index] = item;
     await writeBoardPosts(posts);
-    return posts[index];
+    return { post: posts[index], recorded };
   });
 }
 

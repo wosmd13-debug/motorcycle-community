@@ -163,6 +163,8 @@ export type BoardPost = {
   /** 서버 전용 — API 응답에서는 제거 */
   likedBy?: string[];
   views: number;
+  /** 서버 전용 — 계정별 조회 기록 (API 응답에서는 제거) */
+  viewedBy?: string[];
   comments: BoardComment[];
   createdAt: string;
 };

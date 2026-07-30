@@ -1,8 +1,15 @@
+import { incrementViews } from "@/lib/engagement-comments";
+
 export type CommentVoteChoice = "up" | "down";
 
 export type LikeTarget = {
   likes: number;
   likedBy?: string[];
+};
+
+export type ViewTarget = {
+  views: number;
+  viewedBy?: string[];
 };
 
 export type VotableComment = {
@@ -48,6 +55,26 @@ export function userHasLiked(
 ): boolean {
   if (!target || !userId) return false;
   return (target.likedBy ?? []).includes(userId);
+}
+
+/** 로그인 계정당 게시물 1회만 조회수 증가 */
+export function recordViewByUser<T extends ViewTarget>(
+  target: T,
+  userId: string
+): { item: T; recorded: boolean } {
+  const viewedBy = target.viewedBy ?? [];
+  if (viewedBy.includes(userId)) {
+    return { item: target, recorded: false };
+  }
+
+  return {
+    item: {
+      ...target,
+      viewedBy: [...viewedBy, userId],
+      views: incrementViews(target.views),
+    },
+    recorded: true,
+  };
 }
 
 /** 댓글 추천/비추천 — 서버가 votesBy로 1인 1표 강제 */
@@ -103,15 +130,17 @@ export function applyCommentVoteChoice<T extends VotableComment>(
   };
 }
 
-/** 응답에 likedBy / votesBy 가 노출되지 않도록 제거 */
-export function toPublicEngagementItem<T extends { likedBy?: string[]; comments?: unknown }>(
-  item: T
-): T {
+/** 응답에 likedBy / viewedBy / votesBy 가 노출되지 않도록 제거 */
+export function toPublicEngagementItem<
+  T extends { likedBy?: string[]; viewedBy?: string[]; comments?: unknown },
+>(item: T): T {
   const clone = { ...item } as T & {
     likedBy?: string[];
+    viewedBy?: string[];
     comments?: Array<Record<string, unknown>>;
   };
   delete clone.likedBy;
+  delete clone.viewedBy;
 
   if (Array.isArray(clone.comments)) {
     clone.comments = clone.comments.map((comment) => {
@@ -127,7 +156,7 @@ export function toPublicEngagementItem<T extends { likedBy?: string[]; comments?
 
 /** SSR/클라이언트 props용 — 목록 전체를 공개용으로 정제 */
 export function toPublicEngagementList<
-  T extends { likedBy?: string[]; comments?: unknown },
+  T extends { likedBy?: string[]; viewedBy?: string[]; comments?: unknown },
 >(items: T[]): T[] {
   return items.map((item) => toPublicEngagementItem(item));
 }

@@ -14,6 +14,8 @@ type UseContentViewOptions = {
   apiPath: string;
   onViews: (views: number) => void;
   onError?: (message: string) => void;
+  /** false이면 조회 PATCH를 호출하지 않음 (예: 비로그인 게시판 조회) */
+  enabled?: boolean;
 };
 
 function extractViews(data: Record<string, unknown>): number | null {
@@ -93,6 +95,7 @@ export function useContentView({
   apiPath,
   onViews,
   onError,
+  enabled = true,
 }: UseContentViewOptions) {
   const onViewsRef = useRef(onViews);
   const onErrorRef = useRef(onError);
@@ -101,6 +104,8 @@ export function useContentView({
   onErrorRef.current = onError;
 
   useEffect(() => {
+    if (!enabled) return;
+
     const viewKey = `${storagePrefix}-${contentId}`;
     let cancelled = false;
 
@@ -127,5 +132,5 @@ export function useContentView({
     return () => {
       cancelled = true;
     };
-  }, [contentId, storagePrefix, apiPath]);
+  }, [contentId, storagePrefix, apiPath, enabled]);
 }

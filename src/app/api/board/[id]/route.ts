@@ -8,7 +8,10 @@ import {
   viewBoardPost,
   voteBoardComment,
 } from "@/lib/board-store";
-import { requireCurrentUserFromRequest } from "@/lib/auth-server";
+import {
+  getCurrentUserFromRequest,
+  requireCurrentUserFromRequest,
+} from "@/lib/auth-server";
 import {
   boardCategories,
   canManageBoardPost,
@@ -110,14 +113,32 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       const limited = rateLimitContentView(request, `board:${id}`);
       if (limited) return limited;
 
-      const post = await viewBoardPost(id);
-      if (!post) {
+      const user = await getCurrentUserFromRequest(request);
+      if (!user) {
+        const post = await getBoardPost(id);
+        if (!post) {
+          return NextResponse.json(
+            { error: "게시글을 찾을 수 없습니다." },
+            { status: 404 }
+          );
+        }
+        return NextResponse.json({
+          post: toPublicEngagementItem(post),
+          viewRecorded: false,
+        });
+      }
+
+      const result = await viewBoardPost(id, user.id);
+      if (!result) {
         return NextResponse.json(
           { error: "게시글을 찾을 수 없습니다." },
           { status: 404 }
         );
       }
-      return NextResponse.json({ post: toPublicEngagementItem(post) });
+      return NextResponse.json({
+        post: toPublicEngagementItem(result.post),
+        viewRecorded: result.recorded,
+      });
     }
 
     if (body.action === "comment-vote") {
