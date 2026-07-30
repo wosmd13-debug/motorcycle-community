@@ -2,7 +2,11 @@
 
 import { useEffect, useRef } from "react";
 
-const inflight = new Set<string>();
+type ViewRecordResult =
+  | { ok: true; views: number }
+  | { ok: false; rateLimited?: boolean };
+
+const inflightViews = new Map<string, Promise<ViewRecordResult>>();
 
 type UseContentViewOptions = {
   contentId: string;
@@ -23,6 +27,66 @@ function extractViews(data: Record<string, unknown>): number | null {
   return null;
 }
 
+async function patchViewOnce(apiPath: string): Promise<ViewRecordResult> {
+  const response = await fetch(apiPath, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    cache: "no-store",
+    body: JSON.stringify({ action: "view" }),
+  });
+  const data = (await response.json()) as Record<string, unknown>;
+
+  if (response.status === 429) {
+    return { ok: false, rateLimited: true };
+  }
+
+  if (!response.ok) {
+    return { ok: false };
+  }
+
+  const views = extractViews(data);
+  if (views == null) return { ok: false };
+
+  return { ok: true, views };
+}
+
+function recordContentView(viewKey: string, apiPath: string): Promise<ViewRecordResult> {
+  if (sessionStorage.getItem(viewKey) === "1") {
+    return Promise.resolve({ ok: false });
+  }
+
+  const existing = inflightViews.get(viewKey);
+  if (existing) return existing;
+
+  const promise = (async (): Promise<ViewRecordResult> => {
+    try {
+      let result = await patchViewOnce(apiPath);
+
+      if (!result.ok && result.rateLimited) {
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        if (sessionStorage.getItem(viewKey) === "1") {
+          return { ok: false };
+        }
+        result = await patchViewOnce(apiPath);
+      }
+
+      if (result.ok) {
+        sessionStorage.setItem(viewKey, "1");
+      }
+
+      return result;
+    } catch {
+      return { ok: false };
+    } finally {
+      inflightViews.delete(viewKey);
+    }
+  })();
+
+  inflightViews.set(viewKey, promise);
+  return promise;
+}
+
 export function useContentView({
   contentId,
   storagePrefix,
@@ -40,45 +104,25 @@ export function useContentView({
     const viewKey = `${storagePrefix}-${contentId}`;
     let cancelled = false;
 
-    async function recordView() {
-      if (sessionStorage.getItem(viewKey) === "1") return;
-      if (inflight.has(viewKey)) return;
+    void recordContentView(viewKey, apiPath).then((result) => {
+      if (cancelled) return;
 
-      inflight.add(viewKey);
-
-      try {
-        const response = await fetch(apiPath, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ action: "view" }),
-        });
-        const data = (await response.json()) as Record<string, unknown>;
-
-        if (cancelled) return;
-
-        if (!response.ok) {
-          onErrorRef.current?.(
-            (data.error as string | undefined) ?? "조회수를 반영하지 못했습니다."
-          );
-          return;
-        }
-
-        const views = extractViews(data);
-        if (views == null) return;
-
-        sessionStorage.setItem(viewKey, "1");
-        onViewsRef.current(views);
-      } catch {
-        if (!cancelled) {
-          onErrorRef.current?.("조회수를 반영하지 못했습니다.");
-        }
-      } finally {
-        inflight.delete(viewKey);
+      if (result.ok) {
+        onViewsRef.current(result.views);
+        return;
       }
-    }
 
-    void recordView();
+      if (result.rateLimited) {
+        onErrorRef.current?.(
+          "조회수를 반영하지 못했습니다. 잠시 후 다시 열어 주세요."
+        );
+        return;
+      }
+
+      if (sessionStorage.getItem(viewKey) !== "1") {
+        onErrorRef.current?.("조회수를 반영하지 못했습니다.");
+      }
+    });
 
     return () => {
       cancelled = true;

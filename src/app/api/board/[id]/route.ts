@@ -21,7 +21,7 @@ import { trackMissionLike } from "@/lib/mission-track";
 import { toPublicEngagementItem } from "@/lib/engagement";
 import {
   parseCommentVoteChoice,
-  rateLimitAnonymousView,
+  rateLimitContentView,
   requireUserWithRateLimit,
 } from "@/lib/request-guards";
 import { sanitizePublicUploadUrls } from "@/lib/upload-files";
@@ -106,7 +106,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     }
 
     if (body.action === "view") {
-      const limited = rateLimitAnonymousView(request);
+      const limited = rateLimitContentView(request, `board:${id}`);
       if (limited) return limited;
 
       const post = await viewBoardPost(id);

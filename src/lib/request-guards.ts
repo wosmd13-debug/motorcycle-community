@@ -108,11 +108,12 @@ export function rateLimitAuthAttempt(
   return null;
 }
 
-export function rateLimitAnonymousView(
-  request: NextRequest
+export function rateLimitContentView(
+  request: NextRequest,
+  contentKey: string
 ): NextResponse | null {
   const result = checkRateLimit(
-    clientKeyFromRequest(request, "view"),
+    clientKeyFromRequest(request, `view:${contentKey}`),
     VIEW_LIMIT,
     WINDOW_MS
   );
@@ -125,6 +126,13 @@ export function rateLimitAnonymousView(
     );
   }
   return null;
+}
+
+/** @deprecated Prefer rateLimitContentView with a content id */
+export function rateLimitAnonymousView(
+  request: NextRequest
+): NextResponse | null {
+  return rateLimitContentView(request, "global");
 }
 
 export function parseCommentVoteChoice(body: {

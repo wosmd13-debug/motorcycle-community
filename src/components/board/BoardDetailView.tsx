@@ -56,7 +56,13 @@ export default function BoardDetailView({ initialPost }: BoardDetailViewProps) {
   const canManage = canManageBoardPost(user, post);
 
   useEffect(() => {
-    setPost(initialPost);
+    setPost((current) => {
+      if (current.id !== initialPost.id) return initialPost;
+      return {
+        ...initialPost,
+        views: Math.max(current.views ?? 0, initialPost.views ?? 0),
+      };
+    });
   }, [initialPost]);
 
   useContentView({
