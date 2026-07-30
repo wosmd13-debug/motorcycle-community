@@ -19,12 +19,18 @@ export type UploadFolder =
   | "marketplace"
   | "rider-cafes";
 
+export type AuthenticatedImageUploadOptions = {
+  maxBytes?: number;
+  maxSizeError?: string;
+};
+
 /**
  * 로그인 필수 이미지 업로드. 용량·형식·매직바이트를 검사합니다.
  */
 export async function handleAuthenticatedImageUpload(
   request: NextRequest,
-  folder: UploadFolder
+  folder: UploadFolder,
+  options?: AuthenticatedImageUploadOptions
 ): Promise<NextResponse> {
   try {
     const user = await requireCurrentUserFromRequest(request);
@@ -54,9 +60,14 @@ export async function handleAuthenticatedImageUpload(
       );
     }
 
-    if (file.size > MAX_FILE_SIZE) {
+    const maxFileSize = options?.maxBytes ?? MAX_FILE_SIZE;
+    if (file.size > maxFileSize) {
       return NextResponse.json(
-        { error: "파일 크기는 5MB 이하여야 합니다." },
+        {
+          error:
+            options?.maxSizeError ??
+            "파일 크기는 5MB 이하여야 합니다.",
+        },
         { status: 400 }
       );
     }

@@ -4,6 +4,7 @@ import { createBoardPost, readBoardPosts } from "@/lib/board-store";
 import { toPublicEngagementItem } from "@/lib/engagement";
 import { getMemberRankingByUserId } from "@/lib/ranking-server";
 import { requireUserWithRateLimit } from "@/lib/request-guards";
+import { BOARD_MAX_IMAGE_COUNT } from "@/lib/board-upload-limits";
 import { sanitizePublicUploadUrls } from "@/lib/upload-files";
 
 const postCategories = boardCategories.filter(
@@ -37,7 +38,7 @@ export async function POST(request: NextRequest) {
       Array.isArray(body.imageUrls)
         ? body.imageUrls.map((url: unknown) => String(url).trim()).filter(Boolean)
         : []
-    );
+    ).slice(0, BOARD_MAX_IMAGE_COUNT);
 
     if (!title || !content) {
       return NextResponse.json(

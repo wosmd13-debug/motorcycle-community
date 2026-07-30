@@ -9,6 +9,7 @@ import {
   type BoardCategory,
   type BoardPost,
 } from "@/lib/board";
+import { BOARD_MAX_IMAGE_COUNT } from "@/lib/board-upload-limits";
 
 type BoardEditFormProps = {
   post: BoardPost;
@@ -34,7 +35,10 @@ export default function BoardEditForm({
 
   const handleFilesChange = (nextFiles: FileList | null) => {
     previews.forEach((url) => URL.revokeObjectURL(url));
-    const selected = nextFiles ? Array.from(nextFiles).slice(0, 5) : [];
+    const remaining = Math.max(0, BOARD_MAX_IMAGE_COUNT - imageUrls.length);
+    const selected = nextFiles
+      ? Array.from(nextFiles).slice(0, remaining)
+      : [];
     setFiles(selected);
     setPreviews(selected.map((file) => URL.createObjectURL(file)));
   };
@@ -72,7 +76,7 @@ export default function BoardEditForm({
           title,
           content,
           category,
-          imageUrls: nextImageUrls.slice(0, 5),
+          imageUrls: nextImageUrls.slice(0, BOARD_MAX_IMAGE_COUNT),
         }),
       });
       const data = await response.json();
