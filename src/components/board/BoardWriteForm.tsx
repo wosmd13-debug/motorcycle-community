@@ -9,6 +9,7 @@ import {
   type BoardCategory,
   type BoardPost,
 } from "@/lib/board";
+import { BOARD_MAX_IMAGE_COUNT } from "@/lib/board-upload-limits";
 
 type BoardWriteFormProps = {
   onClose: () => void;
@@ -34,7 +35,9 @@ export default function BoardWriteForm({
 
   const handleFilesChange = (nextFiles: FileList | null) => {
     previews.forEach((url) => URL.revokeObjectURL(url));
-    const selected = nextFiles ? Array.from(nextFiles).slice(0, 5) : [];
+    const selected = nextFiles
+      ? Array.from(nextFiles).slice(0, BOARD_MAX_IMAGE_COUNT)
+      : [];
     setFiles(selected);
     setPreviews(selected.map((file) => URL.createObjectURL(file)));
   };
@@ -147,7 +150,7 @@ export default function BoardWriteForm({
 
           <label className="block">
             <span className="text-sm font-semibold text-slate-700">
-              사진 (선택, 최대 5장)
+              사진 (선택, 최대 3장)
             </span>
             <input
               type="file"

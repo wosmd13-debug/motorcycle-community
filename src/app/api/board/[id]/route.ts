@@ -24,6 +24,7 @@ import {
   rateLimitContentView,
   requireUserWithRateLimit,
 } from "@/lib/request-guards";
+import { BOARD_MAX_IMAGE_COUNT } from "@/lib/board-upload-limits";
 import { sanitizePublicUploadUrls } from "@/lib/upload-files";
 import type { PublicUser } from "@/lib/users";
 
@@ -159,7 +160,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
             body.imageUrls
               .map((url: unknown) => String(url).trim())
               .filter(Boolean)
-          )
+          ).slice(0, BOARD_MAX_IMAGE_COUNT)
         : undefined;
 
       if (title !== undefined && !title) {
