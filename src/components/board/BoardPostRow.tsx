@@ -8,6 +8,7 @@ import {
   getBoardThumbnail,
   type BoardPost,
 } from "@/lib/board";
+import { getBikeBrandById } from "@/lib/home-portal";
 import type { MemberGradeId } from "@/lib/ranking";
 import type { ShopCosmeticLook } from "@/lib/shop";
 
@@ -24,6 +25,9 @@ export default function BoardPostRow({
 }: BoardPostRowProps) {
   const thumbnail = getBoardThumbnail(post);
   const meta = boardCategoryMeta[post.category];
+  const brandLabel = post.bikeBrand
+    ? getBikeBrandById(post.bikeBrand)?.label
+    : undefined;
   const highlight = looksByNickname?.[post.author]?.postHighlightActive;
 
   return (
@@ -52,6 +56,11 @@ export default function BoardPostRow({
 
       <div className="board-post-title-wrap min-w-0 max-w-full">
         <p className="board-post-title board-post-title-clamp text-[13px] leading-snug text-[var(--text-primary)] sm:text-sm sm:leading-5">
+          {brandLabel ? (
+            <span className="mr-1.5 inline-flex rounded bg-signature-light px-1.5 py-0.5 text-[10px] font-bold text-signature-dark">
+              {brandLabel}
+            </span>
+          ) : null}
           {post.title}
           {post.comments.length > 0 && (
             <span className="ml-1 font-semibold text-[#e03131]">

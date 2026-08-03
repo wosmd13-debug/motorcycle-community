@@ -5,6 +5,10 @@ import SiteBreadcrumbs from "@/components/seo/SiteBreadcrumbs";
 import { boardCategories } from "@/lib/board";
 import { readBoardPosts } from "@/lib/board-store";
 import { toPublicEngagementList } from "@/lib/engagement";
+import {
+  getBikeBrandById,
+  isBikeBrandId,
+} from "@/lib/home-portal";
 import { buildPageMetadata } from "@/lib/seo";
 import { redirect } from "next/navigation";
 
@@ -19,7 +23,12 @@ export const metadata: Metadata = buildPageMetadata({
 });
 
 type BoardPageProps = {
-  searchParams: Promise<{ q?: string; id?: string; category?: string }>;
+  searchParams: Promise<{
+    q?: string;
+    id?: string;
+    category?: string;
+    brand?: string;
+  }>;
 };
 
 function resolveBoardCategory(
@@ -32,12 +41,17 @@ function resolveBoardCategory(
 }
 
 export default async function BoardPage({ searchParams }: BoardPageProps) {
-  const { q, id, category } = await searchParams;
+  const { q, id, category, brand } = await searchParams;
 
   if (id) {
     redirect(`/board/${id}`);
   }
 
+  const initialBikeBrand =
+    brand && isBikeBrandId(brand) ? brand : "";
+  const selectedBrand = initialBikeBrand
+    ? getBikeBrandById(initialBikeBrand)
+    : undefined;
   const initialPosts = toPublicEngagementList(await readBoardPosts());
 
   return (
@@ -46,17 +60,29 @@ export default async function BoardPage({ searchParams }: BoardPageProps) {
         <SiteBreadcrumbs
           items={[
             { name: "홈", href: "/" },
-            { name: "자유게시판" },
+            { name: "자유게시판", href: selectedBrand ? "/board" : undefined },
+            ...(selectedBrand
+              ? [{ name: `${selectedBrand.label} 차종` }]
+              : []),
           ]}
         />
         <PageHeader
-          title="바이크 자유게시판"
-          description="코스·정비·장비·모임까지, 라이더들의 이야기를 자유롭게 나눠보세요."
+          title={
+            selectedBrand
+              ? `${selectedBrand.label} 차종 게시판`
+              : "바이크 자유게시판"
+          }
+          description={
+            selectedBrand
+              ? `${selectedBrand.label} 라이더들의 후기·질문·정보를 나눠보세요.`
+              : "코스·정비·장비·모임까지, 라이더들의 이야기를 자유롭게 나눠보세요."
+          }
         />
         <BoardExplorer
           initialPosts={initialPosts}
           initialQuery={q ?? ""}
           initialCategory={resolveBoardCategory(category)}
+          initialBikeBrand={initialBikeBrand}
         />
       </div>
     </div>

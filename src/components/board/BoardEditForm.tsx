@@ -10,6 +10,7 @@ import {
   type BoardPost,
 } from "@/lib/board";
 import { BOARD_MAX_IMAGE_COUNT } from "@/lib/board-upload-limits";
+import { BIKE_BRANDS } from "@/lib/home-portal";
 
 type BoardEditFormProps = {
   post: BoardPost;
@@ -23,6 +24,7 @@ export default function BoardEditForm({
   onUpdated,
 }: BoardEditFormProps) {
   const [category, setCategory] = useState<BoardCategory>(post.category);
+  const [bikeBrand, setBikeBrand] = useState(post.bikeBrand ?? "");
   const [title, setTitle] = useState(post.title);
   const [content, setContent] = useState(post.content);
   const [imageUrls, setImageUrls] = useState<string[]>(post.imageUrls);
@@ -76,6 +78,7 @@ export default function BoardEditForm({
           title,
           content,
           category,
+          bikeBrand: bikeBrand || null,
           imageUrls: nextImageUrls.slice(0, BOARD_MAX_IMAGE_COUNT),
         }),
       });
@@ -123,6 +126,24 @@ export default function BoardEditForm({
             compact
             hideAllOption
           />
+
+          <label className="block">
+            <span className="text-sm font-semibold text-slate-700">
+              차종(브랜드)
+            </span>
+            <select
+              value={bikeBrand}
+              onChange={(event) => setBikeBrand(event.target.value)}
+              className="mt-2 w-full rounded-2xl border border-signature/20 bg-signature-light/50 px-4 py-3 text-sm outline-none focus:border-signature"
+            >
+              <option value="">선택 안 함</option>
+              {BIKE_BRANDS.map((brand) => (
+                <option key={brand.id} value={brand.id}>
+                  {brand.label}
+                </option>
+              ))}
+            </select>
+          </label>
 
           <label className="block">
             <span className="text-sm font-semibold text-slate-700">제목</span>

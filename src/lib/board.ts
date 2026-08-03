@@ -159,6 +159,8 @@ export type BoardPost = {
   authorGradeId?: import("@/lib/ranking").MemberGradeId;
   content: string;
   imageUrls: string[];
+  /** 차종(브랜드) 게시판 소속 — BIKE_BRANDS id */
+  bikeBrand?: string;
   likes: number;
   /** 서버 전용 — API 응답에서는 제거 */
   likedBy?: string[];
@@ -177,6 +179,7 @@ export type CreateBoardPostInput = {
   authorGradeId?: import("@/lib/ranking").MemberGradeId;
   content: string;
   imageUrls?: string[];
+  bikeBrand?: string;
 };
 
 export const seedBoardPosts: BoardPost[] = [
@@ -312,16 +315,31 @@ export function filterBoardPosts(options: {
   posts: BoardPost[];
   category?: (typeof boardCategories)[number];
   query?: string;
+  bikeBrand?: string;
   sort?: "latest" | "popular";
 }): BoardPost[] {
-  const { posts, category = "전체", query = "", sort = "latest" } = options;
+  const {
+    posts,
+    category = "전체",
+    query = "",
+    bikeBrand = "",
+    sort = "latest",
+  } = options;
 
   const filtered = posts.filter((post) => {
     if (category !== "전체" && post.category !== category) return false;
 
+    if (bikeBrand && post.bikeBrand !== bikeBrand) return false;
+
     if (query.trim()) {
       const q = query.trim().toLowerCase();
-      const searchable = [post.title, post.author, post.content, post.category]
+      const searchable = [
+        post.title,
+        post.author,
+        post.content,
+        post.category,
+        post.bikeBrand ?? "",
+      ]
         .join(" ")
         .toLowerCase();
       if (!searchable.includes(q)) return false;
@@ -360,6 +378,7 @@ export function normalizeBoardPost(post: BoardPost): BoardPost {
   return {
     ...post,
     imageUrls: post.imageUrls ?? [],
+    bikeBrand: post.bikeBrand?.trim() || undefined,
     views: post.views ?? 0,
     likes: post.likes ?? 0,
     comments: (post.comments ?? []).map(normalizeBoardComment),

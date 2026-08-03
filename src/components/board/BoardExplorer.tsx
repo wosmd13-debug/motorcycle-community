@@ -18,30 +18,45 @@ import {
   type BoardPost,
 } from "@/lib/board";
 import { collectAuthorGradeSources } from "@/lib/member-grade-display";
+import {
+  BIKE_BRANDS,
+  getBikeBrandById,
+  isBikeBrandId,
+} from "@/lib/home-portal";
 
 type BoardExplorerProps = {
   initialPosts: BoardPost[];
   initialQuery?: string;
   initialCategory?: (typeof boardCategories)[number];
+  initialBikeBrand?: string;
 };
 
 export default function BoardExplorer({
   initialPosts,
   initialQuery = "",
   initialCategory = "전체",
+  initialBikeBrand = "",
 }: BoardExplorerProps) {
   const ensureLoggedIn = useLoginRedirect();
   const [posts, setPosts] = useState<BoardPost[]>(initialPosts);
   const [category, setCategory] =
     useState<(typeof boardCategories)[number]>(initialCategory);
+  const [bikeBrand, setBikeBrand] = useState(
+    initialBikeBrand && isBikeBrandId(initialBikeBrand) ? initialBikeBrand : ""
+  );
   const [query, setQuery] = useState(initialQuery);
   const [sort, setSort] = useState<"latest" | "popular">("latest");
   const [showWrite, setShowWrite] = useState(false);
   const [writeCategory, setWriteCategory] = useState<BoardCategory>("자유");
+  const [writeBikeBrand, setWriteBikeBrand] = useState(
+    initialBikeBrand && isBikeBrandId(initialBikeBrand) ? initialBikeBrand : ""
+  );
+
+  const selectedBrand = getBikeBrandById(bikeBrand);
 
   const filteredPosts = useMemo(
-    () => filterBoardPosts({ posts, category, query, sort }),
-    [posts, category, query, sort]
+    () => filterBoardPosts({ posts, category, query, bikeBrand, sort }),
+    [posts, category, query, bikeBrand, sort]
   );
 
   const featuredPosts = useMemo(
@@ -68,6 +83,7 @@ export default function BoardExplorer({
     if (!ensureLoggedIn()) return;
     if (prefillCategory) setWriteCategory(prefillCategory);
     else if (category !== "전체") setWriteCategory(category);
+    setWriteBikeBrand(bikeBrand);
     setShowWrite(true);
   };
 
@@ -79,11 +95,17 @@ export default function BoardExplorer({
         <div className="border border-[var(--dc-border)] bg-[var(--surface)]">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--dc-border-light)] px-4 py-3">
             <div>
-              <p className="text-sm font-semibold text-[var(--text-primary)]">글 목록</p>
+              <p className="text-sm font-semibold text-[var(--text-primary)]">
+                {selectedBrand
+                  ? `${selectedBrand.label} 차종 게시판`
+                  : "글 목록"}
+              </p>
               <p className="mt-0.5 text-xs text-[var(--text-muted)]">
-                {category === "전체"
-                  ? `총 ${filteredPosts.length}개의 글`
-                  : `${category} · ${filteredPosts.length}개`}
+                {selectedBrand
+                  ? `${selectedBrand.label} · ${filteredPosts.length}개`
+                  : category === "전체"
+                    ? `총 ${filteredPosts.length}개의 글`
+                    : `${category} · ${filteredPosts.length}개`}
               </p>
             </div>
             <button
@@ -101,6 +123,39 @@ export default function BoardExplorer({
               onSelect={(value) => setCategory(value)}
               compact
             />
+          </div>
+
+          <div className="border-b border-[var(--dc-border-light)] px-4 py-3">
+            <p className="mb-2 text-xs font-semibold text-[var(--text-muted)]">
+              차종별 게시판
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              <button
+                type="button"
+                onClick={() => setBikeBrand("")}
+                className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition ${
+                  !bikeBrand
+                    ? "bg-stone-800 text-white"
+                    : "bg-white text-stone-600 ring-1 ring-portal-border hover:bg-portal-muted"
+                }`}
+              >
+                전체
+              </button>
+              {BIKE_BRANDS.map((brand) => (
+                <button
+                  key={brand.id}
+                  type="button"
+                  onClick={() => setBikeBrand(brand.id)}
+                  className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition ${
+                    bikeBrand === brand.id
+                      ? "bg-stone-800 text-white"
+                      : "bg-white text-stone-600 ring-1 ring-portal-border hover:bg-portal-muted"
+                  }`}
+                >
+                  {brand.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="border-b border-[var(--dc-border-light)] px-4 py-3">
@@ -158,6 +213,7 @@ export default function BoardExplorer({
       {showWrite && (
         <BoardWriteForm
           initialCategory={writeCategory}
+          initialBikeBrand={writeBikeBrand}
           onClose={() => setShowWrite(false)}
           onCreated={handleCreated}
         />

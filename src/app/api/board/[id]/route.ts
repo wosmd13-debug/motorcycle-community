@@ -29,6 +29,7 @@ import {
 } from "@/lib/request-guards";
 import { viewViewerKeyFromRequest } from "@/lib/rate-limit";
 import { BOARD_MAX_IMAGE_COUNT } from "@/lib/board-upload-limits";
+import { isBikeBrandId } from "@/lib/home-portal";
 import { sanitizePublicUploadUrls } from "@/lib/upload-files";
 import type { PublicUser } from "@/lib/users";
 
@@ -164,6 +165,16 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       const content =
         body.content !== undefined ? String(body.content).trim() : undefined;
       const category = body.category as BoardCategory | undefined;
+      const bikeBrandRaw =
+        body.bikeBrand !== undefined ? String(body.bikeBrand ?? "").trim() : undefined;
+      const bikeBrand =
+        bikeBrandRaw === undefined
+          ? undefined
+          : bikeBrandRaw === ""
+            ? null
+            : isBikeBrandId(bikeBrandRaw)
+              ? bikeBrandRaw
+              : false;
       const imageUrls = Array.isArray(body.imageUrls)
         ? sanitizePublicUploadUrls(
             body.imageUrls
@@ -193,11 +204,19 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         );
       }
 
+      if (bikeBrand === false) {
+        return NextResponse.json(
+          { error: "올바른 차종(브랜드)을 선택해 주세요." },
+          { status: 400 }
+        );
+      }
+
       const post = await updateBoardPost(id, {
         title,
         content,
         category,
         imageUrls,
+        ...(bikeBrand !== undefined ? { bikeBrand } : {}),
       });
 
       if (!post) {

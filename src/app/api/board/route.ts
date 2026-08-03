@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { boardCategories, type BoardCategory } from "@/lib/board";
 import { createBoardPost, readBoardPosts } from "@/lib/board-store";
 import { toPublicEngagementItem } from "@/lib/engagement";
+import { isBikeBrandId } from "@/lib/home-portal";
 import { getMemberRankingByUserId } from "@/lib/ranking-server";
 import { requireUserWithRateLimit } from "@/lib/request-guards";
 import { BOARD_MAX_IMAGE_COUNT } from "@/lib/board-upload-limits";
@@ -34,6 +35,12 @@ export async function POST(request: NextRequest) {
     const title = String(body.title ?? "").trim();
     const content = String(body.content ?? "").trim();
     const category = body.category as BoardCategory;
+    const bikeBrandRaw = String(body.bikeBrand ?? "").trim();
+    const bikeBrand = bikeBrandRaw
+      ? isBikeBrandId(bikeBrandRaw)
+        ? bikeBrandRaw
+        : null
+      : undefined;
     const imageUrls = sanitizePublicUploadUrls(
       Array.isArray(body.imageUrls)
         ? body.imageUrls.map((url: unknown) => String(url).trim()).filter(Boolean)
@@ -54,6 +61,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (bikeBrandRaw && bikeBrand == null) {
+      return NextResponse.json(
+        { error: "올바른 차종(브랜드)을 선택해 주세요." },
+        { status: 400 }
+      );
+    }
+
     const ranking = await getMemberRankingByUserId(user.id);
     const authorGradeId = user.isOperator ? "operator" : ranking?.grade.id;
 
@@ -65,6 +79,7 @@ export async function POST(request: NextRequest) {
       content,
       category,
       imageUrls,
+      ...(bikeBrand ? { bikeBrand } : {}),
     });
 
     return NextResponse.json(

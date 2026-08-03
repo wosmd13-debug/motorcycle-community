@@ -22,6 +22,7 @@ import {
 } from "@/lib/board";
 import { fetchEngagementAction, fetchEngagementPost } from "@/lib/engagement-client";
 import { collectAuthorGradeSources } from "@/lib/member-grade-display";
+import { getBikeBrandById } from "@/lib/home-portal";
 
 type BoardDetailViewProps = {
   initialPost: BoardPost;
@@ -53,6 +54,9 @@ export default function BoardDetailView({ initialPost }: BoardDetailViewProps) {
   const postHighlight = looksByNickname[post.author]?.postHighlightActive;
 
   const meta = boardCategoryMeta[post.category];
+  const brandLabel = post.bikeBrand
+    ? getBikeBrandById(post.bikeBrand)?.label
+    : undefined;
   const canManage = canManageBoardPost(user, post);
 
   useEffect(() => {
@@ -206,7 +210,14 @@ export default function BoardDetailView({ initialPost }: BoardDetailViewProps) {
         <div className="border-b border-signature/10 px-5 py-4 sm:px-8 sm:py-5">
           <div className="space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <BoardCategoryBadge category={post.category} size="md" />
+              <div className="flex flex-wrap items-center gap-2">
+                <BoardCategoryBadge category={post.category} size="md" />
+                {brandLabel ? (
+                  <span className="rounded-full bg-signature-light px-3 py-1 text-xs font-semibold text-signature-dark">
+                    {brandLabel}
+                  </span>
+                ) : null}
+              </div>
               <div className="flex flex-wrap items-center justify-end gap-2">
                 {canManage && (
                   <OperatorContentActions

@@ -10,20 +10,24 @@ import {
   type BoardPost,
 } from "@/lib/board";
 import { BOARD_MAX_IMAGE_COUNT } from "@/lib/board-upload-limits";
+import { BIKE_BRANDS, getBikeBrandById } from "@/lib/home-portal";
 
 type BoardWriteFormProps = {
   onClose: () => void;
   onCreated: (post: BoardPost) => void;
   initialCategory?: BoardCategory;
+  initialBikeBrand?: string;
 };
 
 export default function BoardWriteForm({
   onClose,
   onCreated,
   initialCategory = "자유",
+  initialBikeBrand = "",
 }: BoardWriteFormProps) {
   const { user } = useAuth();
   const [category, setCategory] = useState<BoardCategory>(initialCategory);
+  const [bikeBrand, setBikeBrand] = useState(initialBikeBrand);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [files, setFiles] = useState<File[]>([]);
@@ -32,6 +36,7 @@ export default function BoardWriteForm({
   const [error, setError] = useState<string | null>(null);
 
   const meta = boardCategoryMeta[category];
+  const brandLabel = getBikeBrandById(bikeBrand)?.label;
 
   const handleFilesChange = (nextFiles: FileList | null) => {
     previews.forEach((url) => URL.revokeObjectURL(url));
@@ -75,6 +80,7 @@ export default function BoardWriteForm({
           content,
           category,
           imageUrls,
+          ...(bikeBrand ? { bikeBrand } : {}),
         }),
       });
       const createJson = await createRes.json();
@@ -123,6 +129,27 @@ export default function BoardWriteForm({
             hideAllOption
           />
         </div>
+
+        <label className="mt-4 block">
+          <span className="text-sm font-semibold text-slate-700">
+            차종(브랜드)
+          </span>
+          <select
+            value={bikeBrand}
+            onChange={(event) => setBikeBrand(event.target.value)}
+            className="mt-2 w-full rounded-2xl border border-orange-100 bg-orange-50/50 px-4 py-3 text-sm outline-none focus:border-orange-300"
+          >
+            <option value="">선택 안 함</option>
+            {BIKE_BRANDS.map((brand) => (
+              <option key={brand.id} value={brand.id}>
+                {brand.label}
+              </option>
+            ))}
+          </select>
+          <span className="mt-1 block text-xs text-slate-500">
+            차종별 게시판에 올리려면 브랜드를 선택하세요.
+          </span>
+        </label>
 
         <div className="mt-6 space-y-4">
           <Input
@@ -185,7 +212,11 @@ export default function BoardWriteForm({
           disabled={submitting}
           className="mt-6 w-full rounded-2xl bg-orange-500 py-3 text-sm font-bold text-white transition hover:bg-orange-600 disabled:opacity-60"
         >
-          {submitting ? "등록 중..." : `${meta.emoji} ${meta.label} 게시판에 등록`}
+          {submitting
+            ? "등록 중..."
+            : brandLabel
+              ? `${meta.emoji} ${brandLabel} · ${meta.label}에 등록`
+              : `${meta.emoji} ${meta.label} 게시판에 등록`}
         </button>
       </form>
     </PortalModal>

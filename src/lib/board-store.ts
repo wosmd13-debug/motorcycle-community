@@ -237,6 +237,7 @@ export type UpdateBoardPostInput = {
   content?: string;
   category?: BoardPost["category"];
   imageUrls?: string[];
+  bikeBrand?: string | null;
 };
 
 export async function updateBoardPost(
@@ -256,9 +257,13 @@ export async function updateBoardPost(
       await deleteUploadedPublicUrls(removed);
     }
 
+    const { bikeBrand, ...rest } = input;
     posts[index] = {
       ...posts[index],
-      ...input,
+      ...rest,
+      ...(bikeBrand !== undefined
+        ? { bikeBrand: bikeBrand?.trim() || undefined }
+        : {}),
     };
 
     await writeBoardPosts(posts);

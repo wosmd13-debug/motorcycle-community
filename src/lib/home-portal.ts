@@ -10,7 +10,7 @@ export type BikeBrandLink = {
   label: string;
   /** Board search query (used when href is omitted) */
   query: string;
-  /** Override destination; defaults to `/board?q={query}` */
+  /** Override destination; defaults to `/board?brand={id}` */
   href?: string;
   comingSoon?: boolean;
 };
@@ -38,7 +38,27 @@ export const BIKE_BRANDS: BikeBrandLink[] = [
   { id: "ducati", label: "Ducati", query: "Ducati" },
   { id: "suzuki", label: "Suzuki", query: "Suzuki" },
   { id: "ktm", label: "KTM", query: "KTM" },
+  { id: "harley-davidson", label: "Harley-Davidson", query: "Harley" },
+  { id: "indian", label: "Indian", query: "Indian" },
+  { id: "royal-enfield", label: "Royal Enfield", query: "Royal Enfield" },
+  { id: "triumph", label: "Triumph", query: "Triumph" },
+  { id: "aprilia", label: "Aprilia", query: "Aprilia" },
+  { id: "vespa", label: "Vespa", query: "Vespa" },
+  { id: "benelli", label: "Benelli", query: "Benelli" },
 ];
+
+export function getBikeBrandById(id: string): BikeBrandLink | undefined {
+  return BIKE_BRANDS.find((brand) => brand.id === id);
+}
+
+export function isBikeBrandId(value: string): boolean {
+  return BIKE_BRANDS.some((brand) => brand.id === value);
+}
+
+export function getBikeBrandHref(brand: BikeBrandLink): string {
+  if (brand.href) return brand.href;
+  return `/board?brand=${encodeURIComponent(brand.id)}`;
+}
 
 export const DISCOVER_MENU: DiscoverMenuItem[] = [
   {
@@ -66,11 +86,6 @@ export const DISCOVER_MENU: DiscoverMenuItem[] = [
     href: "/board",
   },
 ];
-
-export function getBikeBrandHref(brand: BikeBrandLink): string {
-  if (brand.href) return brand.href;
-  return `/board?q=${encodeURIComponent(brand.query)}`;
-}
 
 export type HotSortKey = "views" | "likes" | "comments";
 
