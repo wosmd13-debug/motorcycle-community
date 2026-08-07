@@ -20,9 +20,10 @@ import { trackMissionLike } from "@/lib/mission-track";
 import { toPublicEngagementItem } from "@/lib/engagement";
 import {
   parseCommentVoteChoice,
-  rateLimitAnonymousView,
+  rateLimitContentView,
   requireUserWithRateLimit,
 } from "@/lib/request-guards";
+import { viewViewerKeyFromRequest } from "@/lib/rate-limit";
 
 const postCategories = galleryCategories.filter(
   (category): category is GalleryCategory => category !== "전체"
@@ -105,17 +106,22 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     }
 
     if (body.action === "view") {
-      const limited = rateLimitAnonymousView(request);
+      const limited = rateLimitContentView(request, `gallery:${id}`);
       if (limited) return limited;
 
-      const post = await viewGalleryPost(id);
-      if (!post) {
+      const user = await getCurrentUserFromRequest(request);
+      const viewerKey = viewViewerKeyFromRequest(request, user?.id);
+      const result = await viewGalleryPost(id, viewerKey);
+      if (!result) {
         return NextResponse.json(
           { error: "게시물을 찾을 수 없습니다." },
           { status: 404 }
         );
       }
-      return NextResponse.json({ post: toPublicEngagementItem(post) });
+      return NextResponse.json({
+        post: toPublicEngagementItem(result.post),
+        viewRecorded: result.recorded,
+      });
     }
 
     if (body.action === "comment-vote") {

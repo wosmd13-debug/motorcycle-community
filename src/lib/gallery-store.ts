@@ -8,12 +8,11 @@ import {
   type GalleryComment,
   type GalleryPost,
 } from "@/lib/gallery";
+import { applyCommentVoteChoice, recordViewByViewer, toggleLikeByUser } from "@/lib/engagement";
 import {
-  incrementViews,
   insertThreadComment,
   normalizeThreadComment,
 } from "@/lib/engagement-comments";
-import { applyCommentVoteChoice, toggleLikeByUser } from "@/lib/engagement";
 import { withJsonStoreLock } from "@/lib/json-store-lock";
 import {
   isPermissionError,
@@ -121,14 +120,20 @@ export async function likeGalleryPost(
   });
 }
 
-export async function viewGalleryPost(id: string): Promise<GalleryPost | null> {
+export async function viewGalleryPost(
+  id: string,
+  viewerKey: string
+): Promise<{ post: GalleryPost; recorded: boolean } | null> {
   return mutateGalleryPosts(async (posts) => {
     const index = posts.findIndex((post) => post.id === id);
     if (index === -1) return null;
 
-    posts[index] = { ...posts[index], views: incrementViews(posts[index].views) };
-    await writeGalleryPosts(posts);
-    return posts[index];
+    const { item, recorded } = recordViewByViewer(posts[index], viewerKey);
+    posts[index] = item;
+    if (recorded) {
+      await writeGalleryPosts(posts);
+    }
+    return { post: posts[index], recorded };
   });
 }
 

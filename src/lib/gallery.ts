@@ -44,6 +44,8 @@ export type GalleryPost = {
   /** 서버 전용 — API 응답에서는 제거 */
   likedBy?: string[];
   views: number;
+  /** 서버 전용 — 계정/비로그인 IP별 조회 기록 (API 응답에서는 제거) */
+  viewedBy?: string[];
   comments: GalleryComment[];
   createdAt: string;
 };

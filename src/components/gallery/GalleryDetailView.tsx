@@ -50,12 +50,18 @@ export default function GalleryDetailView({ initialPost }: GalleryDetailViewProp
   const canManage = user ? canManageGalleryPost(user, post) : false;
 
   useEffect(() => {
-    setPost(initialPost);
+    setPost((current) => {
+      if (current.id !== initialPost.id) return initialPost;
+      return {
+        ...initialPost,
+        views: Math.max(current.views ?? 0, initialPost.views ?? 0),
+      };
+    });
   }, [initialPost]);
 
   useContentView({
     contentId: initialPost.id,
-    storagePrefix: "gallery-view",
+    storagePrefix: user ? `gallery-view-u-${user.id}` : "gallery-view-guest",
     apiPath: `/api/gallery/${initialPost.id}`,
     onViews: (views) => {
       setPost((current) =>
