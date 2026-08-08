@@ -15,9 +15,10 @@ import {
 } from "@/lib/rider-cafe-store";
 import { toPublicEngagementItem } from "@/lib/engagement";
 import {
-  rateLimitAnonymousView,
+  rateLimitContentView,
   requireUserWithRateLimit,
 } from "@/lib/request-guards";
+import { viewViewerKeyFromRequest } from "@/lib/rate-limit";
 
 const postRegions = riderCafeCategories.filter(
   (region): region is RiderCafeRegion => region !== "전체"
@@ -99,17 +100,22 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     }
 
     if (body.action === "view") {
-      const limited = rateLimitAnonymousView(request);
+      const limited = rateLimitContentView(request, `rider-cafe:${id}`);
       if (limited) return limited;
 
-      const entry = await viewRiderCafe(id);
-      if (!entry) {
+      const user = await getCurrentUserFromRequest(request);
+      const viewerKey = viewViewerKeyFromRequest(request, user?.id);
+      const result = await viewRiderCafe(id, viewerKey);
+      if (!result) {
         return NextResponse.json(
           { error: "카페 정보를 찾을 수 없습니다." },
           { status: 404 }
         );
       }
-      return NextResponse.json({ entry: toPublicEngagementItem(entry) });
+      return NextResponse.json({
+        entry: toPublicEngagementItem(result.entry),
+        viewRecorded: result.recorded,
+      });
     }
 
     if (body.action === "update") {

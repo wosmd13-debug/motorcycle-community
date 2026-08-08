@@ -124,6 +124,8 @@ export type RiderCafeEntry = {
   /** 서버 전용 — API 응답에서는 제거 */
   likedBy?: string[];
   views: number;
+  /** 서버 전용 — API 응답에서는 제거 */
+  viewedBy?: string[];
   createdAt: string;
 };
 

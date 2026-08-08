@@ -8,8 +8,7 @@ import {
   type RiderCafeEntry,
   type UpdateRiderCafeInput,
 } from "@/lib/rider-cafe";
-import { toggleLikeByUser } from "@/lib/engagement";
-import { incrementViews } from "@/lib/engagement-comments";
+import { recordViewByViewer, toggleLikeByUser } from "@/lib/engagement";
 import { deleteUploadedPublicUrls } from "@/lib/upload-files";
 
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -89,14 +88,20 @@ export async function likeRiderCafe(
   return { entry: entries[index], liked };
 }
 
-export async function viewRiderCafe(id: string): Promise<RiderCafeEntry | null> {
+export async function viewRiderCafe(
+  id: string,
+  viewerKey: string
+): Promise<{ entry: RiderCafeEntry; recorded: boolean } | null> {
   const entries = await readRiderCafes();
   const index = entries.findIndex((entry) => entry.id === id);
   if (index === -1) return null;
 
-  entries[index] = { ...entries[index], views: incrementViews(entries[index].views) };
-  await writeRiderCafes(entries);
-  return entries[index];
+  const { item, recorded } = recordViewByViewer(entries[index], viewerKey);
+  entries[index] = item;
+  if (recorded) {
+    await writeRiderCafes(entries);
+  }
+  return { entry: entries[index], recorded };
 }
 
 export async function updateRiderCafe(

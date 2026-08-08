@@ -44,12 +44,18 @@ export default function RiderCafeDetailView({
   const todayHours = formatTodayOpenHours(entry.weeklyHours);
 
   useEffect(() => {
-    setEntry(initialEntry);
+    setEntry((current) => {
+      if (current.id !== initialEntry.id) return initialEntry;
+      return {
+        ...initialEntry,
+        views: Math.max(current.views ?? 0, initialEntry.views ?? 0),
+      };
+    });
   }, [initialEntry]);
 
   useContentView({
     contentId: initialEntry.id,
-    storagePrefix: "rider-cafe-view",
+    storagePrefix: user ? `rider-cafe-view-u-${user.id}` : "rider-cafe-view-guest",
     apiPath: `/api/rider-cafes/${initialEntry.id}`,
     onViews: (views) => {
       setEntry((current) =>
