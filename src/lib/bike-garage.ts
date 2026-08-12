@@ -36,6 +36,20 @@ export const serviceIntervalLabels: Record<ServiceIntervalKey, string> = {
   brake: "브레이크",
 };
 
+export const serviceIntervalActionLabels: Record<ServiceIntervalKey, string> = {
+  oil: "교환",
+  chain: "점검",
+  tire: "교환",
+  brake: "교환",
+};
+
+export const intervalKeyToCategory: Record<ServiceIntervalKey, MaintenanceCategory> = {
+  oil: "engine_oil",
+  chain: "chain",
+  tire: "tire",
+  brake: "brake",
+};
+
 export const defaultServiceIntervals: Record<ServiceIntervalKey, number> = {
   oil: 3000,
   chain: 500,
@@ -73,17 +87,23 @@ export type UserBikeGarage = {
   updatedAt: string;
 };
 
-export type MaintenanceReminderStatus = "ok" | "soon" | "due";
+export type MaintenanceReminderStatus = "ok" | "soon" | "due" | "unknown";
+
+export type MaintenanceReminderSource = "log" | "manual" | "none";
 
 export type MaintenanceReminder = {
   key: ServiceIntervalKey;
   label: string;
+  actionLabel: string;
   intervalKm: number;
-  lastServiceKm: number;
+  lastServiceKm: number | null;
+  lastServiceDate: string | null;
   currentMileage: number;
   drivenKm: number;
-  remainingKm: number;
+  remainingKm: number | null;
+  nextServiceKm: number | null;
   status: MaintenanceReminderStatus;
+  source: MaintenanceReminderSource;
 };
 
 export type CreateMaintenanceLogInput = {
@@ -149,72 +169,221 @@ export function getIntervalKeyForCategory(
   return categoryToIntervalKey[category] ?? null;
 }
 
+export function getLatestLogForInterval(
+  logs: MaintenanceLog[],
+  key: ServiceIntervalKey
+): MaintenanceLog | null {
+  let latest: MaintenanceLog | null = null;
+
+  for (const log of logs) {
+    if (getIntervalKeyForCategory(log.category) !== key) continue;
+    if (!latest || log.mileage > latest.mileage) {
+      latest = log;
+      continue;
+    }
+    if (log.mileage === latest.mileage) {
+      const logTime = new Date(log.date).getTime();
+      const latestTime = new Date(latest.date).getTime();
+      if (logTime > latestTime) latest = log;
+    }
+  }
+
+  return latest;
+}
+
+export function maxLogMileage(logs: MaintenanceLog[]): number {
+  return logs.reduce((max, log) => Math.max(max, log.mileage), 0);
+}
+
+export function syncBikeMileageFromLogs(
+  bike: BikeProfile,
+  logs: MaintenanceLog[]
+): BikeProfile {
+  const normalized = normalizeBikeProfile(bike);
+  return {
+    ...normalized,
+    currentMileage: Math.max(normalized.currentMileage, maxLogMileage(logs)),
+  };
+}
+
+/**
+ * 일지로 자동 채워졌던 lastServiceAt을 로그 변경 후 다시 맞춘다.
+ * 사용자가 직접 입력한 값이 최신 일지 km와 다를 때는 그대로 둔다.
+ */
+export function reconcileLastServiceAfterLogsChange(
+  bike: BikeProfile,
+  previousLogs: MaintenanceLog[],
+  nextLogs: MaintenanceLog[]
+): BikeProfile {
+  const next: BikeProfile = {
+    ...normalizeBikeProfile(bike),
+    lastServiceAt: { ...bike.lastServiceAt },
+  };
+
+  for (const key of serviceIntervalKeys) {
+    const previousLatest = getLatestLogForInterval(previousLogs, key);
+    const nextLatest = getLatestLogForInterval(nextLogs, key);
+    const manualKm = next.lastServiceAt[key];
+
+    if (previousLatest && manualKm === previousLatest.mileage) {
+      if (nextLatest) {
+        next.lastServiceAt[key] = nextLatest.mileage;
+      } else {
+        delete next.lastServiceAt[key];
+      }
+    }
+  }
+
+  return syncBikeMileageFromLogs(next, nextLogs);
+}
+
 export function applyLogToBikeProfile(
   bike: BikeProfile,
   log: Pick<MaintenanceLog, "category" | "mileage">
 ): BikeProfile {
   const normalized = normalizeBikeProfile(bike);
-  const next: BikeProfile = {
+  return {
     ...normalized,
     currentMileage: Math.max(normalized.currentMileage, log.mileage),
-    lastServiceAt: { ...normalized.lastServiceAt },
   };
-
-  const intervalKey = getIntervalKeyForCategory(log.category);
-  if (intervalKey) {
-    const previous = next.lastServiceAt[intervalKey] ?? 0;
-    if (log.mileage >= previous) {
-      next.lastServiceAt[intervalKey] = log.mileage;
-    }
-  }
-
-  return next;
 }
 
 export function getMaintenanceReminders(
-  bike: BikeProfile
+  bike: BikeProfile,
+  logs: MaintenanceLog[] = []
 ): MaintenanceReminder[] {
-  const normalized = normalizeBikeProfile(bike);
+  const normalized = syncBikeMileageFromLogs(bike, logs);
 
   return serviceIntervalKeys.map((key) => {
-    const intervalKm = normalized.serviceIntervals[key];
-    const lastServiceKm = normalized.lastServiceAt[key] ?? 0;
-    const drivenKm = Math.max(0, normalized.currentMileage - lastServiceKm);
+    const intervalKm = Math.max(1, Math.floor(normalized.serviceIntervals[key]));
+    const latestLog = getLatestLogForInterval(logs, key);
+    const manualKm =
+      normalized.lastServiceAt[key] != null
+        ? Math.floor(normalized.lastServiceAt[key] as number)
+        : null;
+    const logKm = latestLog != null ? Math.floor(latestLog.mileage) : null;
+
+    let lastServiceKm: number | null = null;
+    let source: MaintenanceReminderSource = "none";
+    let lastServiceDate: string | null = null;
+
+    if (logKm != null && (manualKm == null || logKm >= manualKm)) {
+      lastServiceKm = logKm;
+      source = "log";
+      lastServiceDate = latestLog?.date ?? null;
+    } else if (manualKm != null) {
+      lastServiceKm = manualKm;
+      source = "manual";
+    }
+
+    const currentMileage = Math.floor(normalized.currentMileage);
+
+    if (lastServiceKm == null) {
+      return {
+        key,
+        label: serviceIntervalLabels[key],
+        actionLabel: serviceIntervalActionLabels[key],
+        intervalKm,
+        lastServiceKm: null,
+        lastServiceDate: null,
+        currentMileage,
+        drivenKm: 0,
+        remainingKm: null,
+        nextServiceKm: null,
+        status: "unknown" as const,
+        source,
+      };
+    }
+
+    const drivenKm = Math.max(0, currentMileage - lastServiceKm);
     const remainingKm = intervalKm - drivenKm;
+    const nextServiceKm = lastServiceKm + intervalKm;
+    const soonThreshold = Math.max(1, Math.round(intervalKm * 0.2));
 
     let status: MaintenanceReminderStatus = "ok";
     if (remainingKm <= 0) {
       status = "due";
-    } else if (remainingKm <= Math.max(200, intervalKm * 0.2)) {
+    } else if (remainingKm <= soonThreshold) {
       status = "soon";
     }
 
     return {
       key,
       label: serviceIntervalLabels[key],
+      actionLabel: serviceIntervalActionLabels[key],
       intervalKm,
       lastServiceKm,
-      currentMileage: normalized.currentMileage,
+      lastServiceDate,
+      currentMileage,
       drivenKm,
       remainingKm,
+      nextServiceKm,
       status,
+      source,
     };
   });
 }
 
-export function formatGarageDate(value: string): string {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
+export function toGarageDateInput(value: string): string {
+  const match = value.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (match) return match[1];
 
-  return new Intl.DateTimeFormat("ko-KR", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(date);
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+export function todayGarageDate(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+export function formatGarageDate(value: string): string {
+  const input = toGarageDateInput(value);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(input)) return value;
+  const [year, month, day] = input.split("-");
+  return `${year}. ${month}. ${day}.`;
+}
+
+export function formatGarageKm(value: number): string {
+  return `${Math.round(value).toLocaleString("ko-KR")}km`;
 }
 
 export function formatGarageCost(value: number): string {
   return new Intl.NumberFormat("ko-KR").format(value) + "원";
+}
+
+export function getReminderProgressPercent(reminder: MaintenanceReminder): number {
+  if (reminder.status === "unknown" || reminder.intervalKm <= 0) return 0;
+  return Math.min(100, Math.round((reminder.drivenKm / reminder.intervalKm) * 100));
+}
+
+export function maintenanceCategoryBadgeClass(
+  category: MaintenanceCategory
+): string {
+  switch (category) {
+    case "engine_oil":
+      return "bg-amber-100 text-amber-900";
+    case "chain":
+      return "bg-slate-200 text-slate-800";
+    case "tire":
+      return "bg-sky-100 text-sky-800";
+    case "brake":
+      return "bg-rose-100 text-rose-800";
+    case "filter":
+      return "bg-violet-100 text-violet-800";
+    case "general":
+      return "bg-emerald-100 text-emerald-800";
+    default:
+      return "bg-stone-200 text-stone-700";
+  }
 }
 
 export function sortMaintenanceLogs(logs: MaintenanceLog[]): MaintenanceLog[] {
@@ -231,17 +400,24 @@ export function getReminderStatusClass(status: MaintenanceReminderStatus): strin
       return "border-red-200 bg-red-50 text-red-800";
     case "soon":
       return "border-amber-200 bg-amber-50 text-amber-900";
+    case "unknown":
+      return "border-stone-200 bg-stone-50 text-stone-700";
     default:
       return "border-emerald-200 bg-emerald-50 text-emerald-800";
   }
 }
 
-export function getReminderStatusLabel(status: MaintenanceReminderStatus): string {
+export function getReminderStatusLabel(
+  status: MaintenanceReminderStatus,
+  actionLabel = "교환"
+): string {
   switch (status) {
     case "due":
-      return "교환 필요";
+      return `${actionLabel} 필요`;
     case "soon":
-      return "곧 점검";
+      return `곧 ${actionLabel}`;
+    case "unknown":
+      return "기록 없음";
     default:
       return "양호";
   }

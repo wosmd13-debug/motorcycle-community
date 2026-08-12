@@ -1,14 +1,17 @@
 import { promises as fs } from "fs";
 import path from "path";
 import {
-  applyLogToBikeProfile,
   createEmptyBikeProfile,
   normalizeBikeProfile,
   normalizeMaintenanceLog,
+  reconcileLastServiceAfterLogsChange,
+  serviceIntervalKeys,
   sortMaintenanceLogs,
+  syncBikeMileageFromLogs,
   type BikeProfile,
   type CreateMaintenanceLogInput,
   type MaintenanceLog,
+  type ServiceIntervalKey,
   type UpdateMaintenanceLogInput,
   type UserBikeGarage,
 } from "@/lib/bike-garage";
@@ -62,27 +65,45 @@ export async function getUserBikeGarage(userId: string): Promise<UserBikeGarage>
 
 export async function updateUserBikeProfile(
   userId: string,
-  input: Partial<BikeProfile> & { model: string }
+  input: Partial<Omit<BikeProfile, "lastServiceAt">> & {
+    model: string;
+    lastServiceAt?: Partial<Record<ServiceIntervalKey, number | null>>;
+  }
 ): Promise<UserBikeGarage> {
   const store = await readStore();
   const current = store[userId] ?? emptyGarage(userId);
   const base = current.bike ?? createEmptyBikeProfile();
 
-  const bike = normalizeBikeProfile({
-    ...base,
-    ...input,
-    model: input.model.trim(),
-    year: input.year != null ? Number(input.year) : undefined,
-    currentMileage: Math.max(0, Number(input.currentMileage ?? base.currentMileage)),
-    serviceIntervals: {
-      ...base.serviceIntervals,
-      ...input.serviceIntervals,
-    },
-    lastServiceAt: {
-      ...base.lastServiceAt,
-      ...input.lastServiceAt,
-    },
-  });
+  const lastServiceAt: Partial<Record<ServiceIntervalKey, number>> = {
+    ...base.lastServiceAt,
+  };
+  if (input.lastServiceAt) {
+    for (const key of serviceIntervalKeys) {
+      if (!(key in input.lastServiceAt)) continue;
+      const value = input.lastServiceAt[key];
+      if (value == null) {
+        delete lastServiceAt[key];
+      } else {
+        lastServiceAt[key] = value;
+      }
+    }
+  }
+
+  const bike = syncBikeMileageFromLogs(
+    normalizeBikeProfile({
+      ...base,
+      ...input,
+      model: input.model.trim(),
+      year: input.year != null ? Number(input.year) : undefined,
+      currentMileage: Math.max(0, Number(input.currentMileage ?? base.currentMileage)),
+      serviceIntervals: {
+        ...base.serviceIntervals,
+        ...input.serviceIntervals,
+      },
+      lastServiceAt,
+    }),
+    current.logs
+  );
 
   const next: UserBikeGarage = {
     ...current,
@@ -108,15 +129,15 @@ export async function addMaintenanceLog(
     createdAt: new Date().toISOString(),
   });
 
-  let bike = current.bike;
-  if (bike) {
-    bike = applyLogToBikeProfile(bike, log);
-  }
+  const logs = sortMaintenanceLogs([log, ...current.logs]);
+  const bike = current.bike
+    ? syncBikeMileageFromLogs(current.bike, logs)
+    : null;
 
   const next: UserBikeGarage = {
     ...current,
     bike,
-    logs: sortMaintenanceLogs([log, ...current.logs]),
+    logs,
     updatedAt: new Date().toISOString(),
   };
 
@@ -146,10 +167,15 @@ export async function updateMaintenanceLog(
 
   const logs = [...current.logs];
   logs[index] = updated;
+  const sortedLogs = sortMaintenanceLogs(logs);
+  const bike = current.bike
+    ? reconcileLastServiceAfterLogsChange(current.bike, current.logs, sortedLogs)
+    : null;
 
   const next: UserBikeGarage = {
     ...current,
-    logs: sortMaintenanceLogs(logs),
+    bike,
+    logs: sortedLogs,
     updatedAt: new Date().toISOString(),
   };
 
@@ -168,9 +194,13 @@ export async function deleteMaintenanceLog(
 
   const nextLogs = current.logs.filter((log) => log.id !== logId);
   if (nextLogs.length === current.logs.length) return null;
+  const bike = current.bike
+    ? reconcileLastServiceAfterLogsChange(current.bike, current.logs, nextLogs)
+    : null;
 
   const next: UserBikeGarage = {
     ...current,
+    bike,
     logs: nextLogs,
     updatedAt: new Date().toISOString(),
   };

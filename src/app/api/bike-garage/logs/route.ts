@@ -49,7 +49,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!date || Number.isNaN(new Date(date).getTime())) {
+    const dateInput = date.slice(0, 10);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateInput) || Number.isNaN(new Date(dateInput).getTime())) {
       return NextResponse.json(
         { error: "정비 날짜를 입력해 주세요." },
         { status: 400 }
@@ -78,7 +79,7 @@ export async function POST(request: NextRequest) {
     }
 
     const garage = await addMaintenanceLog(user.id, {
-      date: new Date(date).toISOString(),
+      date: dateInput,
       mileage: Math.floor(mileage),
       category,
       title: resolvedTitle,
@@ -88,7 +89,9 @@ export async function POST(request: NextRequest) {
       memo: memo || undefined,
     });
 
-    const reminders = garage.bike ? getMaintenanceReminders(garage.bike) : [];
+    const reminders = garage.bike
+      ? getMaintenanceReminders(garage.bike, garage.logs)
+      : [];
 
     return NextResponse.json({ garage, reminders }, { status: 201 });
   } catch {

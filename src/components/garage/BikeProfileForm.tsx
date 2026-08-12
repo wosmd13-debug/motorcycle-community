@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   defaultServiceIntervals,
+  serviceIntervalActionLabels,
   serviceIntervalKeys,
   serviceIntervalLabels,
   type MaintenanceReminder,
@@ -43,6 +44,24 @@ export default function BikeProfileForm({ garage, onSaved }: BikeProfileFormProp
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  useEffect(() => {
+    const nextBike = garage.bike;
+    setModel(nextBike?.model ?? "");
+    setYear(nextBike?.year != null ? String(nextBike.year) : "");
+    setDisplacement(nextBike?.displacement ?? "");
+    setCurrentMileage(
+      nextBike?.currentMileage != null ? String(nextBike.currentMileage) : "0"
+    );
+    setMemo(nextBike?.memo ?? "");
+    setIntervals(nextBike?.serviceIntervals ?? defaultServiceIntervals);
+    const nextLast: Partial<Record<(typeof serviceIntervalKeys)[number], string>> = {};
+    for (const key of serviceIntervalKeys) {
+      const value = nextBike?.lastServiceAt?.[key];
+      if (value != null) nextLast[key] = String(value);
+    }
+    setLastServiceAt(nextLast);
+  }, [garage.updatedAt]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -86,7 +105,7 @@ export default function BikeProfileForm({ garage, onSaved }: BikeProfileFormProp
       <div>
         <h2 className="text-sm font-bold text-stone-800">내 바이크</h2>
         <p className="mt-1 text-xs text-stone-500">
-          기종, 주행거리, 마지막 정비 km를 입력하면 교환 주기 알림이 계산됩니다.
+          현재 주행거리와 교환 주기를 저장하면 소모품 남은 km가 계산됩니다.
         </p>
       </div>
 
@@ -142,10 +161,16 @@ export default function BikeProfileForm({ garage, onSaved }: BikeProfileFormProp
       </Field>
 
       <div>
-        <p className="text-sm font-semibold text-stone-700">교환 주기 (km)</p>
+        <p className="text-sm font-semibold text-stone-700">소모품 주기 (km)</p>
+        <p className="mt-1 text-xs text-stone-500">
+          기종 매뉴얼 기준을 그대로 넣으면 됩니다. 체인은 교환이 아니라 점검·윤활 주기입니다.
+        </p>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           {serviceIntervalKeys.map((key) => (
-            <Field key={key} label={serviceIntervalLabels[key]}>
+            <Field
+              key={key}
+              label={`${serviceIntervalLabels[key]} ${serviceIntervalActionLabels[key]}`}
+            >
               <input
                 type="number"
                 min={100}
@@ -166,10 +191,10 @@ export default function BikeProfileForm({ garage, onSaved }: BikeProfileFormProp
 
       <div>
         <p className="text-sm font-semibold text-stone-700">
-          마지막 정비 주행거리 (km)
+          앱 사용 전 마지막 정비 km
         </p>
         <p className="mt-1 text-xs text-stone-500">
-          정비 일지를 등록하면 자동으로 갱신됩니다. 처음 설정할 때만 입력하세요.
+          일지에 없는 이전 정비만 입력하세요. 이후 정비는 일지에 기록하면 그 km가 우선 적용됩니다. 비우고 저장하면 해당 항목은 초기화됩니다.
         </p>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           {serviceIntervalKeys.map((key) => (
@@ -184,7 +209,7 @@ export default function BikeProfileForm({ garage, onSaved }: BikeProfileFormProp
                     [key]: event.target.value,
                   }))
                 }
-                placeholder="0"
+                placeholder="비워두면 일지 기준"
                 className="w-full border border-signature/20 bg-signature-light/40 px-3 py-2.5 text-sm outline-none focus:border-signature focus:ring-2 focus:ring-signature/15"
               />
             </Field>

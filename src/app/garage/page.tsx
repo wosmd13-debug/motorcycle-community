@@ -7,7 +7,7 @@ export default function GaragePage() {
       <div className="portal-container mx-auto max-w-3xl space-y-4">
         <PageHeader
           title="내 차고"
-          description="바이크 정보와 정비 일지를 기록하고, 오일·체인·타이어 교환 주기를 km 기준으로 확인하세요."
+          description="정비 일지를 남기고, 현재 주행거리 기준으로 오일·체인·타이어·브레이크 주기를 확인하세요."
         />
         <BikeGarageClient />
       </div>

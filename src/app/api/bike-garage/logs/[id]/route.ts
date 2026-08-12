@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireCurrentUserFromRequest } from "@/lib/auth-server";
 import {
+  getMaintenanceReminders,
   maintenanceCategories,
   type MaintenanceCategory,
 } from "@/lib/bike-garage";
@@ -33,14 +34,14 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     } = {};
 
     if (body.date != null) {
-      const date = String(body.date).trim();
-      if (!date || Number.isNaN(new Date(date).getTime())) {
+      const date = String(body.date).trim().slice(0, 10);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(new Date(date).getTime())) {
         return NextResponse.json(
           { error: "정비 날짜를 올바르게 입력해 주세요." },
           { status: 400 }
         );
       }
-      input.date = new Date(date).toISOString();
+      input.date = date;
     }
 
     if (body.mileage != null) {
@@ -89,7 +90,11 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       );
     }
 
-    return NextResponse.json({ garage });
+    const reminders = garage.bike
+      ? getMaintenanceReminders(garage.bike, garage.logs)
+      : [];
+
+    return NextResponse.json({ garage, reminders });
   } catch {
     return NextResponse.json(
       { error: "정비 기록 수정에 실패했습니다." },
@@ -113,7 +118,11 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       );
     }
 
-    return NextResponse.json({ garage });
+    const reminders = garage.bike
+      ? getMaintenanceReminders(garage.bike, garage.logs)
+      : [];
+
+    return NextResponse.json({ garage, reminders });
   } catch {
     return NextResponse.json(
       { error: "정비 기록 삭제에 실패했습니다." },

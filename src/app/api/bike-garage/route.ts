@@ -17,7 +17,9 @@ export async function GET(request: NextRequest) {
     if (user instanceof NextResponse) return user;
 
     const garage = await getUserBikeGarage(user.id);
-    const reminders = garage.bike ? getMaintenanceReminders(garage.bike) : [];
+    const reminders = garage.bike
+      ? getMaintenanceReminders(garage.bike, garage.logs)
+      : [];
 
     return NextResponse.json({ garage, reminders });
   } catch {
@@ -77,10 +79,14 @@ export async function PATCH(request: NextRequest) {
       serviceIntervals[key] = Math.floor(parsed);
     }
 
-    const lastServiceAt: Partial<Record<ServiceIntervalKey, number>> = {};
+    const lastServiceAt: Partial<Record<ServiceIntervalKey, number | null>> = {};
     for (const key of serviceIntervalKeys) {
-      const raw = body.lastServiceAt?.[key];
-      if (raw == null || raw === "") continue;
+      if (body.lastServiceAt == null || !(key in body.lastServiceAt)) continue;
+      const raw = body.lastServiceAt[key];
+      if (raw == null || raw === "") {
+        lastServiceAt[key] = null;
+        continue;
+      }
       const parsed = Number(raw);
       if (!Number.isFinite(parsed) || parsed < 0) {
         return NextResponse.json(
@@ -104,7 +110,9 @@ export async function PATCH(request: NextRequest) {
       lastServiceAt,
     });
 
-    const reminders = garage.bike ? getMaintenanceReminders(garage.bike) : [];
+    const reminders = garage.bike
+      ? getMaintenanceReminders(garage.bike, garage.logs)
+      : [];
 
     return NextResponse.json({ garage, reminders });
   } catch {
