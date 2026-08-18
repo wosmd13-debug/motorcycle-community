@@ -8,6 +8,7 @@ import OperatorContentActions from "@/components/admin/OperatorContentActions";
 import { BoardCategoryBadge } from "@/components/board/BoardCategoryGuide";
 import BoardEditForm from "@/components/board/BoardEditForm";
 import BoardCommentThread from "@/components/board/BoardCommentThread";
+import BoardPostContent from "@/components/board/BoardPostContent";
 import EngagementLikeButton from "@/components/engagement/EngagementLikeButton";
 import AuthorWithGrade from "@/components/ranking/AuthorWithGrade";
 import ReportButton from "@/components/report/ReportButton";
@@ -269,9 +270,7 @@ export default function BoardDetailView({ initialPost }: BoardDetailViewProps) {
             </div>
           )}
 
-          <p className="whitespace-pre-wrap text-sm leading-7 text-stone-700">
-            {post.content}
-          </p>
+          <BoardPostContent content={post.content} />
 
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-stone-500">
             <EngagementLikeButton
