@@ -14,12 +14,14 @@ import type { ShopCosmeticLook } from "@/lib/shop";
 
 type BoardPostRowProps = {
   post: BoardPost;
+  displayNumber: number;
   gradesByNickname?: Record<string, MemberGradeId>;
   looksByNickname?: Record<string, ShopCosmeticLook>;
 };
 
 export default function BoardPostRow({
   post,
+  displayNumber,
   gradesByNickname,
   looksByNickname,
 }: BoardPostRowProps) {
@@ -37,6 +39,13 @@ export default function BoardPostRow({
         highlight ? "shop-post-highlight" : ""
       }`}
     >
+      <span
+        className="flex h-12 w-8 shrink-0 items-center justify-center text-[11px] font-bold tabular-nums text-[var(--text-muted)] sm:h-14 sm:w-9 sm:text-xs"
+        aria-label={`글 번호 ${displayNumber}`}
+      >
+        {displayNumber}
+      </span>
+
       {thumbnail ? (
         <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-sm bg-[var(--surface-subtle)] sm:h-14 sm:w-14">
           {/* eslint-disable-next-line @next/next/no-img-element */}

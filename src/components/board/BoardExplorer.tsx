@@ -195,10 +195,11 @@ export default function BoardExplorer({
             </div>
           ) : (
             <div>
-              {filteredPosts.map((post) => (
+              {filteredPosts.map((post, index) => (
                 <BoardPostRow
                   key={post.id}
                   post={post}
+                  displayNumber={filteredPosts.length - index}
                   gradesByNickname={gradesByNickname}
                   looksByNickname={looksByNickname}
                 />
