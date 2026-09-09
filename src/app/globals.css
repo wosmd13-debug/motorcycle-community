@@ -793,6 +793,136 @@ body {
   color: #3f6212;
 }
 
+/* 칭호 등급(일반/레어/에픽/레전더리) 디자인 */
+.shop-title-badge-common-green {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.shop-title-badge-common-blue {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.shop-title-badge-common-orange {
+  background: #ffedd5;
+  color: #9a3412;
+}
+
+.shop-title-badge-rare {
+  border: 1px solid color-mix(in srgb, currentColor 40%, transparent);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45);
+}
+
+.shop-title-badge-rare-amber {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  color: #92400e;
+}
+
+.shop-title-badge-rare-sky {
+  background: linear-gradient(135deg, #e0f2fe, #bae6fd);
+  color: #075985;
+}
+
+.shop-title-badge-rare-rose {
+  background: linear-gradient(135deg, #ffe4e6, #fecdd3);
+  color: #9f1239;
+}
+
+.shop-title-badge-rare-slate {
+  background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
+  color: #334155;
+}
+
+.shop-title-badge-rare-indigo {
+  background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+  color: #3730a3;
+}
+
+.shop-title-badge-rare-teal {
+  background: linear-gradient(135deg, #ccfbf1, #99f6e4);
+  color: #115e59;
+}
+
+.shop-title-badge-epic {
+  letter-spacing: 0.01em;
+}
+
+.shop-title-badge-epic-indigo {
+  background: linear-gradient(135deg, #4338ca, #6366f1);
+  color: #eef2ff;
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.65);
+}
+
+.shop-title-badge-epic-violet {
+  background: linear-gradient(135deg, #6d28d9, #8b5cf6);
+  color: #f5f3ff;
+  box-shadow: 0 0 8px rgba(139, 92, 246, 0.65);
+}
+
+.shop-title-badge-epic-lime {
+  background: linear-gradient(135deg, #4d7c0f, #84cc16);
+  color: #f7fee7;
+  box-shadow: 0 0 8px rgba(132, 204, 22, 0.6);
+}
+
+.shop-title-badge-epic-teal {
+  background: linear-gradient(135deg, #0f766e, #14b8a6);
+  color: #f0fdfa;
+  box-shadow: 0 0 8px rgba(20, 184, 166, 0.6);
+}
+
+.shop-title-badge-epic-navy {
+  background: linear-gradient(135deg, #0f172a, #1e3a8a);
+  color: #dbeafe;
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.55);
+}
+
+.shop-title-badge-legendary {
+  position: relative;
+  border: 1px solid transparent;
+  background-size: 200% 100%;
+  animation: shop-title-shimmer 2.4s linear infinite;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.18);
+}
+
+.shop-title-badge-legendary-gold {
+  background-image: linear-gradient(90deg, #fde68a, #f59e0b, #fde68a);
+  color: #78350f;
+}
+
+.shop-title-badge-legendary-blaze {
+  background-image: linear-gradient(90deg, #fecaca, #ef4444, #f97316, #fecaca);
+  color: #7f1d1d;
+}
+
+.shop-title-badge-legendary-violet {
+  background-image: linear-gradient(90deg, #ddd6fe, #7c3aed, #ddd6fe);
+  color: #3b0764;
+}
+
+.shop-title-badge-legendary-rainbow {
+  background-image: linear-gradient(
+    90deg,
+    #f87171,
+    #fbbf24,
+    #34d399,
+    #60a5fa,
+    #c084fc,
+    #f87171
+  );
+  color: #1c1917;
+}
+
+@keyframes shop-title-shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
 .shop-post-highlight {
   background: linear-gradient(
     90deg,
