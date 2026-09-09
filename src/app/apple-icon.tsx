@@ -24,7 +24,7 @@ export default function AppleIcon() {
           letterSpacing: -2,
         }}
       >
-        BC
+        B
       </div>
     ),
     {
