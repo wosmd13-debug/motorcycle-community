@@ -210,6 +210,34 @@ export async function deleteMaintenanceLog(
   return next;
 }
 
+/** 코스를 실제로 탄 만큼 정비기록 누적 주행거리에 더한다. 등록된 바이크가 없으면 null. */
+export async function addRideDistanceToBike(
+  userId: string,
+  distanceKm: number
+): Promise<UserBikeGarage | null> {
+  const store = await readStore();
+  const current = store[userId];
+  if (!current?.bike) return null;
+
+  const bike = normalizeBikeProfile({
+    ...current.bike,
+    currentMileage: Math.max(
+      0,
+      Math.round(current.bike.currentMileage + distanceKm)
+    ),
+  });
+
+  const next: UserBikeGarage = {
+    ...current,
+    bike,
+    updatedAt: new Date().toISOString(),
+  };
+
+  store[userId] = next;
+  await writeStore(store);
+  return next;
+}
+
 export async function deleteUserBikeGarage(userId: string): Promise<void> {
   const store = await readStore();
   if (!(userId in store)) return;

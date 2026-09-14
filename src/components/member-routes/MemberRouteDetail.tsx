@@ -37,8 +37,44 @@ export default function MemberRouteDetail({
   const router = useRouter();
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [logRideState, setLogRideState] = useState<
+    "idle" | "loading" | "success" | "no-bike" | "error"
+  >("idle");
+  const [logRideMessage, setLogRideMessage] = useState<string | null>(null);
 
   const canManage = canManageMemberRoute(user, route);
+
+  const handleLogRide = async () => {
+    if (route.distanceKm == null || route.distanceKm <= 0) return;
+
+    setLogRideState("loading");
+    setLogRideMessage(null);
+
+    try {
+      const response = await fetch("/api/bike-garage/add-distance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ distanceKm: route.distanceKm }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        setLogRideState(response.status === 404 ? "no-bike" : "error");
+        setLogRideMessage(
+          (data.error as string) ?? "정비기록 반영에 실패했습니다."
+        );
+        return;
+      }
+
+      setLogRideState("success");
+      setLogRideMessage(
+        `정비기록에 반영했어요! 누적 주행거리 ${data.garage.bike.currentMileage.toLocaleString()}km`
+      );
+    } catch {
+      setLogRideState("error");
+      setLogRideMessage("정비기록 반영 중 오류가 발생했습니다.");
+    }
+  };
 
   const handleDelete = async () => {
     if (!canManage) return;
@@ -175,6 +211,52 @@ export default function MemberRouteDetail({
           </dd>
         </div>
       </dl>
+
+      {user && route.distanceKm != null && route.distanceKm > 0 && (
+        <div className="rounded-2xl border border-signature/25 bg-signature-light/50 px-4 py-3 text-sm text-stone-600">
+          {logRideState === "success" || logRideState === "no-bike" ? (
+            <div className="space-y-2">
+              <p
+                className={
+                  logRideState === "success"
+                    ? "font-semibold text-signature-dark"
+                    : "text-stone-600"
+                }
+              >
+                {logRideMessage}
+              </p>
+              {logRideState === "no-bike" && (
+                <Link
+                  href="/garage"
+                  className="inline-flex rounded-full border border-signature/30 bg-white px-4 py-2 text-xs font-semibold text-signature-dark hover:bg-signature-light"
+                >
+                  차고에 바이크 등록하기
+                </Link>
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span>
+                이 코스, 실제로 타셨나요? 약 {route.distanceKm}km를 내 정비기록
+                누적 주행거리에 반영할 수 있어요.
+              </span>
+              <button
+                type="button"
+                onClick={() => void handleLogRide()}
+                disabled={logRideState === "loading"}
+                className="rounded-full border border-signature/30 bg-white px-4 py-2 text-xs font-semibold text-signature-dark hover:bg-signature-muted disabled:opacity-60"
+              >
+                {logRideState === "loading"
+                  ? "반영 중..."
+                  : "이 코스 탔어요 (정비기록에 반영)"}
+              </button>
+            </div>
+          )}
+          {logRideState === "error" && (
+            <p className="mt-2 text-red-600">{logRideMessage}</p>
+          )}
+        </div>
+      )}
 
       {showMapSection &&
         (showMap ? (
