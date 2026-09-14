@@ -80,12 +80,21 @@ export type MaintenanceLog = {
   createdAt: string;
 };
 
+/** 바이크 한 대 = 프로필 + 그 바이크의 정비 일지 */
+export type BikeEntry = {
+  id: string;
+  profile: BikeProfile;
+  logs: MaintenanceLog[];
+};
+
 export type UserBikeGarage = {
   userId: string;
-  bike: BikeProfile | null;
-  logs: MaintenanceLog[];
+  bikes: BikeEntry[];
   updatedAt: string;
 };
+
+/** 사용자당 등록 가능한 최대 바이크 수 */
+export const MAX_BIKES_PER_USER = 10;
 
 export type MaintenanceReminderStatus = "ok" | "soon" | "due" | "unknown";
 
@@ -125,6 +134,19 @@ export function createEmptyBikeProfile(): BikeProfile {
     currentMileage: 0,
     serviceIntervals: { ...defaultServiceIntervals },
     lastServiceAt: {},
+  };
+}
+
+export function createBikeEntry(
+  profile: Partial<BikeProfile> & { model: string }
+): BikeEntry {
+  return {
+    id: crypto.randomUUID(),
+    profile: normalizeBikeProfile({
+      ...createEmptyBikeProfile(),
+      ...profile,
+    }),
+    logs: [],
   };
 }
 
@@ -322,6 +344,27 @@ export function getMaintenanceReminders(
       source,
     };
   });
+}
+
+export type BikeEntryWithReminders = BikeEntry & {
+  reminders: MaintenanceReminder[];
+};
+
+export type UserBikeGarageWithReminders = Omit<UserBikeGarage, "bikes"> & {
+  bikes: BikeEntryWithReminders[];
+};
+
+/** API 응답용: 바이크별 정비 리마인더를 계산해 붙인다. */
+export function attachReminders(
+  garage: UserBikeGarage
+): UserBikeGarageWithReminders {
+  return {
+    ...garage,
+    bikes: garage.bikes.map((entry) => ({
+      ...entry,
+      reminders: getMaintenanceReminders(entry.profile, entry.logs),
+    })),
+  };
 }
 
 export function toGarageDateInput(value: string): string {

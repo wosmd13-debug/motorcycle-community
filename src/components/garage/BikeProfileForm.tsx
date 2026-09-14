@@ -1,34 +1,40 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   defaultServiceIntervals,
   serviceIntervalActionLabels,
   serviceIntervalKeys,
   serviceIntervalLabels,
-  type MaintenanceReminder,
-  type UserBikeGarage,
+  type BikeEntryWithReminders,
+  type UserBikeGarageWithReminders,
 } from "@/lib/bike-garage";
 
 type BikeProfileFormProps = {
-  garage: UserBikeGarage;
+  /** null이면 새 바이크 등록 폼 */
+  bike: BikeEntryWithReminders | null;
   onSaved: (payload: {
-    garage: UserBikeGarage;
-    reminders: MaintenanceReminder[];
+    garage: UserBikeGarageWithReminders;
+    focusBikeId?: string;
   }) => void;
+  onCancel?: () => void;
 };
 
-export default function BikeProfileForm({ garage, onSaved }: BikeProfileFormProps) {
-  const bike = garage.bike;
-  const [model, setModel] = useState(bike?.model ?? "");
-  const [year, setYear] = useState(bike?.year != null ? String(bike.year) : "");
-  const [displacement, setDisplacement] = useState(bike?.displacement ?? "");
+export default function BikeProfileForm({
+  bike,
+  onSaved,
+  onCancel,
+}: BikeProfileFormProps) {
+  const profile = bike?.profile ?? null;
+  const [model, setModel] = useState(profile?.model ?? "");
+  const [year, setYear] = useState(profile?.year != null ? String(profile.year) : "");
+  const [displacement, setDisplacement] = useState(profile?.displacement ?? "");
   const [currentMileage, setCurrentMileage] = useState(
-    bike?.currentMileage != null ? String(bike.currentMileage) : "0"
+    profile?.currentMileage != null ? String(profile.currentMileage) : "0"
   );
-  const [memo, setMemo] = useState(bike?.memo ?? "");
+  const [memo, setMemo] = useState(profile?.memo ?? "");
   const [intervals, setIntervals] = useState(
-    bike?.serviceIntervals ?? defaultServiceIntervals
+    profile?.serviceIntervals ?? defaultServiceIntervals
   );
   const [lastServiceAt, setLastServiceAt] = useState<
     Partial<Record<(typeof serviceIntervalKeys)[number], string>>
@@ -36,7 +42,7 @@ export default function BikeProfileForm({ garage, onSaved }: BikeProfileFormProp
     const initial: Partial<Record<(typeof serviceIntervalKeys)[number], string>> =
       {};
     for (const key of serviceIntervalKeys) {
-      const value = bike?.lastServiceAt?.[key];
+      const value = profile?.lastServiceAt?.[key];
       if (value != null) initial[key] = String(value);
     }
     return initial;
@@ -45,24 +51,6 @@ export default function BikeProfileForm({ garage, onSaved }: BikeProfileFormProp
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  useEffect(() => {
-    const nextBike = garage.bike;
-    setModel(nextBike?.model ?? "");
-    setYear(nextBike?.year != null ? String(nextBike.year) : "");
-    setDisplacement(nextBike?.displacement ?? "");
-    setCurrentMileage(
-      nextBike?.currentMileage != null ? String(nextBike.currentMileage) : "0"
-    );
-    setMemo(nextBike?.memo ?? "");
-    setIntervals(nextBike?.serviceIntervals ?? defaultServiceIntervals);
-    const nextLast: Partial<Record<(typeof serviceIntervalKeys)[number], string>> = {};
-    for (const key of serviceIntervalKeys) {
-      const value = nextBike?.lastServiceAt?.[key];
-      if (value != null) nextLast[key] = String(value);
-    }
-    setLastServiceAt(nextLast);
-  }, [garage.updatedAt]);
-
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setSubmitting(true);
@@ -70,8 +58,11 @@ export default function BikeProfileForm({ garage, onSaved }: BikeProfileFormProp
     setSuccess(null);
 
     try {
-      const response = await fetch("/api/bike-garage", {
-        method: "PATCH",
+      const endpoint = bike
+        ? `/api/bike-garage/bikes/${bike.id}`
+        : "/api/bike-garage/bikes";
+      const response = await fetch(endpoint, {
+        method: bike ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           model,
@@ -91,7 +82,11 @@ export default function BikeProfileForm({ garage, onSaved }: BikeProfileFormProp
         throw new Error(data.error ?? "저장에 실패했습니다.");
       }
 
-      onSaved(data);
+      const garage = data.garage as UserBikeGarageWithReminders;
+      const focusBikeId =
+        bike?.id ??
+        garage.bikes.find((entry) => entry.profile.model === model.trim())?.id;
+      onSaved({ garage, focusBikeId });
       setSuccess("바이크 정보가 저장되었습니다.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "저장에 실패했습니다.");
@@ -103,7 +98,9 @@ export default function BikeProfileForm({ garage, onSaved }: BikeProfileFormProp
   return (
     <form onSubmit={handleSubmit} className="portal-panel space-y-4 p-4">
       <div>
-        <h2 className="text-sm font-bold text-stone-800">내 바이크</h2>
+        <h2 className="text-sm font-bold text-stone-800">
+          {bike ? "바이크 정보 수정" : "새 바이크 등록"}
+        </h2>
         <p className="mt-1 text-xs text-stone-500">
           현재 주행거리와 교환 주기를 저장하면 소모품 남은 km가 계산됩니다.
         </p>
@@ -226,13 +223,24 @@ export default function BikeProfileForm({ garage, onSaved }: BikeProfileFormProp
         </p>
       )}
 
-      <button
-        type="submit"
-        disabled={submitting}
-        className="portal-btn px-4 py-2 text-sm disabled:opacity-60"
-      >
-        {submitting ? "저장 중..." : "바이크 정보 저장"}
-      </button>
+      <div className="flex gap-2">
+        <button
+          type="submit"
+          disabled={submitting}
+          className="portal-btn px-4 py-2 text-sm disabled:opacity-60"
+        >
+          {submitting ? "저장 중..." : bike ? "바이크 정보 저장" : "바이크 등록"}
+        </button>
+        {onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="border border-stone-200 px-4 py-2 text-sm font-semibold text-stone-600"
+          >
+            취소
+          </button>
+        )}
+      </div>
     </form>
   );
 }

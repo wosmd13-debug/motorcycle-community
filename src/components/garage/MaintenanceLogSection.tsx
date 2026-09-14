@@ -12,24 +12,27 @@ import {
   todayGarageDate,
   type MaintenanceCategory,
   type MaintenanceLog,
-  type MaintenanceReminder,
-  type UserBikeGarage,
+  type UserBikeGarageWithReminders,
 } from "@/lib/bike-garage";
 
 type GarageChangePayload = {
-  garage: UserBikeGarage;
-  reminders?: MaintenanceReminder[];
+  garage: UserBikeGarageWithReminders;
+  focusBikeId?: string;
 };
 
 type MaintenanceLogSectionProps = {
-  garage: UserBikeGarage;
+  bikeId: string;
+  logs: MaintenanceLog[];
+  currentMileage: number;
   draftCategory?: MaintenanceCategory | null;
   draftNonce?: number;
   onChanged: (payload: GarageChangePayload) => void;
 };
 
 export default function MaintenanceLogSection({
-  garage,
+  bikeId,
+  logs,
+  currentMileage,
   draftCategory,
   draftNonce,
   onChanged,
@@ -49,11 +52,8 @@ export default function MaintenanceLogSection({
   }, [draftCategory, draftNonce]);
 
   const filteredLogs = useMemo(
-    () =>
-      filter === "all"
-        ? garage.logs
-        : garage.logs.filter((log) => log.category === filter),
-    [filter, garage.logs]
+    () => (filter === "all" ? logs : logs.filter((log) => log.category === filter)),
+    [filter, logs]
   );
 
   const groupedLogs = useMemo(() => groupLogsByMonth(filteredLogs), [filteredLogs]);
@@ -71,7 +71,7 @@ export default function MaintenanceLogSection({
     setError(null);
 
     try {
-      const response = await fetch(`/api/bike-garage/logs/${log.id}`, {
+      const response = await fetch(`/api/bike-garage/bikes/${bikeId}/logs/${log.id}`, {
         method: "DELETE",
       });
       const data = await response.json();
@@ -80,10 +80,7 @@ export default function MaintenanceLogSection({
         throw new Error(data.error ?? "삭제에 실패했습니다.");
       }
 
-      onChanged({
-        garage: data.garage as UserBikeGarage,
-        reminders: data.reminders as MaintenanceReminder[] | undefined,
-      });
+      onChanged({ garage: data.garage, focusBikeId: bikeId });
       if (editingLog?.id === log.id) {
         setEditingLog(null);
         setShowForm(false);
@@ -114,7 +111,7 @@ export default function MaintenanceLogSection({
           <div>
             <h2 className="text-sm font-bold text-stone-800">정비 일지</h2>
             <p className="mt-1 text-xs text-stone-500">
-              총 {garage.logs.length}건
+              총 {logs.length}건
               {totalCost > 0 && ` · ${filter === "all" ? "전체" : maintenanceCategoryLabels[filter]} 비용 ${formatGarageCost(totalCost)}`}
             </p>
           </div>
@@ -151,11 +148,11 @@ export default function MaintenanceLogSection({
         <div className="mt-4 flex flex-wrap gap-1.5">
           <FilterChip
             active={filter === "all"}
-            label={`전체 ${garage.logs.length}`}
+            label={`전체 ${logs.length}`}
             onClick={() => setFilter("all")}
           />
           {maintenanceCategories.map((category) => {
-            const count = garage.logs.filter((log) => log.category === category).length;
+            const count = logs.filter((log) => log.category === category).length;
             if (count === 0 && filter !== category) return null;
             return (
               <FilterChip
@@ -171,7 +168,8 @@ export default function MaintenanceLogSection({
         {showForm && (
           <MaintenanceLogForm
             key={editingLog?.id ?? `new-${formCategory}-${draftNonce ?? 0}`}
-            defaultMileage={garage.bike?.currentMileage ?? 0}
+            bikeId={bikeId}
+            defaultMileage={currentMileage}
             initialCategory={editingLog?.category ?? formCategory}
             editingLog={editingLog}
             onSaved={(payload) => {
@@ -191,7 +189,7 @@ export default function MaintenanceLogSection({
         <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600">{error}</p>
       )}
 
-      {garage.logs.length === 0 ? (
+      {logs.length === 0 ? (
         <div className="portal-panel border-dashed px-6 py-12 text-center">
           <p className="text-sm font-semibold text-stone-700">아직 정비 기록이 없습니다.</p>
           <p className="mt-2 text-xs text-stone-500">
@@ -308,12 +306,14 @@ function groupLogsByMonth(logs: MaintenanceLog[]) {
 }
 
 function MaintenanceLogForm({
+  bikeId,
   defaultMileage,
   initialCategory,
   editingLog,
   onSaved,
   onCancel,
 }: {
+  bikeId: string;
   defaultMileage: number;
   initialCategory: MaintenanceCategory;
   editingLog: MaintenanceLog | null;
@@ -359,8 +359,8 @@ function MaintenanceLogForm({
 
     try {
       const endpoint = editingLog
-        ? `/api/bike-garage/logs/${editingLog.id}`
-        : "/api/bike-garage/logs";
+        ? `/api/bike-garage/bikes/${bikeId}/logs/${editingLog.id}`
+        : `/api/bike-garage/bikes/${bikeId}/logs`;
       const response = await fetch(endpoint, {
         method: editingLog ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
@@ -383,10 +383,7 @@ function MaintenanceLogForm({
         );
       }
 
-      onSaved({
-        garage: data.garage as UserBikeGarage,
-        reminders: data.reminders as MaintenanceReminder[] | undefined,
-      });
+      onSaved({ garage: data.garage, focusBikeId: bikeId });
     } catch (err) {
       setError(
         err instanceof Error

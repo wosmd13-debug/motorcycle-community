@@ -1,6 +1,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 import {
+  createBikeEntry,
   createEmptyBikeProfile,
   normalizeBikeProfile,
   normalizeMaintenanceLog,
@@ -8,6 +9,7 @@ import {
   serviceIntervalKeys,
   sortMaintenanceLogs,
   syncBikeMileageFromLogs,
+  type BikeEntry,
   type BikeProfile,
   type CreateMaintenanceLogInput,
   type MaintenanceLog,
@@ -21,6 +23,14 @@ const DATA_FILE = path.join(DATA_DIR, "bike-garage.json");
 
 type GarageStore = Record<string, UserBikeGarage>;
 
+/** 이전(바이크 1대) 저장 형식 — 자동 변환용 */
+type LegacyUserBikeGarage = {
+  userId: string;
+  bike: BikeProfile | null;
+  logs: MaintenanceLog[];
+  updatedAt: string;
+};
+
 async function ensureDataFile() {
   await fs.mkdir(DATA_DIR, { recursive: true });
 
@@ -31,10 +41,82 @@ async function ensureDataFile() {
   }
 }
 
+function emptyGarage(userId: string): UserBikeGarage {
+  return {
+    userId,
+    bikes: [],
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+function normalizeBikeEntry(entry: BikeEntry): BikeEntry {
+  return {
+    id: entry.id,
+    profile: normalizeBikeProfile(entry.profile),
+    logs: sortMaintenanceLogs((entry.logs ?? []).map(normalizeMaintenanceLog)),
+  };
+}
+
+function isLegacyRecord(
+  value: unknown
+): value is LegacyUserBikeGarage {
+  return Boolean(
+    value &&
+      typeof value === "object" &&
+      "bike" in (value as Record<string, unknown>) &&
+      !("bikes" in (value as Record<string, unknown>))
+  );
+}
+
+function migrateLegacyRecord(
+  userId: string,
+  legacy: LegacyUserBikeGarage
+): UserBikeGarage {
+  const logs = legacy.logs ?? [];
+  // 바이크 프로필이 없어도 일지가 남아있으면 유실되지 않게 빈 프로필로 감싼다.
+  if (!legacy.bike && logs.length === 0) return emptyGarage(userId);
+
+  const entry: BikeEntry = {
+    id: crypto.randomUUID(),
+    profile: normalizeBikeProfile(legacy.bike ?? createEmptyBikeProfile()),
+    logs: sortMaintenanceLogs(logs.map(normalizeMaintenanceLog)),
+  };
+
+  return {
+    userId,
+    bikes: [entry],
+    updatedAt: legacy.updatedAt ?? new Date().toISOString(),
+  };
+}
+
 async function readStore(): Promise<GarageStore> {
   await ensureDataFile();
   const raw = await fs.readFile(DATA_FILE, "utf8");
-  return JSON.parse(raw) as GarageStore;
+  const parsed = JSON.parse(raw) as Record<string, unknown>;
+
+  const store: GarageStore = {};
+  let migrated = false;
+
+  for (const [userId, value] of Object.entries(parsed)) {
+    if (isLegacyRecord(value)) {
+      store[userId] = migrateLegacyRecord(userId, value);
+      migrated = true;
+      continue;
+    }
+
+    const record = value as UserBikeGarage;
+    store[userId] = {
+      userId,
+      bikes: (record.bikes ?? []).map(normalizeBikeEntry),
+      updatedAt: record.updatedAt ?? new Date().toISOString(),
+    };
+  }
+
+  if (migrated) {
+    await writeStore(store);
+  }
+
+  return store;
 }
 
 async function writeStore(store: GarageStore) {
@@ -42,28 +124,16 @@ async function writeStore(store: GarageStore) {
   await fs.writeFile(DATA_FILE, JSON.stringify(store, null, 2), "utf8");
 }
 
-function emptyGarage(userId: string): UserBikeGarage {
-  return {
-    userId,
-    bike: null,
-    logs: [],
-    updatedAt: new Date().toISOString(),
-  };
+function findBike(garage: UserBikeGarage, bikeId: string): BikeEntry | undefined {
+  return garage.bikes.find((entry) => entry.id === bikeId);
 }
 
 export async function getUserBikeGarage(userId: string): Promise<UserBikeGarage> {
   const store = await readStore();
-  const garage = store[userId];
-  if (!garage) return emptyGarage(userId);
-
-  return {
-    ...garage,
-    bike: garage.bike ? normalizeBikeProfile(garage.bike) : null,
-    logs: sortMaintenanceLogs(garage.logs.map(normalizeMaintenanceLog)),
-  };
+  return store[userId] ?? emptyGarage(userId);
 }
 
-export async function updateUserBikeProfile(
+export async function addBikeToGarage(
   userId: string,
   input: Partial<Omit<BikeProfile, "lastServiceAt">> & {
     model: string;
@@ -72,10 +142,49 @@ export async function updateUserBikeProfile(
 ): Promise<UserBikeGarage> {
   const store = await readStore();
   const current = store[userId] ?? emptyGarage(userId);
-  const base = current.bike ?? createEmptyBikeProfile();
+
+  const lastServiceAt: Partial<Record<ServiceIntervalKey, number>> = {};
+  if (input.lastServiceAt) {
+    for (const key of serviceIntervalKeys) {
+      const value = input.lastServiceAt[key];
+      if (value != null) lastServiceAt[key] = value;
+    }
+  }
+
+  const entry = createBikeEntry({
+    ...input,
+    model: input.model.trim(),
+    year: input.year != null ? Number(input.year) : undefined,
+    currentMileage: Math.max(0, Number(input.currentMileage ?? 0)),
+    lastServiceAt,
+  });
+
+  const next: UserBikeGarage = {
+    ...current,
+    bikes: [...current.bikes, entry],
+    updatedAt: new Date().toISOString(),
+  };
+
+  store[userId] = next;
+  await writeStore(store);
+  return next;
+}
+
+export async function updateBikeProfile(
+  userId: string,
+  bikeId: string,
+  input: Partial<Omit<BikeProfile, "lastServiceAt">> & {
+    model: string;
+    lastServiceAt?: Partial<Record<ServiceIntervalKey, number | null>>;
+  }
+): Promise<UserBikeGarage | null> {
+  const store = await readStore();
+  const current = store[userId];
+  const existing = current ? findBike(current, bikeId) : undefined;
+  if (!current || !existing) return null;
 
   const lastServiceAt: Partial<Record<ServiceIntervalKey, number>> = {
-    ...base.lastServiceAt,
+    ...existing.profile.lastServiceAt,
   };
   if (input.lastServiceAt) {
     for (const key of serviceIntervalKeys) {
@@ -89,25 +198,51 @@ export async function updateUserBikeProfile(
     }
   }
 
-  const bike = syncBikeMileageFromLogs(
+  const profile = syncBikeMileageFromLogs(
     normalizeBikeProfile({
-      ...base,
+      ...existing.profile,
       ...input,
       model: input.model.trim(),
       year: input.year != null ? Number(input.year) : undefined,
-      currentMileage: Math.max(0, Number(input.currentMileage ?? base.currentMileage)),
+      currentMileage: Math.max(
+        0,
+        Number(input.currentMileage ?? existing.profile.currentMileage)
+      ),
       serviceIntervals: {
-        ...base.serviceIntervals,
+        ...existing.profile.serviceIntervals,
         ...input.serviceIntervals,
       },
       lastServiceAt,
     }),
-    current.logs
+    existing.logs
+  );
+
+  const bikes = current.bikes.map((entry) =>
+    entry.id === bikeId ? { ...entry, profile } : entry
   );
 
   const next: UserBikeGarage = {
     ...current,
-    bike,
+    bikes,
+    updatedAt: new Date().toISOString(),
+  };
+
+  store[userId] = next;
+  await writeStore(store);
+  return next;
+}
+
+export async function deleteBike(
+  userId: string,
+  bikeId: string
+): Promise<UserBikeGarage | null> {
+  const store = await readStore();
+  const current = store[userId];
+  if (!current || !findBike(current, bikeId)) return null;
+
+  const next: UserBikeGarage = {
+    ...current,
+    bikes: current.bikes.filter((entry) => entry.id !== bikeId),
     updatedAt: new Date().toISOString(),
   };
 
@@ -118,10 +253,13 @@ export async function updateUserBikeProfile(
 
 export async function addMaintenanceLog(
   userId: string,
+  bikeId: string,
   input: CreateMaintenanceLogInput
-): Promise<UserBikeGarage> {
+): Promise<UserBikeGarage | null> {
   const store = await readStore();
-  const current = store[userId] ?? emptyGarage(userId);
+  const current = store[userId];
+  const existing = current ? findBike(current, bikeId) : undefined;
+  if (!current || !existing) return null;
 
   const log: MaintenanceLog = normalizeMaintenanceLog({
     id: crypto.randomUUID(),
@@ -129,15 +267,16 @@ export async function addMaintenanceLog(
     createdAt: new Date().toISOString(),
   });
 
-  const logs = sortMaintenanceLogs([log, ...current.logs]);
-  const bike = current.bike
-    ? syncBikeMileageFromLogs(current.bike, logs)
-    : null;
+  const logs = sortMaintenanceLogs([log, ...existing.logs]);
+  const profile = syncBikeMileageFromLogs(existing.profile, logs);
+
+  const bikes = current.bikes.map((entry) =>
+    entry.id === bikeId ? { ...entry, profile, logs } : entry
+  );
 
   const next: UserBikeGarage = {
     ...current,
-    bike,
-    logs,
+    bikes,
     updatedAt: new Date().toISOString(),
   };
 
@@ -148,34 +287,41 @@ export async function addMaintenanceLog(
 
 export async function updateMaintenanceLog(
   userId: string,
+  bikeId: string,
   logId: string,
   input: UpdateMaintenanceLogInput
 ): Promise<UserBikeGarage | null> {
   const store = await readStore();
   const current = store[userId];
-  if (!current) return null;
+  const existing = current ? findBike(current, bikeId) : undefined;
+  if (!current || !existing) return null;
 
-  const index = current.logs.findIndex((log) => log.id === logId);
+  const index = existing.logs.findIndex((log) => log.id === logId);
   if (index === -1) return null;
 
   const updated = normalizeMaintenanceLog({
-    ...current.logs[index],
+    ...existing.logs[index],
     ...input,
     title:
-      input.title != null ? String(input.title).trim() : current.logs[index].title,
+      input.title != null ? String(input.title).trim() : existing.logs[index].title,
   });
 
-  const logs = [...current.logs];
+  const logs = [...existing.logs];
   logs[index] = updated;
   const sortedLogs = sortMaintenanceLogs(logs);
-  const bike = current.bike
-    ? reconcileLastServiceAfterLogsChange(current.bike, current.logs, sortedLogs)
-    : null;
+  const profile = reconcileLastServiceAfterLogsChange(
+    existing.profile,
+    existing.logs,
+    sortedLogs
+  );
+
+  const bikes = current.bikes.map((entry) =>
+    entry.id === bikeId ? { ...entry, profile, logs: sortedLogs } : entry
+  );
 
   const next: UserBikeGarage = {
     ...current,
-    bike,
-    logs: sortedLogs,
+    bikes,
     updatedAt: new Date().toISOString(),
   };
 
@@ -186,22 +332,30 @@ export async function updateMaintenanceLog(
 
 export async function deleteMaintenanceLog(
   userId: string,
+  bikeId: string,
   logId: string
 ): Promise<UserBikeGarage | null> {
   const store = await readStore();
   const current = store[userId];
-  if (!current) return null;
+  const existing = current ? findBike(current, bikeId) : undefined;
+  if (!current || !existing) return null;
 
-  const nextLogs = current.logs.filter((log) => log.id !== logId);
-  if (nextLogs.length === current.logs.length) return null;
-  const bike = current.bike
-    ? reconcileLastServiceAfterLogsChange(current.bike, current.logs, nextLogs)
-    : null;
+  const nextLogs = existing.logs.filter((log) => log.id !== logId);
+  if (nextLogs.length === existing.logs.length) return null;
+
+  const profile = reconcileLastServiceAfterLogsChange(
+    existing.profile,
+    existing.logs,
+    nextLogs
+  );
+
+  const bikes = current.bikes.map((entry) =>
+    entry.id === bikeId ? { ...entry, profile, logs: nextLogs } : entry
+  );
 
   const next: UserBikeGarage = {
     ...current,
-    bike,
-    logs: nextLogs,
+    bikes,
     updatedAt: new Date().toISOString(),
   };
 
@@ -210,26 +364,32 @@ export async function deleteMaintenanceLog(
   return next;
 }
 
-/** 코스를 실제로 탄 만큼 정비기록 누적 주행거리에 더한다. 등록된 바이크가 없으면 null. */
+/** 코스를 실제로 탄 만큼 해당 바이크 누적 주행거리에 더한다. 바이크가 없으면 null. */
 export async function addRideDistanceToBike(
   userId: string,
+  bikeId: string,
   distanceKm: number
 ): Promise<UserBikeGarage | null> {
   const store = await readStore();
   const current = store[userId];
-  if (!current?.bike) return null;
+  const existing = current ? findBike(current, bikeId) : undefined;
+  if (!current || !existing) return null;
 
-  const bike = normalizeBikeProfile({
-    ...current.bike,
+  const profile = normalizeBikeProfile({
+    ...existing.profile,
     currentMileage: Math.max(
       0,
-      Math.round(current.bike.currentMileage + distanceKm)
+      Math.round(existing.profile.currentMileage + distanceKm)
     ),
   });
 
+  const bikes = current.bikes.map((entry) =>
+    entry.id === bikeId ? { ...entry, profile } : entry
+  );
+
   const next: UserBikeGarage = {
     ...current,
-    bike,
+    bikes,
     updatedAt: new Date().toISOString(),
   };
 

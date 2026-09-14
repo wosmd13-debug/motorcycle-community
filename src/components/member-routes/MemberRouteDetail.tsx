@@ -16,6 +16,7 @@ import {
   formatMemberRouteDuration,
   type MemberRoute,
 } from "@/lib/member-route";
+import type { BikeEntryWithReminders } from "@/lib/bike-garage";
 import { estimateRestBreakCount } from "@/lib/route-detail";
 import { buildMemberRouteEditHref } from "@/lib/route-links";
 import ViewOnMapButton from "@/components/routes/ViewOnMapButton";
@@ -38,20 +39,22 @@ export default function MemberRouteDetail({
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [logRideState, setLogRideState] = useState<
-    "idle" | "loading" | "success" | "no-bike" | "error"
+    "idle" | "loading" | "choosing" | "success" | "no-bike" | "error"
   >("idle");
   const [logRideMessage, setLogRideMessage] = useState<string | null>(null);
+  const [rideBikes, setRideBikes] = useState<BikeEntryWithReminders[]>([]);
+  const [selectedRideBikeId, setSelectedRideBikeId] = useState<string | null>(null);
 
   const canManage = canManageMemberRoute(user, route);
 
-  const handleLogRide = async () => {
+  const submitRideDistance = async (bikeId: string) => {
     if (route.distanceKm == null || route.distanceKm <= 0) return;
 
     setLogRideState("loading");
     setLogRideMessage(null);
 
     try {
-      const response = await fetch("/api/bike-garage/add-distance", {
+      const response = await fetch(`/api/bike-garage/bikes/${bikeId}/add-distance`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ distanceKm: route.distanceKm }),
@@ -66,10 +69,51 @@ export default function MemberRouteDetail({
         return;
       }
 
+      const updatedBike = data.garage.bikes.find(
+        (entry: BikeEntryWithReminders) => entry.id === bikeId
+      );
       setLogRideState("success");
       setLogRideMessage(
-        `정비기록에 반영했어요! 누적 주행거리 ${data.garage.bike.currentMileage.toLocaleString()}km`
+        `정비기록에 반영했어요! ${updatedBike?.profile.model ?? "내 바이크"} 누적 주행거리 ${updatedBike?.profile.currentMileage?.toLocaleString() ?? "-"}km`
       );
+    } catch {
+      setLogRideState("error");
+      setLogRideMessage("정비기록 반영 중 오류가 발생했습니다.");
+    }
+  };
+
+  const handleLogRide = async () => {
+    if (route.distanceKm == null || route.distanceKm <= 0) return;
+
+    setLogRideState("loading");
+    setLogRideMessage(null);
+
+    try {
+      const response = await fetch("/api/bike-garage");
+      const data = await response.json();
+
+      if (!response.ok) {
+        setLogRideState("error");
+        setLogRideMessage((data.error as string) ?? "차고 정보를 불러오지 못했습니다.");
+        return;
+      }
+
+      const bikes = data.garage.bikes as BikeEntryWithReminders[];
+
+      if (bikes.length === 0) {
+        setLogRideState("no-bike");
+        setLogRideMessage("정비기록에 등록된 바이크가 없습니다. 차고를 먼저 설정해 주세요.");
+        return;
+      }
+
+      if (bikes.length === 1) {
+        await submitRideDistance(bikes[0].id);
+        return;
+      }
+
+      setRideBikes(bikes);
+      setSelectedRideBikeId(bikes[0].id);
+      setLogRideState("choosing");
     } catch {
       setLogRideState("error");
       setLogRideMessage("정비기록 반영 중 오류가 발생했습니다.");
@@ -214,7 +258,31 @@ export default function MemberRouteDetail({
 
       {user && route.distanceKm != null && route.distanceKm > 0 && (
         <div className="rounded-2xl border border-signature/25 bg-signature-light/50 px-4 py-3 text-sm text-stone-600">
-          {logRideState === "success" || logRideState === "no-bike" ? (
+          {logRideState === "choosing" ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <span>어느 바이크로 반영할까요?</span>
+              <select
+                value={selectedRideBikeId ?? ""}
+                onChange={(event) => setSelectedRideBikeId(event.target.value)}
+                className="border border-signature/20 bg-white px-3 py-2 text-xs font-semibold text-stone-700 outline-none focus:border-signature"
+              >
+                {rideBikes.map((entry) => (
+                  <option key={entry.id} value={entry.id}>
+                    {entry.profile.model || "이름 없는 바이크"}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() =>
+                  selectedRideBikeId && void submitRideDistance(selectedRideBikeId)
+                }
+                className="rounded-full border border-signature/30 bg-white px-4 py-2 text-xs font-semibold text-signature-dark hover:bg-signature-muted"
+              >
+                반영하기
+              </button>
+            </div>
+          ) : logRideState === "success" || logRideState === "no-bike" ? (
             <div className="space-y-2">
               <p
                 className={

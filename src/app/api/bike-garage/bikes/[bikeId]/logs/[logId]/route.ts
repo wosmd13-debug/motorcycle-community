@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireCurrentUserFromRequest } from "@/lib/auth-server";
 import {
-  getMaintenanceReminders,
+  attachReminders,
   maintenanceCategories,
   type MaintenanceCategory,
 } from "@/lib/bike-garage";
@@ -11,11 +11,11 @@ import {
 } from "@/lib/bike-garage-store";
 
 type RouteContext = {
-  params: Promise<{ id: string }>;
+  params: Promise<{ bikeId: string; logId: string }>;
 };
 
 export async function PATCH(request: NextRequest, context: RouteContext) {
-  const { id } = await context.params;
+  const { bikeId, logId } = await context.params;
 
   try {
     const user = await requireCurrentUserFromRequest(request);
@@ -82,7 +82,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       input.cost = cost;
     }
 
-    const garage = await updateMaintenanceLog(user.id, id, input);
+    const garage = await updateMaintenanceLog(user.id, bikeId, logId, input);
     if (!garage) {
       return NextResponse.json(
         { error: "정비 기록을 찾을 수 없습니다." },
@@ -90,11 +90,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       );
     }
 
-    const reminders = garage.bike
-      ? getMaintenanceReminders(garage.bike, garage.logs)
-      : [];
-
-    return NextResponse.json({ garage, reminders });
+    return NextResponse.json({ garage: attachReminders(garage) });
   } catch {
     return NextResponse.json(
       { error: "정비 기록 수정에 실패했습니다." },
@@ -104,13 +100,13 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 }
 
 export async function DELETE(request: NextRequest, context: RouteContext) {
-  const { id } = await context.params;
+  const { bikeId, logId } = await context.params;
 
   try {
     const user = await requireCurrentUserFromRequest(request);
     if (user instanceof NextResponse) return user;
 
-    const garage = await deleteMaintenanceLog(user.id, id);
+    const garage = await deleteMaintenanceLog(user.id, bikeId, logId);
     if (!garage) {
       return NextResponse.json(
         { error: "정비 기록을 찾을 수 없습니다." },
@@ -118,11 +114,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       );
     }
 
-    const reminders = garage.bike
-      ? getMaintenanceReminders(garage.bike, garage.logs)
-      : [];
-
-    return NextResponse.json({ garage, reminders });
+    return NextResponse.json({ garage: attachReminders(garage) });
   } catch {
     return NextResponse.json(
       { error: "정비 기록 삭제에 실패했습니다." },

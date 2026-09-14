@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireCurrentUserFromRequest } from "@/lib/auth-server";
-import { getMaintenanceReminders } from "@/lib/bike-garage";
+import { attachReminders } from "@/lib/bike-garage";
 import { addRideDistanceToBike } from "@/lib/bike-garage-store";
 
-/** 코스 상세에서 "이 코스 탔어요"를 누르면 그 거리를 내 정비기록에 반영한다. */
-export async function POST(request: NextRequest) {
+type RouteContext = {
+  params: Promise<{ bikeId: string }>;
+};
+
+/** 코스 상세에서 "이 코스 탔어요"를 누르면 그 거리를 선택한 바이크의 정비기록에 반영한다. */
+export async function POST(request: NextRequest, context: RouteContext) {
+  const { bikeId } = await context.params;
+
   try {
     const user = await requireCurrentUserFromRequest(request);
     if (user instanceof NextResponse) return user;
@@ -19,19 +25,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const garage = await addRideDistanceToBike(user.id, distanceKm);
+    const garage = await addRideDistanceToBike(user.id, bikeId, distanceKm);
     if (!garage) {
       return NextResponse.json(
-        { error: "정비기록에 등록된 바이크가 없습니다. 차고를 먼저 설정해 주세요." },
+        { error: "바이크를 찾을 수 없습니다." },
         { status: 404 }
       );
     }
 
-    const reminders = garage.bike
-      ? getMaintenanceReminders(garage.bike, garage.logs)
-      : [];
-
-    return NextResponse.json({ garage, reminders });
+    return NextResponse.json({ garage: attachReminders(garage) });
   } catch {
     return NextResponse.json(
       { error: "주행거리 반영에 실패했습니다." },

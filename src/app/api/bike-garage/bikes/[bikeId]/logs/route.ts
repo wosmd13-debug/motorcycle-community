@@ -1,33 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireCurrentUserFromRequest } from "@/lib/auth-server";
 import {
-  getMaintenanceReminders,
+  attachReminders,
   maintenanceCategories,
   maintenanceCategoryLabels,
   type MaintenanceCategory,
 } from "@/lib/bike-garage";
-import {
-  addMaintenanceLog,
-  getUserBikeGarage,
-} from "@/lib/bike-garage-store";
+import { addMaintenanceLog } from "@/lib/bike-garage-store";
 import { requireUserWithRateLimit } from "@/lib/request-guards";
 
-export async function GET(request: NextRequest) {
-  try {
-    const user = await requireCurrentUserFromRequest(request);
-    if (user instanceof NextResponse) return user;
+type RouteContext = {
+  params: Promise<{ bikeId: string }>;
+};
 
-    const garage = await getUserBikeGarage(user.id);
-    return NextResponse.json({ logs: garage.logs });
-  } catch {
-    return NextResponse.json(
-      { error: "정비 일지를 불러오지 못했습니다." },
-      { status: 500 }
-    );
-  }
-}
+export async function POST(request: NextRequest, context: RouteContext) {
+  const { bikeId } = await context.params;
 
-export async function POST(request: NextRequest) {
   try {
     const user = await requireUserWithRateLimit(request, "write");
     if (user instanceof NextResponse) return user;
@@ -78,7 +65,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const garage = await addMaintenanceLog(user.id, {
+    const garage = await addMaintenanceLog(user.id, bikeId, {
       date: dateInput,
       mileage: Math.floor(mileage),
       category,
@@ -89,11 +76,14 @@ export async function POST(request: NextRequest) {
       memo: memo || undefined,
     });
 
-    const reminders = garage.bike
-      ? getMaintenanceReminders(garage.bike, garage.logs)
-      : [];
+    if (!garage) {
+      return NextResponse.json(
+        { error: "바이크를 찾을 수 없습니다." },
+        { status: 404 }
+      );
+    }
 
-    return NextResponse.json({ garage, reminders }, { status: 201 });
+    return NextResponse.json({ garage: attachReminders(garage) }, { status: 201 });
   } catch {
     return NextResponse.json(
       { error: "정비 일지 등록에 실패했습니다." },
