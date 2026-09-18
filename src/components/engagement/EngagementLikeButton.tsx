@@ -7,6 +7,8 @@ type EngagementLikeButtonProps = {
   liking?: boolean;
   onLike: () => void | Promise<void>;
   label?: string;
+  /** 텍스트 대신(또는 함께) 보여줄 아이콘. 지정하면 "아이콘 + 숫자"로 표시됩니다. */
+  icon?: React.ReactNode;
   className?: string;
 };
 
@@ -19,6 +21,7 @@ export default function EngagementLikeButton({
   liking = false,
   onLike,
   label = "추천",
+  icon,
   className = "portal-btn min-h-11 px-4 py-2.5 text-sm touch-manipulation disabled:opacity-60",
 }: EngagementLikeButtonProps) {
   const ensureLoggedIn = useLoginRedirect();
@@ -34,7 +37,16 @@ export default function EngagementLikeButton({
       className={className}
       aria-label={`${label} ${likes}`}
     >
-      {liking ? "처리 중..." : `${label} ${likes}`}
+      {liking ? (
+        "처리 중..."
+      ) : icon ? (
+        <span className="inline-flex items-center gap-1">
+          {icon}
+          <span className="tabular-nums">{likes}</span>
+        </span>
+      ) : (
+        `${label} ${likes}`
+      )}
     </button>
   );
 }

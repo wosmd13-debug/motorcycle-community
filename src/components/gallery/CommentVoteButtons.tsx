@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useLoginRedirect } from "@/components/auth/useLoginRedirect";
+import ThumbIcon from "@/components/ui/ThumbIcon";
 import type { CommentVoteChoice } from "@/lib/gallery";
 
 type CommentVoteButtonsProps = {
@@ -93,7 +94,7 @@ export default function CommentVoteButtons({
           title="추천"
           className={voteBtnClass(currentVote === "up", "up")}
         >
-          <span aria-hidden="true">👍</span>
+          <ThumbIcon className="h-4 w-4" direction="up" />
           <span className="tabular-nums text-xs font-semibold">{upvotes}</span>
         </button>
         <button
@@ -104,7 +105,7 @@ export default function CommentVoteButtons({
           title="비추천"
           className={voteBtnClass(currentVote === "down", "down")}
         >
-          <span aria-hidden="true">👎</span>
+          <ThumbIcon className="h-4 w-4" direction="down" />
           <span className="tabular-nums text-xs font-semibold">{downvotes}</span>
         </button>
       </div>

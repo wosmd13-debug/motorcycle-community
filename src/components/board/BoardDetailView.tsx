@@ -12,6 +12,7 @@ import BoardPostContent from "@/components/board/BoardPostContent";
 import EngagementLikeButton from "@/components/engagement/EngagementLikeButton";
 import AuthorWithGrade from "@/components/ranking/AuthorWithGrade";
 import ReportButton from "@/components/report/ReportButton";
+import ThumbIcon from "@/components/ui/ThumbIcon";
 import { useMemberGradeLookup } from "@/hooks/useMemberGradeLookup";
 import { useCosmeticLookup } from "@/hooks/useCosmeticLookup";
 import { useContentView } from "@/hooks/useContentView";
@@ -277,7 +278,8 @@ export default function BoardDetailView({ initialPost }: BoardDetailViewProps) {
               likes={post.likes}
               liking={liking}
               onLike={() => void handleLike()}
-              label="👍"
+              label="좋아요"
+              icon={<ThumbIcon className="h-4 w-4" />}
               className="gallery-ig-like-btn inline-flex min-h-0 items-center border-0 bg-transparent p-0 text-sm font-medium text-stone-600 shadow-none transition hover:text-signature-dark disabled:opacity-60 touch-manipulation dark:text-stone-300"
             />
             <span>조회 {post.views}</span>

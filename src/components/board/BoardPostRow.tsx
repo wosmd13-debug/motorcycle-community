@@ -11,6 +11,7 @@ import {
 import { getBikeBrandById } from "@/lib/home-portal";
 import type { MemberGradeId } from "@/lib/ranking";
 import type { ShopCosmeticLook } from "@/lib/shop";
+import ThumbIcon from "@/components/ui/ThumbIcon";
 
 type BoardPostRowProps = {
   post: BoardPost;
@@ -98,7 +99,10 @@ export default function BoardPostRow({
           <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5">
             <span>조회 {post.views.toLocaleString("ko-KR")}</span>
             <span className="text-[var(--text-faint)]">·</span>
-            <span>👍 {post.likes.toLocaleString("ko-KR")}</span>
+            <span className="inline-flex items-center gap-1">
+              <ThumbIcon className="h-3.5 w-3.5" />
+              {post.likes.toLocaleString("ko-KR")}
+            </span>
             <span className="text-[var(--text-faint)] sm:hidden">·</span>
             <span className="sm:hidden">{formatBoardListTime(post.createdAt)}</span>
           </div>
