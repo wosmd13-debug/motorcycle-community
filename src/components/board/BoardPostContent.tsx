@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useMemo } from "react";
+import { parseBoardContent } from "@/lib/board-content";
 
 const URL_PATTERN = /(?:https?:\/\/[^\s<]+|www\.[^\s<]+)/gi;
 const TRAILING_PUNCT = /[.,;:!?)}\]'"]+$/;
@@ -22,17 +23,17 @@ function toSafeLink(raw: string): { href: string; label: string } | null {
   return { href, label: trimmed + trailing };
 }
 
-export default function BoardPostContent({ content }: { content: string }) {
+function LinkifiedText({ value }: { value: string }) {
   const nodes = useMemo(() => {
     const parts: Array<string | { href: string; label: string }> = [];
     let lastIndex = 0;
 
-    for (const match of content.matchAll(URL_PATTERN)) {
+    for (const match of value.matchAll(URL_PATTERN)) {
       const start = match.index ?? 0;
       const raw = match[0];
 
       if (start > lastIndex) {
-        parts.push(content.slice(lastIndex, start));
+        parts.push(value.slice(lastIndex, start));
       }
 
       const link = toSafeLink(raw);
@@ -40,15 +41,15 @@ export default function BoardPostContent({ content }: { content: string }) {
       lastIndex = start + raw.length;
     }
 
-    if (lastIndex < content.length) {
-      parts.push(content.slice(lastIndex));
+    if (lastIndex < value.length) {
+      parts.push(value.slice(lastIndex));
     }
 
     return parts;
-  }, [content]);
+  }, [value]);
 
   return (
-    <p className="whitespace-pre-wrap text-sm leading-7 text-stone-700">
+    <>
       {nodes.map((part, index) => {
         if (typeof part === "string") {
           return <Fragment key={`text-${index}`}>{part}</Fragment>;
@@ -66,6 +67,45 @@ export default function BoardPostContent({ content }: { content: string }) {
           </a>
         );
       })}
-    </p>
+    </>
+  );
+}
+
+export default function BoardPostContent({
+  content,
+  imageUrls = [],
+}: {
+  content: string;
+  imageUrls?: string[];
+}) {
+  const segments = useMemo(
+    () => parseBoardContent(content, imageUrls),
+    [content, imageUrls]
+  );
+
+  return (
+    <div className="space-y-3 text-sm leading-7 text-stone-700">
+      {segments.map((segment, index) => {
+        if (segment.type === "image") {
+          return (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              key={`img-${index}-${segment.url}`}
+              src={segment.url}
+              alt=""
+              className="w-full rounded-2xl object-cover ring-1 ring-signature/10"
+            />
+          );
+        }
+
+        if (!segment.value) return null;
+
+        return (
+          <p key={`text-${index}`} className="whitespace-pre-wrap">
+            <LinkifiedText value={segment.value} />
+          </p>
+        );
+      })}
+    </div>
   );
 }

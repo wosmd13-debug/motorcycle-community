@@ -4,11 +4,15 @@ import PortalModal from "@/components/portal/PortalModal";
 
 import { useState } from "react";
 import { BoardCategoryGuide } from "@/components/board/BoardCategoryGuide";
+import BoardContentEditor, {
+  type BoardAttachment,
+} from "@/components/board/BoardContentEditor";
 import {
   boardCategoryMeta,
   type BoardCategory,
   type BoardPost,
 } from "@/lib/board";
+import { finalizeContentTokens } from "@/lib/board-content";
 import { BOARD_MAX_IMAGE_COUNT } from "@/lib/board-upload-limits";
 import { BIKE_BRANDS } from "@/lib/home-portal";
 
@@ -28,22 +32,13 @@ export default function BoardEditForm({
   const [title, setTitle] = useState(post.title);
   const [content, setContent] = useState(post.content);
   const [imageUrls, setImageUrls] = useState<string[]>(post.imageUrls);
-  const [files, setFiles] = useState<File[]>([]);
-  const [previews, setPreviews] = useState<string[]>([]);
+  const [attachments, setAttachments] = useState<BoardAttachment[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const meta = boardCategoryMeta[category];
-
-  const handleFilesChange = (nextFiles: FileList | null) => {
-    previews.forEach((url) => URL.revokeObjectURL(url));
-    const remaining = Math.max(0, BOARD_MAX_IMAGE_COUNT - imageUrls.length);
-    const selected = nextFiles
-      ? Array.from(nextFiles).slice(0, remaining)
-      : [];
-    setFiles(selected);
-    setPreviews(selected.map((file) => URL.createObjectURL(file)));
-  };
+  const remainingSlots =
+    BOARD_MAX_IMAGE_COUNT - imageUrls.length - attachments.length;
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -51,24 +46,35 @@ export default function BoardEditForm({
     setError(null);
 
     try {
-      const nextImageUrls = [...imageUrls];
+      const { content: finalContent, imageUrls: newUrls } =
+        await finalizeContentTokens(
+          content,
+          async (id) => {
+            const attachment = attachments.find((item) => item.id === id);
+            if (!attachment) return null;
 
-      for (const file of files) {
-        const uploadData = new FormData();
-        uploadData.append("file", file);
+            const uploadData = new FormData();
+            uploadData.append("file", attachment.file);
 
-        const uploadRes = await fetch("/api/board/upload", {
-          method: "POST",
-          body: uploadData,
-        });
-        const uploadJson = await uploadRes.json();
+            const uploadRes = await fetch("/api/board/upload", {
+              method: "POST",
+              body: uploadData,
+            });
+            const uploadJson = await uploadRes.json();
 
-        if (!uploadRes.ok) {
-          throw new Error(uploadJson.error ?? "이미지 업로드에 실패했습니다.");
-        }
+            if (!uploadRes.ok) {
+              throw new Error(uploadJson.error ?? "이미지 업로드에 실패했습니다.");
+            }
 
-        nextImageUrls.push(uploadJson.imageUrl as string);
-      }
+            return uploadJson.imageUrl as string;
+          },
+          imageUrls.length + 1
+        );
+
+      const nextImageUrls = [...imageUrls, ...newUrls].slice(
+        0,
+        BOARD_MAX_IMAGE_COUNT
+      );
 
       const response = await fetch(`/api/board/${post.id}`, {
         method: "PATCH",
@@ -76,10 +82,10 @@ export default function BoardEditForm({
         body: JSON.stringify({
           action: "update",
           title,
-          content,
+          content: finalContent,
           category,
           bikeBrand: bikeBrand || null,
-          imageUrls: nextImageUrls.slice(0, BOARD_MAX_IMAGE_COUNT),
+          imageUrls: nextImageUrls,
         }),
       });
       const data = await response.json();
@@ -156,58 +162,48 @@ export default function BoardEditForm({
             />
           </label>
 
-          <label className="block">
+          <div>
             <span className="text-sm font-semibold text-slate-700">내용</span>
-            <textarea
-              value={content}
-              onChange={(event) => setContent(event.target.value)}
-              required
-              rows={8}
-              placeholder={meta.contentPlaceholder}
-              className="mt-2 w-full rounded-2xl border border-signature/20 bg-signature-light/50 px-4 py-3 text-sm outline-none focus:border-signature"
-            />
-          </label>
+            <p className="mt-1 text-xs text-slate-500">
+              글을 쓰다가 원하는 위치에서 &quot;사진 추가&quot;를 누르면 그 자리에 새 사진이
+              들어갑니다.
+            </p>
+            <div className="mt-2">
+              <BoardContentEditor
+                content={content}
+                onContentChange={setContent}
+                attachments={attachments}
+                onAttachmentsChange={setAttachments}
+                placeholder={meta.contentPlaceholder}
+                rows={8}
+                remainingSlots={remainingSlots}
+              />
+            </div>
+          </div>
 
           {imageUrls.length > 0 && (
-            <div className="grid gap-2 sm:grid-cols-2">
-              {imageUrls.map((url) => (
-                <div key={url} className="relative overflow-hidden rounded-2xl">
-                  <img src={url} alt="" className="h-32 w-full object-cover" />
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setImageUrls((current) => current.filter((item) => item !== url))
-                    }
-                    className="absolute right-2 top-2 rounded-full bg-red-600 px-2 py-1 text-[10px] font-bold text-white"
-                  >
-                    제거
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <label className="block">
-            <span className="text-sm font-semibold text-slate-700">사진 추가</span>
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              multiple
-              onChange={(event) => handleFilesChange(event.target.files)}
-              className="mt-2 block w-full text-sm text-slate-600"
-            />
-          </label>
-
-          {previews.length > 0 && (
-            <div className="grid gap-2 sm:grid-cols-2">
-              {previews.map((url) => (
-                <img
-                  key={url}
-                  src={url}
-                  alt=""
-                  className="h-32 w-full rounded-2xl object-cover"
-                />
-              ))}
+            <div>
+              <span className="text-sm font-semibold text-slate-700">
+                기존에 첨부된 사진
+              </span>
+              <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                {imageUrls.map((url) => (
+                  <div key={url} className="relative overflow-hidden rounded-2xl">
+                    <img src={url} alt="" className="h-32 w-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setImageUrls((current) =>
+                          current.filter((item) => item !== url)
+                        )
+                      }
+                      className="absolute right-2 top-2 rounded-full bg-red-600 px-2 py-1 text-[10px] font-bold text-white"
+                    >
+                      제거
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>

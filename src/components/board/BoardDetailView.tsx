@@ -13,6 +13,7 @@ import EngagementLikeButton from "@/components/engagement/EngagementLikeButton";
 import AuthorWithGrade from "@/components/ranking/AuthorWithGrade";
 import ReportButton from "@/components/report/ReportButton";
 import ThumbIcon from "@/components/ui/ThumbIcon";
+import { unusedImageUrls } from "@/lib/board-content";
 import { useMemberGradeLookup } from "@/hooks/useMemberGradeLookup";
 import { useCosmeticLookup } from "@/hooks/useCosmeticLookup";
 import { useContentView } from "@/hooks/useContentView";
@@ -60,6 +61,10 @@ export default function BoardDetailView({ initialPost }: BoardDetailViewProps) {
     ? getBikeBrandById(post.bikeBrand)?.label
     : undefined;
   const canManage = canManageBoardPost(user, post);
+  const unusedPostImages = useMemo(
+    () => unusedImageUrls(post.content, post.imageUrls),
+    [post.content, post.imageUrls]
+  );
 
   useEffect(() => {
     setPost((current) => {
@@ -257,9 +262,9 @@ export default function BoardDetailView({ initialPost }: BoardDetailViewProps) {
         </div>
 
         <div className="space-y-6 px-5 py-6 sm:px-8">
-          {post.imageUrls.length > 0 && (
+          {unusedPostImages.length > 0 && (
             <div className="grid gap-3 sm:grid-cols-2">
-              {post.imageUrls.map((url) => (
+              {unusedPostImages.map((url) => (
                 /* eslint-disable-next-line @next/next/no-img-element */
                 <img
                   key={url}
@@ -271,7 +276,7 @@ export default function BoardDetailView({ initialPost }: BoardDetailViewProps) {
             </div>
           )}
 
-          <BoardPostContent content={post.content} />
+          <BoardPostContent content={post.content} imageUrls={post.imageUrls} />
 
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-stone-500">
             <EngagementLikeButton

@@ -13,6 +13,7 @@ import EngagementLikeButton from "@/components/engagement/EngagementLikeButton";
 import AuthorWithGrade from "@/components/ranking/AuthorWithGrade";
 import ReportButton from "@/components/report/ReportButton";
 import ThumbIcon from "@/components/ui/ThumbIcon";
+import { unusedImageUrls } from "@/lib/board-content";
 import { useMemberGradeLookup } from "@/hooks/useMemberGradeLookup";
 import { useCosmeticLookup } from "@/hooks/useCosmeticLookup";
 import {
@@ -100,6 +101,10 @@ export default function BoardDetailModal({
   const postHighlight = looksByNickname[post.author]?.postHighlightActive;
 
   const meta = boardCategoryMeta[post.category];
+  const unusedPostImages = useMemo(
+    () => unusedImageUrls(post.content, post.imageUrls),
+    [post.content, post.imageUrls]
+  );
 
   return (
     <PortalModal onClose={onClose}>
@@ -156,9 +161,9 @@ export default function BoardDetailModal({
         </div>
 
         <div className="space-y-6 px-6 py-6">
-          {post.imageUrls.length > 0 && (
+          {unusedPostImages.length > 0 && (
             <div className="grid gap-3 sm:grid-cols-2">
-              {post.imageUrls.map((url) => (
+              {unusedPostImages.map((url) => (
                 <img
                   key={url}
                   src={url}
@@ -169,7 +174,7 @@ export default function BoardDetailModal({
             </div>
           )}
 
-          <BoardPostContent content={post.content} />
+          <BoardPostContent content={post.content} imageUrls={post.imageUrls} />
 
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-stone-500">
             <EngagementLikeButton

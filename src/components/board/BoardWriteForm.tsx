@@ -4,11 +4,15 @@ import { useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import PortalModal from "@/components/portal/PortalModal";
 import { BoardCategoryGuide } from "@/components/board/BoardCategoryGuide";
+import BoardContentEditor, {
+  type BoardAttachment,
+} from "@/components/board/BoardContentEditor";
 import {
   boardCategoryMeta,
   type BoardCategory,
   type BoardPost,
 } from "@/lib/board";
+import { finalizeContentTokens } from "@/lib/board-content";
 import { BOARD_MAX_IMAGE_COUNT } from "@/lib/board-upload-limits";
 import { BIKE_BRANDS, getBikeBrandById } from "@/lib/home-portal";
 
@@ -30,22 +34,12 @@ export default function BoardWriteForm({
   const [bikeBrand, setBikeBrand] = useState(initialBikeBrand);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [files, setFiles] = useState<File[]>([]);
-  const [previews, setPreviews] = useState<string[]>([]);
+  const [attachments, setAttachments] = useState<BoardAttachment[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const meta = boardCategoryMeta[category];
   const brandLabel = getBikeBrandById(bikeBrand)?.label;
-
-  const handleFilesChange = (nextFiles: FileList | null) => {
-    previews.forEach((url) => URL.revokeObjectURL(url));
-    const selected = nextFiles
-      ? Array.from(nextFiles).slice(0, BOARD_MAX_IMAGE_COUNT)
-      : [];
-    setFiles(selected);
-    setPreviews(selected.map((file) => URL.createObjectURL(file)));
-  };
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -53,31 +47,35 @@ export default function BoardWriteForm({
     setError(null);
 
     try {
-      const imageUrls: string[] = [];
+      const { content: finalContent, imageUrls } = await finalizeContentTokens(
+        content,
+        async (id) => {
+          const attachment = attachments.find((item) => item.id === id);
+          if (!attachment) return null;
 
-      for (const file of files) {
-        const uploadData = new FormData();
-        uploadData.append("file", file);
+          const uploadData = new FormData();
+          uploadData.append("file", attachment.file);
 
-        const uploadRes = await fetch("/api/board/upload", {
-          method: "POST",
-          body: uploadData,
-        });
-        const uploadJson = await uploadRes.json();
+          const uploadRes = await fetch("/api/board/upload", {
+            method: "POST",
+            body: uploadData,
+          });
+          const uploadJson = await uploadRes.json();
 
-        if (!uploadRes.ok) {
-          throw new Error(uploadJson.error ?? "이미지 업로드에 실패했습니다.");
+          if (!uploadRes.ok) {
+            throw new Error(uploadJson.error ?? "이미지 업로드에 실패했습니다.");
+          }
+
+          return uploadJson.imageUrl as string;
         }
-
-        imageUrls.push(uploadJson.imageUrl as string);
-      }
+      );
 
       const createRes = await fetch("/api/board", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title,
-          content,
+          content: finalContent,
           category,
           imageUrls,
           ...(bikeBrand ? { bikeBrand } : {}),
@@ -163,42 +161,24 @@ export default function BoardWriteForm({
             작성자: <strong className="text-slate-800">{user?.nickname}</strong>
           </p>
 
-          <label className="block">
+          <div>
             <span className="text-sm font-semibold text-slate-700">내용</span>
-            <textarea
-              value={content}
-              onChange={(event) => setContent(event.target.value)}
-              required
-              rows={6}
-              className="mt-2 w-full rounded-2xl border border-orange-100 bg-orange-50/50 px-4 py-3 text-sm outline-none focus:border-orange-300"
-              placeholder={meta.contentPlaceholder}
-            />
-          </label>
-
-          <label className="block">
-            <span className="text-sm font-semibold text-slate-700">
-              사진 (선택, 최대 3장)
-            </span>
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              multiple
-              onChange={(event) => handleFilesChange(event.target.files)}
-              className="mt-2 block w-full text-sm text-slate-600"
-            />
-          </label>
-
-          {previews.length > 0 && (
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-              {previews.map((url) => (
-                <div
-                  key={url}
-                  className="aspect-[4/3] rounded-2xl bg-cover bg-center"
-                  style={{ backgroundImage: `url(${url})` }}
-                />
-              ))}
+            <p className="mt-1 text-xs text-slate-500">
+              글을 쓰다가 원하는 위치에서 &quot;사진 추가&quot;를 누르면 그 자리에 사진이
+              들어갑니다. 미리보기 탭에서 실제 모습을 확인할 수 있어요.
+            </p>
+            <div className="mt-2">
+              <BoardContentEditor
+                content={content}
+                onContentChange={setContent}
+                attachments={attachments}
+                onAttachmentsChange={setAttachments}
+                placeholder={meta.contentPlaceholder}
+                rows={6}
+                remainingSlots={BOARD_MAX_IMAGE_COUNT - attachments.length}
+              />
             </div>
-          )}
+          </div>
         </div>
 
         {error && (
