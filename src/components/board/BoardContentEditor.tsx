@@ -14,7 +14,6 @@ type BoardContentEditorProps = {
   onContentChange: (value: string) => void;
   attachments: BoardAttachment[];
   onAttachmentsChange: (next: BoardAttachment[]) => void;
-  placeholder?: string;
   rows?: number;
   /** 지금 더 추가할 수 있는 사진 수 (다른 곳에 이미 첨부된 사진까지 감안해서 부모가 계산) */
   remainingSlots: number;
@@ -105,13 +104,11 @@ export default function BoardContentEditor({
   onContentChange,
   attachments,
   onAttachmentsChange,
-  placeholder,
   rows = 16,
   remainingSlots,
 }: BoardContentEditorProps) {
   const [tab, setTab] = useState<"write" | "preview">("write");
   const [dragActive, setDragActive] = useState(false);
-  const [isEmpty, setIsEmpty] = useState(content.trim().length === 0);
   const editableRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const lastRangeRef = useRef<Range | null>(null);
@@ -130,7 +127,6 @@ export default function BoardContentEditor({
   const syncContentFromDom = () => {
     if (!editableRef.current) return;
     const next = domToContent(editableRef.current);
-    setIsEmpty(next.trim().length === 0);
     onContentChange(next);
   };
 
@@ -307,15 +303,10 @@ export default function BoardContentEditor({
           style={{ minHeight: panelHeight }}
           className="w-full overflow-y-auto whitespace-pre-wrap break-words rounded-2xl border border-signature/20 bg-signature-light/50 px-4 py-3 text-sm leading-7 outline-none focus:border-signature"
         />
-        {isEmpty && (
-          <p className="pointer-events-none absolute left-4 top-3 text-sm text-stone-400">
-            {placeholder}
-          </p>
-        )}
         {dragActive && (
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-2xl border-2 border-dashed border-signature bg-signature-light/90">
             <p className="text-sm font-bold text-signature-dark">
-              📷 여기에 놓으면 사진이 추가됩니다
+              여기에 놓으면 사진이 추가됩니다
             </p>
           </div>
         )}
@@ -358,7 +349,7 @@ export default function BoardContentEditor({
           disabled={remainingSlots <= 0}
           className="rounded-full border border-signature/30 bg-white px-3 py-1.5 text-xs font-semibold text-signature-dark hover:bg-signature-light disabled:cursor-not-allowed disabled:opacity-50"
         >
-          📷 사진 추가 (커서 위치에 삽입)
+          사진 추가 (커서 위치에 삽입)
         </button>
         <span className="text-xs text-stone-400">
           {attachments.length}장 첨부됨 · {Math.max(0, remainingSlots)}장 더 가능

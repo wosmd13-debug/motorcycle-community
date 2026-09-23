@@ -103,7 +103,7 @@ export default function BoardWriteForm({
         className="portal-modal-panel max-w-2xl overflow-y-auto p-4 shadow-2xl sm:p-8"
       >
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-slate-800">✍️ 글쓰기</h2>
+          <h2 className="text-xl font-bold text-slate-800">글쓰기</h2>
           <button
             type="button"
             onClick={onClose}
@@ -150,13 +150,7 @@ export default function BoardWriteForm({
         </label>
 
         <div className="mt-6 space-y-4">
-          <Input
-            label="제목"
-            value={title}
-            onChange={setTitle}
-            required
-            placeholder={meta.titlePlaceholder}
-          />
+          <Input label="제목" value={title} onChange={setTitle} required />
           <p className="text-sm text-slate-500">
             작성자: <strong className="text-slate-800">{user?.nickname}</strong>
           </p>
@@ -173,7 +167,6 @@ export default function BoardWriteForm({
                 onContentChange={setContent}
                 attachments={attachments}
                 onAttachmentsChange={setAttachments}
-                placeholder={meta.contentPlaceholder}
                 remainingSlots={BOARD_MAX_IMAGE_COUNT - attachments.length}
               />
             </div>
@@ -194,8 +187,8 @@ export default function BoardWriteForm({
           {submitting
             ? "등록 중..."
             : brandLabel
-              ? `${meta.emoji} ${brandLabel} · ${meta.label}에 등록`
-              : `${meta.emoji} ${meta.label} 게시판에 등록`}
+              ? `${brandLabel} · ${meta.label}에 등록`
+              : `${meta.label} 게시판에 등록`}
         </button>
       </form>
     </PortalModal>

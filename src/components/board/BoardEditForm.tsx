@@ -7,11 +7,7 @@ import { BoardCategoryGuide } from "@/components/board/BoardCategoryGuide";
 import BoardContentEditor, {
   type BoardAttachment,
 } from "@/components/board/BoardContentEditor";
-import {
-  boardCategoryMeta,
-  type BoardCategory,
-  type BoardPost,
-} from "@/lib/board";
+import { type BoardCategory, type BoardPost } from "@/lib/board";
 import { finalizeContentTokens } from "@/lib/board-content";
 import { BOARD_MAX_IMAGE_COUNT } from "@/lib/board-upload-limits";
 import { BIKE_BRANDS } from "@/lib/home-portal";
@@ -36,7 +32,6 @@ export default function BoardEditForm({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const meta = boardCategoryMeta[category];
   const remainingSlots =
     BOARD_MAX_IMAGE_COUNT - imageUrls.length - attachments.length;
 
@@ -157,7 +152,6 @@ export default function BoardEditForm({
               value={title}
               onChange={(event) => setTitle(event.target.value)}
               required
-              placeholder={meta.titlePlaceholder}
               className="mt-2 w-full rounded-2xl border border-signature/20 bg-signature-light/50 px-4 py-3 text-sm outline-none focus:border-signature"
             />
           </label>
@@ -174,7 +168,6 @@ export default function BoardEditForm({
                 onContentChange={setContent}
                 attachments={attachments}
                 onAttachmentsChange={setAttachments}
-                placeholder={meta.contentPlaceholder}
                 remainingSlots={remainingSlots}
               />
             </div>
