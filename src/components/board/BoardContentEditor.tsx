@@ -179,7 +179,13 @@ export default function BoardContentEditor({
 
       range!.deleteContents();
       range!.insertNode(img);
+
+      // 사진 바로 뒤에 이어서 쓸 수 있는 줄을 항상 만들어둔다.
+      const br = document.createElement("br");
       range!.setStartAfter(img);
+      range!.collapse(true);
+      range!.insertNode(br);
+      range!.setStartAfter(br);
       range!.collapse(true);
 
       newAttachments.push({ id, file, previewUrl });
