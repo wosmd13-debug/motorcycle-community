@@ -1,12 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import {
-  buildTempToken,
-  insertTokenAtCursor,
-  parseDraftContent,
-  stripTempToken,
-} from "@/lib/board-content";
+import { buildTempToken, parseDraftContent } from "@/lib/board-content";
 
 export type BoardAttachment = {
   id: string;
@@ -33,6 +28,78 @@ function isImageFile(file: File): boolean {
   return file.type.startsWith("image/");
 }
 
+const IMAGE_CLASS =
+  "my-2 block w-full rounded-2xl object-cover ring-1 ring-signature/10";
+
+/** 편집 화면(contentEditable) DOM을, 우리가 쓰는 문자열(줄바꿈 + [[사진:id]] 토큰)로 되돌린다. */
+function domToContent(node: Node): string {
+  let out = "";
+
+  node.childNodes.forEach((child) => {
+    if (child.nodeType === Node.TEXT_NODE) {
+      out += child.textContent ?? "";
+      return;
+    }
+    if (child.nodeType !== Node.ELEMENT_NODE) return;
+
+    const el = child as HTMLElement;
+    if (el.tagName === "BR") {
+      out += "\n";
+    } else if (el.tagName === "IMG" && el.dataset.tokenId) {
+      out += buildTempToken(el.dataset.tokenId);
+    } else if (el.tagName === "DIV" || el.tagName === "P") {
+      if (out && !out.endsWith("\n")) out += "\n";
+      out += domToContent(el);
+      if (!out.endsWith("\n")) out += "\n";
+    } else {
+      out += domToContent(el);
+    }
+  });
+
+  return out;
+}
+
+/** content 문자열 + attachments로 contentEditable 내부를 안전하게(직접 노드 생성만으로) 그린다. */
+function renderIntoDom(
+  container: HTMLElement,
+  content: string,
+  attachments: BoardAttachment[]
+) {
+  const byId = new Map(attachments.map((item) => [item.id, item.previewUrl]));
+  const tokenPattern = /\[\[사진:([a-z0-9]+)\]\]/g;
+
+  container.innerHTML = "";
+
+  const appendText = (text: string) => {
+    const lines = text.split("\n");
+    lines.forEach((line, i) => {
+      if (line) container.appendChild(document.createTextNode(line));
+      if (i < lines.length - 1) container.appendChild(document.createElement("br"));
+    });
+  };
+
+  let lastIndex = 0;
+  for (const match of content.matchAll(tokenPattern)) {
+    const start = match.index ?? 0;
+    appendText(content.slice(lastIndex, start));
+
+    const url = byId.get(match[1]);
+    if (url) {
+      const img = document.createElement("img");
+      img.src = url;
+      img.alt = "";
+      img.setAttribute("contenteditable", "false");
+      img.dataset.tokenId = match[1];
+      img.className = IMAGE_CLASS;
+      container.appendChild(img);
+    } else {
+      appendText(match[0]);
+    }
+    lastIndex = start + match[0].length;
+  }
+  appendText(content.slice(lastIndex));
+}
+
 export default function BoardContentEditor({
   content,
   onContentChange,
@@ -44,50 +111,87 @@ export default function BoardContentEditor({
 }: BoardContentEditorProps) {
   const [tab, setTab] = useState<"write" | "preview">("write");
   const [dragActive, setDragActive] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const [isEmpty, setIsEmpty] = useState(content.trim().length === 0);
+  const editableRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const attachmentsRef = useRef(attachments);
+  const lastRangeRef = useRef<Range | null>(null);
   const dragCounter = useRef(0);
+  const mountedContent = useRef(false);
+
+  // 처음 한 번만 문자열 -> DOM으로 그린다. 그 다음부터는 타이핑을 방해하지 않기 위해
+  // 이 컴포넌트가 직접 DOM을 바꿀 때(사진 삽입/삭제)만 손댄다.
+  useEffect(() => {
+    if (mountedContent.current || !editableRef.current) return;
+    mountedContent.current = true;
+    renderIntoDom(editableRef.current, content, attachments);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 최초 1회만
+  }, []);
+
+  const syncContentFromDom = () => {
+    if (!editableRef.current) return;
+    const next = domToContent(editableRef.current);
+    setIsEmpty(next.trim().length === 0);
+    onContentChange(next);
+  };
+
+  const saveSelectionIfInside = () => {
+    const el = editableRef.current;
+    if (!el) return;
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+    const range = selection.getRangeAt(0);
+    if (el.contains(range.commonAncestorContainer)) {
+      lastRangeRef.current = range.cloneRange();
+    }
+  };
 
   useEffect(() => {
-    attachmentsRef.current = attachments;
-  }, [attachments]);
-
-  // 컴포넌트가 사라질 때(글쓰기 취소 등) 미리보기용 blob URL을 정리한다.
-  useEffect(() => {
-    return () => {
-      attachmentsRef.current.forEach((item) => URL.revokeObjectURL(item.previewUrl));
-    };
+    document.addEventListener("selectionchange", saveSelectionIfInside);
+    return () => document.removeEventListener("selectionchange", saveSelectionIfInside);
   }, []);
 
   const insertFiles = (incoming: File[]) => {
+    const el = editableRef.current;
+    if (!el) return;
     const files = incoming.filter(isImageFile).slice(0, Math.max(0, remainingSlots));
     if (files.length === 0) return;
 
-    let cursor = textareaRef.current?.selectionStart ?? content.length;
-    let nextContent = content;
-    const nextAttachments = [...attachments];
+    el.focus();
 
-    for (const file of files) {
-      const id = randomId();
-      const previewUrl = URL.createObjectURL(file);
-      const token = buildTempToken(id);
-      const result = insertTokenAtCursor(nextContent, cursor, token);
-      nextContent = result.content;
-      cursor = result.cursor;
-      nextAttachments.push({ id, file, previewUrl });
+    let range = lastRangeRef.current;
+    if (!range || !el.contains(range.commonAncestorContainer)) {
+      range = document.createRange();
+      range.selectNodeContents(el);
+      range.collapse(false); // 못 찾으면 맨 끝에 삽입
     }
 
-    onContentChange(nextContent);
-    onAttachmentsChange(nextAttachments);
+    const newAttachments: BoardAttachment[] = [];
 
-    // 다음 사진도 방금 넣은 자리 바로 뒤에서 이어 넣을 수 있게 커서를 옮겨둔다.
-    requestAnimationFrame(() => {
-      const el = textareaRef.current;
-      if (!el) return;
-      el.focus();
-      el.setSelectionRange(cursor, cursor);
+    files.forEach((file) => {
+      const id = randomId();
+      const previewUrl = URL.createObjectURL(file);
+      const img = document.createElement("img");
+      img.src = previewUrl;
+      img.alt = "";
+      img.setAttribute("contenteditable", "false");
+      img.dataset.tokenId = id;
+      img.className = IMAGE_CLASS;
+
+      range!.deleteContents();
+      range!.insertNode(img);
+      range!.setStartAfter(img);
+      range!.collapse(true);
+
+      newAttachments.push({ id, file, previewUrl });
     });
+
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+    lastRangeRef.current = range.cloneRange();
+
+    onAttachmentsChange([...attachments, ...newAttachments]);
+    syncContentFromDom();
   };
 
   const handleFileInputChange = (fileList: FileList | null) => {
@@ -119,20 +223,34 @@ export default function BoardContentEditor({
     insertFiles(Array.from(event.dataTransfer.files));
   };
 
-  const handlePaste = (event: React.ClipboardEvent<HTMLTextAreaElement>) => {
-    const files = Array.from(event.clipboardData?.files ?? []).filter(isImageFile);
-    if (files.length === 0) return;
+  const handlePaste = (event: React.ClipboardEvent<HTMLDivElement>) => {
+    const imageFiles = Array.from(event.clipboardData?.files ?? []).filter(isImageFile);
     event.preventDefault();
-    insertFiles(files);
+
+    if (imageFiles.length > 0) {
+      insertFiles(imageFiles);
+      return;
+    }
+
+    // 사진이 아니면 순수 텍스트로만 붙여넣는다 (서식/HTML은 절대 들여오지 않음).
+    const text = event.clipboardData?.getData("text/plain") ?? "";
+    if (!text) return;
+    document.execCommand("insertText", false, text);
+    syncContentFromDom();
   };
 
   const handleRemove = (id: string) => {
     const target = attachments.find((item) => item.id === id);
     if (!target) return;
 
+    const imgNode = editableRef.current?.querySelector(
+      `img[data-token-id="${id}"]`
+    );
+    imgNode?.remove();
+
     URL.revokeObjectURL(target.previewUrl);
-    onContentChange(stripTempToken(content, buildTempToken(id)));
     onAttachmentsChange(attachments.filter((item) => item.id !== id));
+    syncContentFromDom();
   };
 
   const segments = parseDraftContent(content, attachments);
@@ -166,34 +284,38 @@ export default function BoardContentEditor({
         </span>
       </div>
 
-      {tab === "write" ? (
+      <div
+        onDragEnter={handleDragEnter}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        className="relative mt-2"
+        hidden={tab !== "write"}
+      >
         <div
-          onDragEnter={handleDragEnter}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-          className="relative mt-2"
-        >
-          <textarea
-            ref={textareaRef}
-            value={content}
-            onChange={(event) => onContentChange(event.target.value)}
-            onPaste={handlePaste}
-            required
-            rows={rows}
-            placeholder={placeholder}
-            style={{ minHeight: panelHeight }}
-            className="w-full resize-y rounded-2xl border border-signature/20 bg-signature-light/50 px-4 py-3 text-sm leading-7 outline-none focus:border-signature"
-          />
-          {dragActive && (
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-2xl border-2 border-dashed border-signature bg-signature-light/90">
-              <p className="text-sm font-bold text-signature-dark">
-                📷 여기에 놓으면 사진이 추가됩니다
-              </p>
-            </div>
-          )}
-        </div>
-      ) : (
+          ref={editableRef}
+          contentEditable
+          suppressContentEditableWarning
+          onInput={syncContentFromDom}
+          onPaste={handlePaste}
+          style={{ minHeight: panelHeight }}
+          className="w-full overflow-y-auto whitespace-pre-wrap break-words rounded-2xl border border-signature/20 bg-signature-light/50 px-4 py-3 text-sm leading-7 outline-none focus:border-signature"
+        />
+        {isEmpty && (
+          <p className="pointer-events-none absolute left-4 top-3 text-sm text-stone-400">
+            {placeholder}
+          </p>
+        )}
+        {dragActive && (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-2xl border-2 border-dashed border-signature bg-signature-light/90">
+            <p className="text-sm font-bold text-signature-dark">
+              📷 여기에 놓으면 사진이 추가됩니다
+            </p>
+          </div>
+        )}
+      </div>
+
+      {tab === "preview" && (
         <div
           style={{ minHeight: panelHeight }}
           className="mt-2 space-y-3 overflow-y-auto rounded-2xl border border-signature/20 bg-white px-4 py-3"

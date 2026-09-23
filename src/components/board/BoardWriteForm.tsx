@@ -189,7 +189,7 @@ export default function BoardWriteForm({
         <button
           type="submit"
           disabled={submitting}
-          className="mt-6 w-full rounded-2xl bg-orange-500 py-3 text-sm font-bold text-white transition hover:bg-orange-600 disabled:opacity-60"
+          className="portal-btn mt-6 w-full rounded-2xl py-3 text-sm font-bold disabled:opacity-60"
         >
           {submitting
             ? "등록 중..."
