@@ -29,19 +29,25 @@ function randomId(): string {
   return Math.random().toString(36).slice(2, 8);
 }
 
+function isImageFile(file: File): boolean {
+  return file.type.startsWith("image/");
+}
+
 export default function BoardContentEditor({
   content,
   onContentChange,
   attachments,
   onAttachmentsChange,
   placeholder,
-  rows = 8,
+  rows = 16,
   remainingSlots,
 }: BoardContentEditorProps) {
   const [tab, setTab] = useState<"write" | "preview">("write");
+  const [dragActive, setDragActive] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const attachmentsRef = useRef(attachments);
+  const dragCounter = useRef(0);
 
   useEffect(() => {
     attachmentsRef.current = attachments;
@@ -54,14 +60,11 @@ export default function BoardContentEditor({
     };
   }, []);
 
-  const handleFilesSelected = (fileList: FileList | null) => {
-    if (!fileList || fileList.length === 0) return;
-
-    const files = Array.from(fileList).slice(0, Math.max(0, remainingSlots));
+  const insertFiles = (incoming: File[]) => {
+    const files = incoming.filter(isImageFile).slice(0, Math.max(0, remainingSlots));
     if (files.length === 0) return;
 
-    let cursor =
-      textareaRef.current?.selectionStart ?? content.length;
+    let cursor = textareaRef.current?.selectionStart ?? content.length;
     let nextContent = content;
     const nextAttachments = [...attachments];
 
@@ -85,8 +88,42 @@ export default function BoardContentEditor({
       el.focus();
       el.setSelectionRange(cursor, cursor);
     });
+  };
 
+  const handleFileInputChange = (fileList: FileList | null) => {
+    if (fileList) insertFiles(Array.from(fileList));
     if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleDragEnter = (event: React.DragEvent) => {
+    event.preventDefault();
+    if (!event.dataTransfer.types.includes("Files")) return;
+    dragCounter.current += 1;
+    setDragActive(true);
+  };
+
+  const handleDragOver = (event: React.DragEvent) => {
+    event.preventDefault();
+  };
+
+  const handleDragLeave = (event: React.DragEvent) => {
+    event.preventDefault();
+    dragCounter.current = Math.max(0, dragCounter.current - 1);
+    if (dragCounter.current === 0) setDragActive(false);
+  };
+
+  const handleDrop = (event: React.DragEvent) => {
+    event.preventDefault();
+    dragCounter.current = 0;
+    setDragActive(false);
+    insertFiles(Array.from(event.dataTransfer.files));
+  };
+
+  const handlePaste = (event: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const files = Array.from(event.clipboardData?.files ?? []).filter(isImageFile);
+    if (files.length === 0) return;
+    event.preventDefault();
+    insertFiles(files);
   };
 
   const handleRemove = (id: string) => {
@@ -99,42 +136,68 @@ export default function BoardContentEditor({
   };
 
   const segments = parseDraftContent(content, attachments);
+  const panelHeight = `${Math.max(rows, 10) * 1.75}rem`;
 
   return (
     <div>
-      <div className="flex items-center gap-1 text-xs font-semibold text-stone-500">
-        <button
-          type="button"
-          onClick={() => setTab("write")}
-          className={`rounded-full px-3 py-1.5 transition ${
-            tab === "write" ? "bg-signature-dark text-white" : "hover:bg-signature-light"
-          }`}
-        >
-          작성
-        </button>
-        <button
-          type="button"
-          onClick={() => setTab("preview")}
-          className={`rounded-full px-3 py-1.5 transition ${
-            tab === "preview" ? "bg-signature-dark text-white" : "hover:bg-signature-light"
-          }`}
-        >
-          미리보기
-        </button>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1 text-xs font-semibold text-stone-500">
+          <button
+            type="button"
+            onClick={() => setTab("write")}
+            className={`rounded-full px-3 py-1.5 transition ${
+              tab === "write" ? "bg-signature-dark text-white" : "hover:bg-signature-light"
+            }`}
+          >
+            작성
+          </button>
+          <button
+            type="button"
+            onClick={() => setTab("preview")}
+            className={`rounded-full px-3 py-1.5 transition ${
+              tab === "preview" ? "bg-signature-dark text-white" : "hover:bg-signature-light"
+            }`}
+          >
+            미리보기
+          </button>
+        </div>
+        <span className="hidden text-xs text-stone-400 sm:inline">
+          사진을 이 안으로 끌어놓거나 붙여넣기(Ctrl+V) 해도 추가돼요
+        </span>
       </div>
 
       {tab === "write" ? (
-        <textarea
-          ref={textareaRef}
-          value={content}
-          onChange={(event) => onContentChange(event.target.value)}
-          required
-          rows={rows}
-          placeholder={placeholder}
-          className="mt-2 w-full rounded-2xl border border-signature/20 bg-signature-light/50 px-4 py-3 text-sm outline-none focus:border-signature"
-        />
+        <div
+          onDragEnter={handleDragEnter}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          className="relative mt-2"
+        >
+          <textarea
+            ref={textareaRef}
+            value={content}
+            onChange={(event) => onContentChange(event.target.value)}
+            onPaste={handlePaste}
+            required
+            rows={rows}
+            placeholder={placeholder}
+            style={{ minHeight: panelHeight }}
+            className="w-full resize-y rounded-2xl border border-signature/20 bg-signature-light/50 px-4 py-3 text-sm leading-7 outline-none focus:border-signature"
+          />
+          {dragActive && (
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-2xl border-2 border-dashed border-signature bg-signature-light/90">
+              <p className="text-sm font-bold text-signature-dark">
+                📷 여기에 놓으면 사진이 추가됩니다
+              </p>
+            </div>
+          )}
+        </div>
       ) : (
-        <div className="mt-2 min-h-[8rem] space-y-3 rounded-2xl border border-signature/20 bg-white px-4 py-3">
+        <div
+          style={{ minHeight: panelHeight }}
+          className="mt-2 space-y-3 overflow-y-auto rounded-2xl border border-signature/20 bg-white px-4 py-3"
+        >
           {segments.every((s) => s.type === "text" && !s.value.trim()) ? (
             <p className="text-sm text-stone-400">아직 작성한 내용이 없습니다.</p>
           ) : (
@@ -177,10 +240,13 @@ export default function BoardContentEditor({
           type="file"
           accept="image/jpeg,image/png,image/webp"
           multiple
-          onChange={(event) => handleFilesSelected(event.target.files)}
+          onChange={(event) => handleFileInputChange(event.target.files)}
           className="hidden"
         />
       </div>
+      <p className="mt-1 text-xs text-stone-400 sm:hidden">
+        사진을 이 안으로 끌어놓거나 붙여넣기 해도 추가돼요
+      </p>
 
       {attachments.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-2">

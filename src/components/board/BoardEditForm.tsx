@@ -175,7 +175,6 @@ export default function BoardEditForm({
                 attachments={attachments}
                 onAttachmentsChange={setAttachments}
                 placeholder={meta.contentPlaceholder}
-                rows={8}
                 remainingSlots={remainingSlots}
               />
             </div>

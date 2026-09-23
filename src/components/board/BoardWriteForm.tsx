@@ -174,7 +174,6 @@ export default function BoardWriteForm({
                 attachments={attachments}
                 onAttachmentsChange={setAttachments}
                 placeholder={meta.contentPlaceholder}
-                rows={6}
                 remainingSlots={BOARD_MAX_IMAGE_COUNT - attachments.length}
               />
             </div>
