@@ -26,7 +26,6 @@ export function BoardCategoryBadge({
     <span
       className={`inline-flex items-center gap-1 rounded-full font-semibold ring-1 ${sizeClass} ${meta.badgeClass}`}
     >
-      <span aria-hidden>{meta.emoji}</span>
       {meta.label}
     </span>
   );
@@ -56,9 +55,7 @@ export function BoardCategoryGuide({
       <div className="flex flex-wrap gap-2">
         {categories.map((category) => {
           const meta =
-            category === "전체"
-              ? { label: "전체", emoji: "📋" }
-              : boardCategoryMeta[category];
+            category === "전체" ? { label: "전체" } : boardCategoryMeta[category];
           const active = selected === category;
 
           return (
@@ -72,7 +69,7 @@ export function BoardCategoryGuide({
                   : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50"
               }`}
             >
-              {meta.emoji} {meta.label}
+              {meta.label}
             </button>
           );
         })}
@@ -103,7 +100,6 @@ export function BoardCategoryGuide({
                 : "border-slate-200 bg-white hover:border-slate-300"
             }`}
           >
-            <p className="text-lg">📋</p>
             <p className="mt-2 font-bold">전체</p>
             <p
               className={`mt-1 text-xs leading-5 ${
@@ -130,7 +126,6 @@ export function BoardCategoryGuide({
                   : meta.cardClass
               }`}
             >
-              <p className="text-lg">{meta.emoji}</p>
               <p className="mt-2 font-bold">{meta.label}</p>
               <p
                 className={`mt-1 text-xs leading-5 ${
@@ -147,7 +142,7 @@ export function BoardCategoryGuide({
       {selectedMeta && (
         <div className="rounded-2xl border border-orange-100 bg-white px-4 py-4">
           <p className="text-sm font-bold text-slate-800">
-            {selectedMeta.emoji} {selectedMeta.label} 게시판
+            {selectedMeta.label} 게시판
           </p>
           <p className="mt-2 text-sm leading-6 text-slate-600">
             {selectedMeta.description}
