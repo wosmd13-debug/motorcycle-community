@@ -93,6 +93,13 @@ export default function AuthNavActions({
       {user.isOperator && (
         <>
           <Link
+            href="/admin/town"
+            onClick={onNavigate}
+            className={`${buttonClass} border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 dark:border-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-300 dark:hover:bg-emerald-950`}
+          >
+            {compact ? "마을" : "마을현황"}
+          </Link>
+          <Link
             href="/admin/reports"
             onClick={onNavigate}
             className={`${buttonClass} border-red-200 bg-red-50 text-red-700 hover:bg-red-100 dark:border-red-900 dark:bg-red-950/50 dark:text-red-300 dark:hover:bg-red-950`}

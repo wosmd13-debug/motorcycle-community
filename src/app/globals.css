@@ -2847,3 +2847,116 @@ html[data-theme="dark"] .home-latest-row:hover {
     transition: none !important;
   }
 }
+
+/* 운영자 픽셀 마을 (/admin/town) */
+.pixel-font {
+  font-family: "Galmuri11", "Galmuri9", ui-monospace, monospace;
+}
+
+.pixel-town {
+  color: #fff8e1;
+}
+
+.pixel-hud {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.pixel-panel,
+.pixel-dialog {
+  margin: 3px;
+  border: 3px solid #fff8e1;
+  outline: 3px solid #1a1c2c;
+  background: #23263a;
+  padding: 8px 10px;
+}
+
+.pixel-label,
+.pixel-sub {
+  font-size: 12px;
+  color: #c9c3a8;
+}
+
+.pixel-sub {
+  margin-top: 4px;
+  font-size: 11px;
+}
+
+.pixel-value {
+  font-size: 20px;
+}
+
+.pixel-seg {
+  display: flex;
+  gap: 2px;
+  margin-top: 5px;
+}
+
+.pixel-seg i {
+  flex: 1;
+  height: 7px;
+}
+
+.pixel-map {
+  display: block;
+  width: calc(100% - 6px);
+  margin: 3px;
+  border: 3px solid #1a1c2c;
+  background: #7ec850;
+  image-rendering: pixelated;
+}
+
+.pixel-dialog {
+  margin-top: 12px;
+  min-height: 52px;
+  background: #1a1c2c;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.pixel-board {
+  margin-top: 12px;
+  border: 3px solid #5a3a1a;
+  background: #8b5a2b;
+  padding: 10px;
+}
+
+.pixel-board-title {
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.pixel-quest {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+  border: 2px solid #5a3a1a;
+  background: #f4e4bc;
+  padding: 8px 10px;
+  font-size: 13px;
+  color: #5a3a1a;
+}
+
+.pixel-quest:last-child {
+  margin-bottom: 0;
+}
+
+a.pixel-quest:hover {
+  background: #fff8e1;
+}
+
+.pixel-tag {
+  flex: none;
+  padding: 2px 6px;
+  font-size: 11px;
+  color: #fff8e1;
+}
+
+.pixel-foot {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #78716c;
+}

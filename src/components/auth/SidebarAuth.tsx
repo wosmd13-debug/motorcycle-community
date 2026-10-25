@@ -98,6 +98,12 @@ export default function SidebarAuth() {
           {user.isOperator && (
             <>
               <Link
+                href="/admin/town"
+                className="block w-full border border-emerald-200 bg-emerald-50 py-2 text-center text-xs font-semibold text-emerald-800 hover:bg-emerald-100"
+              >
+                마을 현황
+              </Link>
+              <Link
                 href="/admin/reports"
                 className="block w-full border border-red-200 bg-red-50 py-2 text-center text-xs font-semibold text-red-700 hover:bg-red-100"
               >
