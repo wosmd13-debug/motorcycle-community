@@ -129,7 +129,6 @@ export type MemberRankActivity = {
 
 export type MemberRankEntry = {
   userId: string;
-  loginId: string;
   nickname: string;
   points: number;
   rank: number;

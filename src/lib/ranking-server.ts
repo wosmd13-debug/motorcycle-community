@@ -313,7 +313,6 @@ function competitiveAccumulators(
 function toRankEntry(accumulator: RankAccumulator, rank: number): MemberRankEntry {
   return {
     userId: accumulator.userId,
-    loginId: accumulator.loginId,
     nickname: accumulator.nickname,
     points: accumulator.points,
     rank,
