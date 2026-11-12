@@ -11,7 +11,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # NEXT_PUBLIC_* 는 빌드 시점에 인라인됩니다. docker compose build-args 로 전달하세요.
-ARG NEXT_PUBLIC_SITE_URL=http://localhost:3000
+ARG NEXT_PUBLIC_SITE_URL=https://byanra.com
 ARG NEXT_PUBLIC_CONTACT_EMAIL=
 ARG NEXT_PUBLIC_SITE_OPERATOR_NAME=
 ARG NEXT_PUBLIC_CONTACT_PHONE=
